@@ -6,11 +6,14 @@ This file sets repo-wide policy for humans and agents. The repo builds a static 
 
 "Do less, do it better."
 
-- Use plain language (avoid tech lingo).
+- Use plain English.
+- Say what to do. Use a negative instruction only when the contrast removes ambiguity.
+- Fix issues with a minimal update to the wording so correct behavior becomes the new default; remove anything not needed to make the point clear.
 - Check the repo before assuming what exists.
 - Take product decisions from the files in `agent_docs/`.
-- Record durable decisions in the owning file before or alongside code changes.
+- Update the spec to keep it aligned with the code.
 - Keep this file repo-wide; put narrower guidance closer to the work.
+- Fix root causes, not symptoms
 
 ## Standards
 
@@ -23,7 +26,7 @@ Apply these standards to planning, specification, and implementation.
 - When behavior is unclear, degrade gracefully or stop cleanly.
 - When behavior is unspecified, make the smallest reasonable choice and mark it as a guess.
 
+
 ## Hard Constraints
 
 - No JavaScript in generated output (local exceptions only if the scope and justification are explicit).
-

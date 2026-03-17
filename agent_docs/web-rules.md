@@ -1,77 +1,63 @@
 # Web Rules
 
-This file defines the website's shared web requirements: semantic HTML, accessibility, reduced motion, responsive behavior, performance, and validation.
+## 1. Purpose
+This document defines the web standards the site must meet in its generated output.
 
-## Semantic HTML
+## 2. Decisions Owned
+- HTML semantics and landmark structure
+- Keyboard and focus behavior
+- Responsive and reduced-motion behavior
+- Progressive enhancement requirements
+- Interoperability rules for media, URLs, and indie-web markup
 
-Every page must contain:
+## 3. Requirements
 
-- a skip link before the main navigation
-- a `header`
-- a `main`
-- a `footer`
+### 3.1 Markup
+1. Every public page is a valid HTML5 document with a declared document language.
+2. Every public page uses semantic landmarks, including `header`, `main`, and `footer`.
+3. Every public page contains one `main` landmark only.
+4. Pages use heading levels in order, starting with one page-level heading.
+5. The works index uses list markup for work entries.
+6. Dates are rendered with a machine-readable `datetime` value in the timestamp type defined in `bones.md`, inside a `time` element.
+7. Figures, captions, quotations, and audio players use their native HTML elements when those content types appear.
+8. The site's global links block is exposed as navigation markup.
 
-Every page must use exactly one `h1`.
+### 3.2 Accessibility
+1. Every interactive element is reachable and usable with a keyboard alone.
+2. Focus is always visible and visually distinct from surrounding text.
+3. The layout remains readable at `320px` wide and at `200%` browser zoom without loss of content or function.
+4. Link text describes the destination or action in plain language.
+5. Informative images include alternative text in the rendered markup. Decorative images use empty alternative text.
+6. Audio uses visible native controls and never starts automatically.
+7. Motion, if present, is subtle and respects the user's reduced-motion preference.
+8. If the global links block reveals extra detail in a compact state, that detail is also available on keyboard focus or activation.
 
-The shared navigation must use a `nav` element.
+### 3.3 Progressive Enhancement
+1. Reading, the site's global links block, image viewing, and audio playback work when scripting is unavailable.
+2. The generated site includes no JavaScript.
+3. The site does not depend on client-side routing, client-side rendering, or custom widgets to expose core content.
 
-The works index must use:
+### 3.4 Interoperability
+1. The site keeps public URLs stable for unchanged content across rebuilds.
+2. The homepage exposes an `h-card`.
+3. The homepage `h-card` maps the site title to `p-name`, the homepage canonical URL to `u-url`, and the site statement to `p-note`.
+4. Contact links and gift links stay as normal links. A `mailto:` contact link may also use `u-email`.
+5. Every work page exposes an `h-entry`.
+6. The work page `h-entry` maps the resolved title to `p-name`, the canonical URL to `u-url`, the created timestamp to `dt-published`, the summary to `p-summary` when one is present, and the main body content to `e-content`.
+7. Every work page declares its own canonical URL as canonical.
+8. The homepage exposes a discoverable RSS feed link.
+9. Internal links resolve correctly on a plain static host.
 
-- `h2` for section headings
-- an ordered list for section entries
-- one list item per work entry
-- a `time` element for dates when dates are shown
+## 4. Acceptance Checks
+1. Validate the generated pages as HTML5 documents.
+2. Navigate every page with the keyboard and confirm that all links and audio controls work, and that any extra detail in a compact global links block is available on focus or activation.
+3. Open the site with scripting disabled and confirm that reading, the site's global links block, and audio playback still work.
+4. Resize to `320px` width and zoom to `200%` and confirm that content remains readable and usable.
+5. Inspect the homepage and confirm that its `h-card` matches the required mapping.
+6. Inspect a work page and confirm that its `h-entry` matches the required mapping.
+7. Inspect a work page and confirm that it includes a canonical self-link.
+8. Inspect the homepage and confirm that it exposes a discoverable RSS feed link.
+9. Confirm that the generated output contains no JavaScript files, inline scripts, or script tags.
 
-## Accessibility
-
-The site must meet these minimum accessibility rules:
-
-- keyboard navigation must reach all interactive elements
-- focus states must remain clearly visible
-- text and essential UI must meet WCAG AA contrast targets
-- link text must describe the destination
-- heading levels must stay sequential
-
-The contact email must be a usable link.
-
-## Responsive Behavior
-
-The layout must remain usable from 320px wide screens upward.
-
-On narrow screens:
-
-- content must stay in a single column
-- navigation must remain readable without horizontal scrolling
-
-On wide screens:
-
-- work pages must preserve a narrow reading measure
-- large empty margins should support reading rather than create dead space
-
-## Motion
-
-Motion must remain restrained.
-
-Allowed motion is limited to brief CSS transitions on color, opacity, or border treatment.
-
-When `prefers-reduced-motion: reduce` is present, decorative transitions must be removed.
-
-## Performance
-
-Generated output must be static HTML and CSS only.
-
-The launch site should ship:
-
-- one primary CSS file
-- no JavaScript in generated output
-- optimized local assets when assets are present
-
-## Validation
-
-The implementation must validate:
-
-- required content fields
-- duplicate or missing slugs
-- works-index entries that reference missing works
-- broken internal links
-- valid HTML output
+## 5. Open Questions
+None.

@@ -1,67 +1,54 @@
 # Shape
 
-This file defines the launch website's structure: page URLs, page purposes, sections, navigation, and launch boundary.
+## 1. Purpose
+This document defines the user experience shape of the site.
 
-## Launch Pages
+## 2. Decisions Owned
+- The public page set
+- The content order on each page type
+- The site's global links block
+- The structure and ordering of the works index
+- The layout frame for work pages
 
-The launch site must define exactly three page types:
+## 3. Requirements
 
-- `/` is the homepage.
-- `/works/` is the works index.
-- `/works/<slug>/` is a work page.
+### 3.1 Public Pages
+1. The site publishes exactly three page types: `/`, `/works`, and `/<slug>`.
+2. The homepage acts as the cover and title page of the site.
+3. The works index acts as the table of contents for the site.
+4. Each work page presents one work within the site's layout frame.
+5. The site also publishes one non-HTML feed output at `/feed.xml`.
 
-## Homepage
+### 3.2 Global Links Block
+1. Every page includes the same global links block.
+2. The global links block contains a link to `/works`, plus the configured contact links and gift links.
+3. The global links block may use different presentation variants by page type, but it keeps the same destination set everywhere.
+4. The current location is apparent from the page structure and global links block treatment.
 
-The homepage must function as a cover/title page.
+### 3.3 Homepage
+1. The homepage main content contains only the site title, short statement, and a clear link to `/works`.
 
-It must contain:
+### 3.4 Works Index
+1. The works index uses the section order from `site.toml`.
+2. Works with no section, or with an unknown section id, appear in a final fallback section named `Other works`.
+3. Works are sorted newest first within each section. Ties are sorted by slug in ascending order.
+4. Each work entry links to `/<slug>` and shows its index label, creation date, and summary when one is present.
 
-- the site title
-- a short introduction
-- a primary link to `/works/`
-- the shared navigation
-- the shared footer
+### 3.5 Work Pages
+1. Every work page uses the same layout frame.
+2. The work page presents a work header before the body content.
+3. The work header includes the resolved title as the page-level heading, plus the creation date and summary when one is present.
+4. The main reading area contains either converted Markdown or authored HTML body content.
 
-It must also surface the featured work as a secondary link.
+## 4. Acceptance Checks
+1. Confirm that the spec defines only `/`, `/works`, and `/<slug>`.
+2. Confirm that the spec also defines a feed output at `/feed.xml`.
+3. Confirm that the homepage main content contains only the title-page content described in this document.
+4. Confirm that `/works` uses configured section order, appends `Other works` last, and places works without section metadata there.
+5. Confirm that `/`, `/works`, and `/<slug>` all include the global links block.
+6. Confirm that a work page includes a work header and body content.
+7. Confirm that the work header owns the page-level heading.
+8. Confirm that Markdown works and HTML works use the same layout frame.
 
-## Navigation
-
-The site must use one consistent navigation and footer pattern on every page.
-
-The header navigation must contain:
-
-- `Home`, linking to `/`
-- `Works`, linking to `/works/`
-
-The footer must contain:
-
-- the contact email defined in `kinds.md`
-- the support links defined in `kinds.md`
-
-Navigation labels are fixed for launch and must use `Home` and `Works`.
-
-## Works Index
-
-The works index must act as the site's table of contents.
-
-It must:
-
-- render section headings in the order defined by `works_index`
-- render work entries inside each section in the order defined by `works_index`
-- show each work's title as the primary link
-- show each work's summary with the title
-- show the published date when `published` is present
-
-The works index is the only launch page that groups multiple works.
-
-## Work Page
-
-Each work page must contain:
-
-- the work title
-- the work summary as a standfirst
-- the published date when `published` is present
-- the updated date when `updated` is present and differs from `published`
-- the body content
-- the shared navigation
-- the shared footer
+## 5. Open Questions
+None.
