@@ -4,7 +4,7 @@
 This document defines the web standards the site must meet in its generated output.
 
 ## 2. Decisions Owned
-- HTML semantics and landmark structure
+- HTML semantics and document metadata
 - Keyboard and focus behavior
 - Responsive and reduced-motion behavior
 - Progressive enhancement requirements
@@ -12,15 +12,17 @@ This document defines the web standards the site must meet in its generated outp
 
 ## 3. Requirements
 
-### 3.1 Markup
-1. Every public page is a valid HTML5 document with a declared document language.
-2. Every public page uses semantic landmarks, including `header`, `main`, and `footer`.
-3. Every public page contains one `main` landmark only.
-4. Pages use heading levels in order, starting with one page-level heading.
+### 3.1 Document Contract
+1. Every public HTML page is a valid HTML5 document with the document language set from the resolved site record defined in `bones.md`.
+2. Every public HTML page uses semantic landmarks (`header`, `main`, `footer`), with exactly one `main`.
+3. Pages use heading levels in order, starting with one page-level heading.
+4. The site's global links block is exposed as navigation markup.
 5. The works index uses list markup for work entries.
 6. Dates are rendered with a machine-readable `datetime` value in the timestamp type defined in `bones.md`, inside a `time` element.
 7. Figures, captions, quotations, and audio players use their native HTML elements when those content types appear.
-8. The site's global links block is exposed as navigation markup.
+8. The HTML `title` element uses the resolved site title on `/`, `Works | {resolved site title}` on `/works`, and `{resolved work title} | {resolved site title}` on work pages.
+9. Every public HTML page declares its own canonical URL as canonical.
+10. The `/works` link uses `aria-current="page"` on `/works` and omits `aria-current` on `/` and work pages.
 
 ### 3.2 Accessibility
 1. Every interactive element is reachable and usable with a keyboard alone.
@@ -30,34 +32,22 @@ This document defines the web standards the site must meet in its generated outp
 5. Informative images include alternative text in the rendered markup. Decorative images use empty alternative text.
 6. Audio uses visible native controls and never starts automatically.
 7. Motion, if present, is subtle and respects the user's reduced-motion preference.
-8. If the global links block reveals extra detail in a compact state, that detail is also available on keyboard focus or activation.
 
 ### 3.3 Progressive Enhancement
 1. Reading, the site's global links block, image viewing, and audio playback work when scripting is unavailable.
-2. The generated site includes no JavaScript.
-3. The site does not depend on client-side routing, client-side rendering, or custom widgets to expose core content.
+2. The shared site output includes no build-generated JavaScript and does not depend on client-side routing, client-side rendering, or custom widgets to expose core content. A work page may include explicit author-provided JavaScript in `index.html`.
+3. Site styling works from the shared site stylesheet without relying on scripting.
 
 ### 3.4 Interoperability
 1. The site keeps public URLs stable for unchanged content across rebuilds.
-2. The homepage exposes an `h-card`.
-3. The homepage `h-card` maps the site title to `p-name`, the homepage canonical URL to `u-url`, and the site statement to `p-note`.
-4. Contact links and gift links stay as normal links. A `mailto:` contact link may also use `u-email`.
-5. Every work page exposes an `h-entry`.
-6. The work page `h-entry` maps the resolved title to `p-name`, the canonical URL to `u-url`, the created timestamp to `dt-published`, the summary to `p-summary` when one is present, and the main body content to `e-content`.
-7. Every work page declares its own canonical URL as canonical.
-8. The homepage exposes a discoverable RSS feed link.
-9. Internal links resolve correctly on a plain static host.
+2. The homepage exposes an `h-card` mapping: resolved site title to `p-name`, homepage canonical URL to `u-url`, and resolved site statement to `p-note`. Contact links and gift links stay as normal links. A `mailto:` contact link may also use `u-email`.
+3. Every work page exposes an `h-entry` mapping: resolved title to `p-name`, resolved work canonical URL to `u-url`, created timestamp to `dt-published`, summary to `p-summary` when one is present, and the main body content to `e-content`.
+4. The homepage includes `<link rel="alternate" type="application/rss+xml" href="/feed.xml">`.
+5. Internal links resolve correctly on a plain static host.
 
 ## 4. Acceptance Checks
-1. Validate the generated pages as HTML5 documents.
-2. Navigate every page with the keyboard and confirm that all links and audio controls work, and that any extra detail in a compact global links block is available on focus or activation.
-3. Open the site with scripting disabled and confirm that reading, the site's global links block, and audio playback still work.
-4. Resize to `320px` width and zoom to `200%` and confirm that content remains readable and usable.
-5. Inspect the homepage and confirm that its `h-card` matches the required mapping.
-6. Inspect a work page and confirm that its `h-entry` matches the required mapping.
-7. Inspect a work page and confirm that it includes a canonical self-link.
-8. Inspect the homepage and confirm that it exposes a discoverable RSS feed link.
-9. Confirm that the generated output contains no JavaScript files, inline scripts, or script tags.
+1. Build `agent_docs/examples/minimal-markdown` and `agent_docs/examples/html-work`, then validate the generated output against the requirements in this document with HTML validation, keyboard-only navigation, scripting disabled, and a narrow viewport.
+2. Inspect `/`, `/works`, and one work page from those examples and confirm that the required microformat mappings, canonical link, and RSS feed link are present.
 
 ## 5. Open Questions
 None.

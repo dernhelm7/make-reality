@@ -1,0 +1,14 @@
+url = "https://labyrinth.example"
+lang = "en"
+title = "Labyrinth"
+statement = "A room for poems, projects, and notes."
+
+[[contact_links]]
+label = "Email"
+href = "mailto:hello@labyrinth.example"
+
+[[gift_links]]
+label = "Gift"
+href = "https://gifts.example/labyrinth"
+
+sections = []

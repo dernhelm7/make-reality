@@ -2,6 +2,8 @@
 
 ## Goal
 Write a spec in 'agent_docs/' for my site which can be implemented by LLM coding agents.
+Use `README.md` in this folder and this plan as the governing inputs for that spec.
+Keep the spec itself in `agent_docs/`.
 
 There's a main page, with contact and gift links.
 There's an index of works with subheadings I can customize.
@@ -10,25 +12,27 @@ There's a folder where I can add new works, and it will be shown in the index of
 ## Scopes 
 
 ### web-rules.md
-- Specify the web standards the site must meet: accessibility, progressive enhancement, and interoperability constraints that the other docs must conform to.
+- Specify the generated web standards for the published output: accessibility, progressive enhancement, semantics, and interoperability.
 
 ### shape.md
-- Specify the UX: relationships among pages, internal page structure, and navigation.
+- Specify the page relationships, page structure, and navigation.
 
 ### bones.md
-- Specify the content model: what a work is, what metadata it carries, and how content and assets are organized.
+- Specify the site and work content models: what the site and a work are, what metadata they carry, and how defaults and overrides work.
 
 ### look.md
-- Specify the UI; the visual system for the site.
+- Specify the visual system.
 
 ### build.md
-- Specify how the site is built.
+- Specify the build process, outputs, and validation behavior.
 
 ## Guidance
 
-- Use `aim.md` to understand product intent. Clarify open questions.
-- Make each file a self-contained contract for its own decision scope.
-- Use a standard format: Purpose, Decisions Owned, Requirements, Acceptance Checks, and Open Questions.
+- Use the Aim section in `README.md` to understand product intent. Clarify open questions.
+- Make each file the source of truth for its own decision scope.
+- When one doc needs a concept owned by another doc, refer to that doc instead of redefining it.
+- If a requirement could fit in more than one doc, assign it once to the narrowest scope and have the other docs use it.
+- Use a standard format: Purpose, Decisions Owned, Requirements, Acceptance Checks.
 - Use direct, positive language; state what the site does. Reserve negative requirements for constraints and explicit exceptions.
 - Use traditional section numbering.
 - Write testable requirements.

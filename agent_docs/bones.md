@@ -1,92 +1,93 @@
 # Bones
 
 ## 1. Purpose
-This document defines the content model for the site.
+This document defines the source model for the site and the resolved site and work models the build uses everywhere else.
 
 ## 2. Decisions Owned
+- The required source inputs
 - The structure of `site.toml`
+- The resolved site model
 - The structure of `works/<slug>/`
-- The timestamp type
+- The stored and visible date forms
 - Work metadata fields
-- Supported source formats for works
-- Supported media
-- Override and fallback behavior for derived data
+- Derived defaults
+- Supported source formats, local assets, and wikilinks
 
 ## 3. Requirements
 
-### 3.1 Site-Level Config
-1. The site root contains one `site.toml` file.
-2. `site.toml` defines these top-level fields:
+### 3.1 Source Root
+1. The site root contains one `site.toml` file and one `works/` directory.
+2. The build treats every direct child folder of `works/` as one candidate work.
+
+### 3.2 Site Config
+1. `site.toml` requires these top-level fields:
    - `url`: the canonical site base URL as an absolute URL with no trailing slash
+   - `lang`: the document language as a BCP 47 language tag
    - `title`: the site title as a string
    - `statement`: the one-line site statement as a string
    - `contact_links`: an ordered list of links
    - `gift_links`: an ordered list of links
-   - `sections`: an ordered list of works sections
-3. Each entry in `contact_links` and `gift_links` contains `label` and `href`.
-4. Each entry in `sections` contains:
-   - `id`: the stable section key used by work metadata
+   - `sections`: a list of works sections
+2. Each entry in `contact_links` and `gift_links` contains `label` and `href`.
+3. Each entry in `sections` contains:
+   - `number`: unique section number used by work metadata and section order
    - `title`: the reader-facing section title shown on `/works`
-5. `sections` may be empty. When it is empty, all works appear in `Other works`.
+4. `contact_links` and `gift_links` each contain at least one link. `sections` may be empty.
 
-### 3.2 Work Folder Structure
-1. Each work lives in its own folder at `works/<slug>/`.
-2. The folder name is the public slug and is published at `/<slug>`.
-3. A slug uses lowercase letters, numbers, and hyphens only.
-4. Each work folder contains exactly one main source file:
-   - `index.md` for a Markdown work
-   - `index.html` for an HTML work
-5. Each work folder contains `meta.toml` for metadata.
-6. A work folder may also contain:
-   - `work.css` for page-specific styles
-   - local asset files referenced by the work
-7. A work folder may not contain both `index.md` and `index.html`.
+### 3.3 Resolved Site Model
+1. The build resolves `site.toml` into one site record with these fields: canonical URL, document language, title, statement, ordered contact links, ordered gift links, and sections ordered by ascending section number.
+2. The resolved site record is the source of truth for the homepage content, the global links block, the works index section order, the feed channel metadata, and site-wide document metadata.
 
-### 3.3 Timestamp Type
-1. The site uses one timestamp type for stored timestamps and for machine-readable timestamps in HTML.
-2. The timestamp type is a UTC RFC 3339 timestamp formatted as `YYYY-MM-DDTHH:MM:SSZ`.
+### 3.4 Work Folder Structure
+1. Each work lives in `works/<slug>/`. The folder name is the public slug; the work is published at `/<slug>`.
+2. A slug uses lowercase letters, numbers, and hyphens only and must not use a reserved top-level path. Reserved: `works`.
+3. Each work folder contains exactly one main source file (`index.md` for Markdown, `index.html` for HTML), `meta.toml`, optionally `work.css`, and optionally local asset files named by the work body. It may not contain both `index.md` and `index.html`.
 
-### 3.4 Work Metadata
+### 3.5 Stored And Visible Dates
+1. The timestamp type is a UTC RFC 3339 timestamp formatted as `YYYY-MM-DDTHH:MM:SSZ`, used for stored timestamps and machine-readable timestamps in HTML.
+2. Visible dates are derived from the stored timestamp and rendered in UTC as a full month name, day number, and four-digit year, for example `February 14, 2020`.
+
+### 3.6 Work Metadata
 1. `meta.toml` requires `created`.
 2. `created` uses the timestamp type.
 3. `meta.toml` may also define:
-   - `title`
-   - `summary`
-   - `section`
-   - `index_title`
-4. `summary` is a short plain-language summary used on the work page and the works index.
-5. `section` matches a `sections[].id` value from `site.toml`.
-6. `index_title` overrides the work label shown on `/works` only.
+   - `title`: derived from the slug when it is absent
+   - `summary`: a short plain-language summary shown on the work page and the works index
+   - `section`: names the preferred section for the work by section number
+   - `index_title`: overrides the work label shown on `/works` only
 
-### 3.5 Derived Defaults
+### 3.7 Resolved Work Model
 1. The resolved slug comes from the work folder name.
-2. When `title` is not set, the build derives it by replacing hyphens with spaces and title-casing the words.
-3. When `index_title` is not set, the works index uses the resolved `title`.
+2. The resolved canonical URL joins the resolved site canonical URL with `/<slug>`.
+3. When `title` is not set, the build derives it by replacing hyphens with spaces and title-casing the words.
+4. When `index_title` is not set, the works index uses the resolved `title`.
+5. When `section` names a configured section number, section placement uses that section.
+6. When `section` is missing, names no configured section, or `sections` is empty, section placement uses the final fallback section named `Other works`.
+7. Each valid work resolves to one record with these reader-facing fields: slug, canonical URL, title, index label, created timestamp, visible date, summary, and section placement. This record is the source of truth for work pages, works index entries, feed items, and wikilink resolution.
 
-### 3.6 Source Formats And Media
+### 3.8 Source Formats And Local Media
 1. `index.md` uses CommonMark as its base syntax.
 2. Supported wikilinks in `index.md` are `[[Note]]` and `[[Note|Label]]`.
-3. A wikilink target matches a published work when the target, normalized with the site's slug rules, equals the work slug.
-4. When a wikilink target matches a published work, the build rewrites it to that work's canonical URL.
-5. When a wikilink target does not match a published work, the build keeps the visible label text and removes the hyperlink.
-6. Supported content includes text, links, images, captions, and native audio.
-7. `work.css` applies to its own work page only.
-8. Local asset files stay beside the work source so each work is self-contained.
+3. To normalize a wikilink target, the build lowercases it, replaces spaces and underscores with hyphens, removes characters other than lowercase letters, numbers, and hyphens, collapses repeated hyphens, and trims leading and trailing hyphens. A target matches a published work when its normalized form equals the work slug.
+4. These normalization examples define the expected result:
 
-### 3.7 Override Rules
-1. Explicit metadata overrides derived defaults.
-2. An explicit `section` value places a work in that configured section when the section exists.
+   | Input | Normalized |
+   | --- | --- |
+   | `Folded Map` | `folded-map` |
+   | `__note__` | `note` |
+   | `café` | `caf` |
+
+5. When a wikilink target matches a published work, the build rewrites it to that work's canonical URL. When it does not match, the build keeps the visible label text and removes the hyperlink.
+6. Authored `index.html` provides body content for that work page. It may not use `h1`. It may include author-provided JavaScript.
+7. `work.css` may define work-specific CSS for that work page.
+8. Local asset files stay beside the work source so each work is self-contained.
+9. The work body names each local asset file it uses.
+10. A local asset file is publishable when the work body references it and the file is in the same work folder.
 
 ## 4. Acceptance Checks
-1. Confirm that `site.toml` matches the required fields.
-2. Confirm that a work folder matches the required and optional files.
-3. Confirm that the timestamp type is defined once and used for `created` and other machine-readable timestamps.
-4. Confirm that a work with `meta.toml` containing only `created` still resolves a root-level public slug, title, and created timestamp.
-5. Confirm that a work with no `created` fails validation.
-6. Confirm that a derived title is made by replacing hyphens with spaces and title-casing the words.
-7. Confirm that `index_title` changes the label on `/works` without changing the page title.
-8. Confirm that `index.md` supports CommonMark plus wikilinks.
-9. Confirm that images and native audio are part of the supported content set.
+1. Build `agent_docs/examples/minimal-markdown` and confirm that `site.toml` resolves to one site record and that the work resolves to the values listed in `expected.md`, including derived defaults.
+2. Build `agent_docs/examples/metadata-overrides` and `agent_docs/examples/section-fallback` and confirm that explicit metadata and fallback section placement resolve to the values listed in each `expected.md`.
+3. Build `agent_docs/examples/wikilinks-and-assets` and confirm that wikilinks and publishable local assets resolve according to `expected.md`.
 
 ## 5. Open Questions
 None.
