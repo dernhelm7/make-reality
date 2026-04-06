@@ -1,7 +1,7 @@
 # Look
 
 ## Purpose
-This document says how the site feels to read.
+Specify how the site looks.
 
 ## Decisions Owned
 - The overall visual direction

@@ -1,20 +1,27 @@
 # Build
 
 ## Purpose
-This document says how site files become the published site.
+Specify how to generate the static site from source files.
 
 ## Decisions Owned
-- How the build is run
+- What the author runs
+- What the build reads
+- Where the build writes
 - What the build publishes
+- What the build validates
 - What the build says when it fails
 
 ## Requirements
-1. The project has one documented local build command.
-2. That command turns the site files into a plain static site.
-3. The same input gives the same output and clears stale output.
-4. The build publishes the files the site needs and leaves authoring files out.
-5. When the build fails, it says why.
+1. The project defines one local build command.
+2. That command reads one site root.
+3. That command writes one publish root and removes stale published files from it.
+4. The publish root contains only public site files: HTML pages, `/feed.xml`, one shared stylesheet, referenced author assets needed by published pages, and no build-generated JavaScript.
+5. The publish root leaves out source-only files and build-only files.
+6. The build validates required content fields, duplicate published paths, missing work references, and broken internal links.
+7. The same site root produces the same publish root and public paths.
+8. On failure, the build stops and reports the file and rule that caused the failure.
 
 ## Acceptance Checks
-1. Run the documented build against the full-output examples and compare each result with its `expected.md`.
-2. Build one unchanged example twice and confirm the output does not change.
+1. Run the documented build against the full-output examples and inspect the publish root against each `expected.md`.
+2. Build one unchanged example twice and compare the publish roots.
+3. Run the named validation cases for build failures in `agent_docs/examples/validation-severity.md`.

@@ -1,7 +1,5 @@
 Read [[Garden Path]] before dusk. The old survey also lives at [Archive Atlas](https://archive.example/atlas).
 
-![Lantern](lantern.svg)
-
 # Materials
 
 Carry a lamp and chalk.
