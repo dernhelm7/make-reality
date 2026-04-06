@@ -4,9 +4,8 @@ This folder contains canonical source fixtures, expected outcomes, and one valid
 
 Each fixture directory is one self-contained site root plus one `expected.md` file that records the observable outcome the build must produce.
 
-The main docs own the product rules. These examples pin those rules to named cases and concrete outcomes.
 Examples may show one accepted file layout, naming convention, or created-date shape. Treat those as concrete examples unless a main spec doc makes them a general requirement.
-Each `expected.md` should record only the fixture-specific outcomes worth checking. Do not use an example as the only copy of a product rule.
+Each `expected.md` should record only the exact outcomes worth checking for its fixture. Do not restate generic success or common output files unless the fixture adds a distinct case.
 
 Keep each example small and focused. When a rule changes, update the owning spec and the affected example in the same change.
 

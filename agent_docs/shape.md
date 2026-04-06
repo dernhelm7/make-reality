@@ -28,7 +28,7 @@ Specify relationships and flow of use by author and reader.
 ## Micro-Features
 - `Heading self-links`: Each body heading gets an id from its visible text and a self-link.
 - `Content nav sidebar`: Two or more top-level body headings add a Contents sidebar with links based on headings.
-- `wikilinks`: A `[[...]]` link that matches a work becomes a link to that work's published path. A label in the link becomes the visible text. A link with no matching work becomes plain text.
+- `wikilinks`: A `[[...]]` link is a soft reference to a work. If it matches a work, link to that work's published path. A label in the link becomes the visible text. If it does not match a work, render plain text.
 - `Backlinks`: A work-to-work link adds the source work title to a backlinks section on the destination work page. The backlinks section appears after the body content.
 
 ## Acceptance Checks

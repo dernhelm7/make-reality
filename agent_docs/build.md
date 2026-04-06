@@ -15,9 +15,9 @@ Specify how to generate the static site from source files.
 1. The project defines one local build command.
 2. That command reads one site root.
 3. That command writes one publish root and removes stale published files from it.
-4. The publish root contains only public site files: HTML pages, `/feed.xml`, one shared stylesheet, referenced author assets needed by published pages, and no build-generated JavaScript.
+4. The publish root contains only public site files: HTML pages, `/feed.xml`, one shared stylesheet, and no build-generated JavaScript.
 5. The publish root leaves out source-only files and build-only files.
-6. The build validates required content fields, duplicate published paths, missing work references, and broken internal links.
+6. The build validates required content fields, duplicate published paths, and broken explicit internal links written by the author. Unmatched wikilinks do not fail the build.
 7. The same site root produces the same publish root and public paths.
 8. On failure, the build stops and reports the file and rule that caused the failure.
 

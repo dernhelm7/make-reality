@@ -7,31 +7,32 @@ Keep the spec itself in `agent_docs/`.
 
 The site has a homepage with contact and gift links.
 The site has a works index with section headings I can customize.
-When I add a new work in the works area, it should appear in the index automatically. Each work uses its folder name, publishes at `/<folder-name>`, and carries an explicit created date. A work may name one section from the site config.
+When I add a new work in the works area, it should appear in the index automatically. Each work uses its folder name, published at `/<folder-name>`. A work may name one section from the site config.
 Work pages need linked body headings, a generated section index, work-to-work links, backlinks, and external link treatment readers can distinguish without relying on color alone.
 
 ## Scopes 
 
 ### web-rules.md
-- Accessibility and interoperability supporting rules
+- Specify accessibility and interoperability standards
 
 ### shape.md
-- Relationships and flow of use by author and reader: UX
+- Describe the relationships among elements and general UX
 
 ### look.md
-- Appearance: UI
+- Describe the UI
 
 ### build.md
 - Generate the static site
 
+## Structure
+
+- `plan.md` assigns scope and decision ownership.
+- The scope docs in `agent_docs/` define the overview requirements for each scope.
+- The examples in `agent_docs/examples/` define exact behavior and expected outcomes for unusual behavior, specific preferences, and edge cases.
+- Read a scope doc and its examples together.
+
 ## Acceptance Criteria
-- Adding a work is enough to make it show up on the site.
-- Public page types are defined for the homepage, the works index, individual work pages, and the feed.
-- Contact and gift links are available.
-- Section names and short published paths are defined.
-- Work pages define body heading links, generated section indexes, work-to-work links, and backlinks.
-- External links are distinguishable from internal work links without relying on color alone.
-- Each doc is a complete set of instructions for its own scope.
-- Each requirement is defined in only one place.
-- The spec supports adding works after launch.
-- `build.md` is enough to define code that handles local build and publication .
+- Review the `Goal` section against `web-rules.md`, `shape.md`, `look.md`, and `build.md`.
+- Review `agent_docs/examples/README.md` coverage groups and named fixtures against those scope docs.
+- Each scope has one owning doc.
+- The scope docs and examples agree.
