@@ -7,13 +7,14 @@ This file sets general policy for agents working on this repo.
 "Do less, do it better."
 
 - Use plain English.
-- Say what to do. Fix issues by rewriting so correct behavior is the default. The rewrite is the prevention. Use a negative instruction only if the contrast removes ambiguity.
+- Say what to do. Change the structure so correct behavior is the default. Use a negative instruction only if the contrast removes ambiguity.
 - Check the repo before assuming what exists.
-- Take product decisions from the files in `agent_docs/`.
 - Update the spec to keep it aligned with the code.
 - Keep this file repo-wide; put narrower guidance closer to the work.
-- Fix root causes, not symptoms
-- When editing, restate the central idea more efficiently. Don't cut. Distill.
+- Solve the right problem. Fix the origin, not the output.
+- Follow the grain of the problem. Work with the natural structure.
+- Frame the central idea efficiently. Don't just cut extra words. Distill the essence.
+- In specs and plans, describe what changes what. Use concrete nouns, name the action or choice that changes the outcome, and stop once you have named the lever that matters. Do not pad it out with theory, inventories, or obvious consequences.
 
 
 ## Standards
@@ -22,10 +23,9 @@ Apply these standards to planning, specification, and implementation.
 
 - Choose the simplest design that meets the need.
 - Keep sections, functions, and modules small and focused.
-- Add abstraction only when repetition or expected change justifies it.
-- Validate close to the source and fail with clear, actionable errors.
+- Add abstraction only when necessary. If edge cases multiply, work at a better level of abstraction.
+- Make robustness a consequence of the design. Prefer designs where bad states cannot be constructed over designs that only detect or reject them later.
 - When behavior is unclear, degrade gracefully or stop cleanly.
-- When behavior is unspecified, make the smallest reasonable choice and mark it as a guess.
 
 ## Read Order
 
@@ -43,6 +43,8 @@ Apply these standards to planning, specification, and implementation.
 
 - Run the most relevant local validation commands that already exist in the repo before finishing.
 - For spec-only changes, review the affected docs and examples for duplicated or conflicting requirements.
+- Do not restate requirements in validation or acceptance checks.
+- If `Requirements` or an example's `expected.md` already defines the outcome, name the fixture, command, page, or inspection method instead of repeating the behavior. Spell behavior out only when the check adds a cross-document integration case, a failure mode, or a distinct verification method.
 - If a task changes acceptance behavior, update the affected acceptance checks and example expectations in the same change.
 
 ## Done Means

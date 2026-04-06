@@ -11,4 +11,4 @@ href = "mailto:hello@labyrinth.example"
 label = "Gift"
 href = "https://gifts.example/labyrinth"
 
-sections = ["Poems"]
+sections = ["Essays", "Projects"]

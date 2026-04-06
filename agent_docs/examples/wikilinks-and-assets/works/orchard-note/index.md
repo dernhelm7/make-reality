@@ -1,5 +1,5 @@
 # Orchard
 
-See [[Garden Path]] and [[Missing Note|Elsewhere]].
+See [[Garden Path]], [[__Garden_Path__|Mapped]], [[Café|Cafe]], and [[Missing Note|Elsewhere]].
 
 ![Lantern](lantern.svg)

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Samples (Exploratory) — Labyrinth</title>
+<link rel="stylesheet" href="https://edwardtufte.github.io/et-book/et-book.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root { --vt: #0a7c80; --ink: #1c1a17; --page: #fffff8; }
+
+/* CSS-only custom cursor */
+.cursor-demo, .cursor-demo * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M4 24 L6 14 L14 4 L20 10 Z' fill='%23fffff8' stroke='%231c1a17' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M14 4 L20 10 L17 7 Z' fill='%231c1a17'/%3E%3Cline x1='6' y1='14' x2='13' y2='7' stroke='%231c1a17' stroke-width='1'/%3E%3C/svg%3E") 4 4, auto;
+}
+
+body {
+  background: #dedad2;
+  color: var(--ink);
+  font-family: et-book, Georgia, serif;
+  padding: 3rem 2rem 8rem;
+  line-height: 1.5;
+}
+
+.label {
+  font-family: system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 0.75rem;
+}
+
+.section { margin-bottom: 5rem; }
+.section + .section { border-top: 1px solid #bbb; padding-top: 4rem; }
+.section > .label { font-size: 0.8rem; margin-bottom: 2rem; }
+.row { display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start; }
+
+/* ── Page mock ── */
+.page {
+  background: var(--page);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 2px;
+  padding: 3rem 3.5rem 3.5rem;
+  width: 500px;
+  font-family: et-book, Georgia, serif;
+  color: var(--ink);
+}
+.page.wide { width: 700px; }
+
+.nav { font-size: 0.78rem; margin-bottom: 3.5rem; display: flex; gap: 1.5rem; align-items: baseline; }
+.nav a { text-decoration: none; color: var(--vt); }
+.site-name { font-size: 0.78rem; font-weight: 400; letter-spacing: 0.04em; margin-right: auto; color: var(--vt); }
+
+.h1    { font-size: 2.6rem; line-height: 1.12; font-weight: 400; margin-bottom: 0.5rem; }
+.h1.xl { font-size: 3.4rem; }
+.h1.sm { font-size: 1.8rem; }
+.subtitle { font-size: 1.05rem; line-height: 1.5; font-style: italic; opacity: 0.6; margin-bottom: 2rem; }
+.body     { font-size: 1.05rem; line-height: 1.68; max-width: 58ch; margin-bottom: 1rem; }
+.meta     { font-size: 0.78rem; opacity: 0.45; letter-spacing: 0.02em; }
+.rule     { border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 1.5rem 0; }
+.rule.vt  { border-color: var(--vt); }
+.links    { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: 2rem; font-size: 0.82rem; }
+.links a  { text-decoration: none; border-bottom: 1px solid var(--vt); padding-bottom: 1px; color: var(--vt); }
+
+.toc-section { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--vt); margin: 1.5rem 0 0.4rem; }
+.toc-entry   { display: flex; justify-content: space-between; align-items: baseline; padding: 0.35rem 0; border-bottom: 1px solid rgba(0,0,0,0.07); font-size: 1rem; }
+.toc-entry a { text-decoration: none; color: var(--ink); }
+.toc-date    { font-size: 0.75rem; opacity: 0.4; font-style: italic; }
+
+/* ── Tufte layout mock ── */
+.tufte-wrap {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 2rem;
+  align-items: start;
+}
+.tufte-body { max-width: 55ch; }
+.sidenotes-col { padding-top: 0.2rem; }
+.sidenote {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ink);
+  opacity: 0.65;
+  border-left: 1px solid var(--vt);
+  padding-left: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.sidenote-marker {
+  color: var(--vt);
+  font-size: 0.7rem;
+  vertical-align: super;
+  margin-right: 0.15em;
+}
+
+/* ── Link icon microfeature ── */
+/* External links get a small arrow after them — CSS only */
+.link-icons a[href^="http"]::after {
+  content: " ↗";
+  font-size: 0.7em;
+  color: var(--vt);
+  opacity: 0.7;
+}
+.link-icons a[href^="/feed"]::after,
+.link-icons a[href$=".xml"]::after {
+  content: " ⌁";
+  font-size: 0.75em;
+  color: var(--vt);
+  opacity: 0.7;
+}
+
+/* ── CSS animations (no JS, no library) ── */
+
+/* Ring spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+.css-ring {
+  width: 22px; height: 22px;
+  border: 2px solid rgba(10,124,128,0.2);
+  border-top-color: var(--vt);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Waveform bars */
+@keyframes bar-wave {
+  0%, 100% { transform: scaleY(0.3); }
+  50%       { transform: scaleY(1); }
+}
+.css-waveform {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+}
+.css-waveform span {
+  display: block;
+  width: 3px;
+  height: 100%;
+  background: var(--vt);
+  border-radius: 1px;
+  transform-origin: center;
+  animation: bar-wave 0.9s ease-in-out infinite;
+}
+.css-waveform span:nth-child(1) { animation-delay: 0.00s; }
+.css-waveform span:nth-child(2) { animation-delay: 0.10s; }
+.css-waveform span:nth-child(3) { animation-delay: 0.20s; }
+.css-waveform span:nth-child(4) { animation-delay: 0.30s; }
+.css-waveform span:nth-child(5) { animation-delay: 0.20s; }
+.css-waveform span:nth-child(6) { animation-delay: 0.10s; }
+
+/* Dot pulse */
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.2; transform: scale(0.75); }
+  50%       { opacity: 1;   transform: scale(1); }
+}
+.css-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.css-dots span {
+  display: block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--vt);
+  animation: dot-pulse 1.2s ease-in-out infinite;
+}
+.css-dots span:nth-child(1) { animation-delay: 0.00s; }
+.css-dots span:nth-child(2) { animation-delay: 0.20s; }
+.css-dots span:nth-child(3) { animation-delay: 0.40s; }
+
+/* SVG animated ring (SMIL — no JS) */
+/* shown inline in the SVG below */
+
+/* Line spinner via SVG */
+/* shown inline */
+
+/* ── Teaching piece ── */
+.teaching-wrap { background:var(--page); border:1px solid rgba(0,0,0,0.08); border-radius:2px; width:680px; font-family:et-book,Georgia,serif; color:var(--ink); overflow:hidden; }
+.teaching-nav { display:flex; align-items:center; padding:1rem 2rem; border-bottom:1px solid rgba(0,0,0,0.08); font-size:0.78rem; }
+.teaching-nav .progress { margin-left:auto; display:flex; align-items:center; gap:0.75rem; opacity:0.5; }
+.teaching-nav .progress span { font-size:0.72rem; font-family:system-ui,sans-serif; }
+.pip-row { display:flex; gap:4px; }
+.pip { width:6px; height:6px; border-radius:50%; background:rgba(0,0,0,0.15); }
+.pip.done   { background:var(--vt); }
+.pip.active { background:var(--vt); opacity:0.5; }
+.teaching-body { display:flex; min-height:420px; }
+.diagram-panel { flex:1; display:flex; align-items:center; justify-content:center; padding:2.5rem; border-right:1px solid rgba(0,0,0,0.06); background:rgba(0,0,0,0.012); }
+.text-panel { width:240px; flex-shrink:0; padding:2.5rem 2rem; display:flex; flex-direction:column; justify-content:space-between; }
+.term-name { font-size:1.8rem; font-weight:400; line-height:1.15; margin-bottom:0.75rem; }
+.term-alt  { font-size:0.75rem; font-style:italic; opacity:0.45; margin-bottom:1.5rem; }
+.term-def  { font-size:0.92rem; line-height:1.65; opacity:0.85; flex-grow:1; margin-bottom:2rem; }
+.card-nav  { display:flex; justify-content:space-between; }
+.card-nav button { background:none; border:1px solid rgba(0,0,0,0.15); border-radius:2px; padding:0.35rem 0.85rem; font-family:et-book,Georgia,serif; font-size:0.82rem; cursor:pointer; color:var(--ink); transition:border-color 0.15s; }
+.card-nav button:hover { border-color:var(--vt); color:var(--vt); }
+.card-nav button.primary { background:var(--vt); border-color:var(--vt); color:var(--page); }
+.teaching-footer { border-top:1px solid rgba(0,0,0,0.06); padding:0.85rem 2rem; display:flex; align-items:center; gap:0.75rem; font-size:0.78rem; opacity:0.5; }
+.diagram-svg { overflow:visible; }
+.guide-line  { stroke:rgba(0,0,0,0.12); stroke-width:1; stroke-dasharray:4 3; }
+.guide-label { font-family:system-ui,sans-serif; font-size:10px; fill:rgba(0,0,0,0.4); letter-spacing:0.06em; text-transform:uppercase; }
+.letter-glyph { font-family:et-book,Georgia,serif; fill:var(--ink); }
+</style>
+</head>
+<body>
+<!-- Exploratory sketches only. Non-normative. The implementation contract lives in agent_docs/. -->
+
+<!-- ════════════════════════════════════════
+     0 · COLOR
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="label">0 — Color</div>
+  <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+    <div>
+      <div style="width:110px;height:64px;background:#fffff8;border:1px solid rgba(0,0,0,0.1);border-radius:3px;display:flex;align-items:flex-end;padding:5px 7px;"><span style="font-family:monospace;font-size:0.6rem;opacity:0.55;">#fffff8</span></div>
+      <div class="label" style="margin-top:0.4rem;">Page</div>
+    </div>
+    <div>
+      <div style="width:110px;height:64px;background:#1c1a17;border:1px solid rgba(0,0,0,0.1);border-radius:3px;display:flex;align-items:flex-end;padding:5px 7px;"><span style="font-family:monospace;font-size:0.6rem;color:#fffff8;opacity:0.5;">#1c1a17</span></div>
+      <div class="label" style="margin-top:0.4rem;">Ink</div>
+    </div>
+    <div>
+      <div style="width:110px;height:64px;background:#0a7c80;border:1px solid rgba(0,0,0,0.1);border-radius:3px;display:flex;align-items:flex-end;padding:5px 7px;"><span style="font-family:monospace;font-size:0.6rem;color:#fff;opacity:0.5;">#0a7c80</span></div>
+      <div class="label" style="margin-top:0.4rem;">Velvet teal</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+      <div style="display:flex;gap:0.4rem;">
+        <div style="width:48px;height:32px;background:#085f62;border-radius:2px;" title="#085f62 — hover/active"></div>
+        <div style="width:48px;height:32px;background:#0a7c80;border-radius:2px;" title="#0a7c80 — base"></div>
+        <div style="width:48px;height:32px;background:#0e9ea3;border-radius:2px;" title="#0e9ea3 — lighter"></div>
+      </div>
+      <div class="label">Dark · Base · Light</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     1 · HOMEPAGE
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="label">1 — Homepage · left-aligned title page</div>
+  <div class="row">
+    <div class="page">
+      <nav class="nav">
+        <span class="site-name">Labyrinth</span>
+        <a href="#">Works</a><a href="#">Contact</a>
+      </nav>
+      <h1 class="h1 xl">Your Name</h1>
+      <p class="subtitle">Writing, projects, and other small things.</p>
+      <hr class="rule vt">
+      <div class="links"><a href="#">Email</a><a href="#">Gift</a><a href="#">RSS</a></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     2 · WORKS INDEX · flat scannable list
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="label">2 — Works index · flat scannable list</div>
+  <div class="row">
+    <div class="page">
+      <nav class="nav">
+        <span class="site-name">Labyrinth</span>
+        <a href="#" aria-current="page" style="color:var(--vt); border-bottom:1px solid var(--vt); padding-bottom:1px;">Works</a>
+        <a href="#">Contact</a>
+      </nav>
+      <h1 class="h1 sm" style="margin-bottom:1.5rem;">Works</h1>
+      <div class="toc-section">Poetry</div>
+      <div class="toc-entry"><a href="#">First Room</a><span class="toc-date">Mar 2025</span></div>
+      <div class="toc-entry"><a href="#">Night Walk</a><span class="toc-date">Jan 2025</span></div>
+      <div class="toc-section">Projects</div>
+      <div class="toc-entry"><a href="#">The Folded Map</a><span class="toc-date">Nov 2024</span></div>
+      <div class="toc-entry"><a href="#">Orchard Note</a><span class="toc-date">Sep 2024</span></div>
+      <div class="toc-section">Art</div>
+      <div class="toc-entry"><a href="#">Garden Path</a><span class="toc-date">Jun 2024</span></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     3 · READING PAGE · Tufte layout
+     narrow body + sidenote margin
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="label">3 — Work page · Tufte layout · sidenote margin</div>
+  <div class="row">
+    <div class="page wide">
+      <nav class="nav">
+        <span class="site-name">Labyrinth</span>
+        <a href="#">Works</a><a href="#">Contact</a>
+      </nav>
+      <p class="meta" style="margin-bottom:0.4rem;">Essay · November 2024</p>
+      <h1 class="h1" style="margin-bottom:2rem;">The Folded Map</h1>
+      <hr class="rule vt" style="margin-bottom:2rem;">
+
+      <div class="tufte-wrap">
+        <div class="tufte-body">
+          <p class="body">There is a way of reading a place that has nothing to do with being there.<span class="sidenote-marker">1</span> You fold the map until only one square shows, and you study it until you know it better than the territory it describes.</p>
+          <p class="body" style="margin-top:1.25rem;">The map is always a more forgiving version of the land. It does not have weather. It does not have the sun in your eyes or the sound of the river you cannot see from where you are standing.<span class="sidenote-marker">2</span></p>
+          <p class="body" style="margin-top:1.25rem;">To read a map is to read a theory of a place. And like all theories, it is most useful precisely where it is most wrong.</p>
+        </div>
+        <div class="sidenotes-col">
+          <div class="sidenote"><span class="sidenote-marker">1</span> Rebecca Solnit makes a version of this argument in <em>A Field Guide to Getting Lost</em>.</div>
+          <div class="sidenote" style="margin-top:3rem;"><span class="sidenote-marker">2</span> The Ordnance Survey maps of Ireland famously omit the sound of the sea.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     4 · LINK MICROFEATURES
+     Per-destination icons, CSS only
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="label">4 — Link microfeatures · CSS-only per-destination icons</div>
+  <div class="page link-icons" style="width:auto; display:inline-block; min-width:400px;">
+    <p class="body">
+      Internal links look plain: <a href="/works">Works index</a>.<br>
+      External links get an arrow: <a href="https://edwardtufte.github.io/tufte-css/">Tufte CSS</a> and <a href="https://danilafe.com/blog/blog_microfeatures/">Blog microfeatures</a>.<br>
+      Feed links get a feed mark: <a href="/feed.xml">RSS feed</a>.
+    </p>
+    <p class="meta" style="margin-top:1.25rem;">All via CSS <code>a[href^="http"]::after</code> — no JS, no extra markup.</p>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     5 · CSS & SVG ANIMATIONS
+     Replacements for LDRS — no JS, no library
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="label">5 — CSS &amp; SVG animations · no JS, no library</div>
+  <p style="font-family:system-ui,sans-serif;font-size:0.8rem;color:#888;margin-bottom:2rem;max-width:60ch;">These replace LDRS. Pure CSS keyframes or SVG SMIL. All shown at the velvet teal on the page background.</p>
+
+  <div style="background:var(--page); border:1px solid rgba(0,0,0,0.08); border-radius:2px; padding:2.5rem; display:flex; flex-wrap:wrap; gap:3rem; align-items:flex-start;">
+
+    <!-- Ring: CSS border animation -->
+    <div>
+      <div class="label" style="margin-bottom:1rem;">Ring · CSS border</div>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <div class="css-ring"></div>
+        <div class="css-ring" style="width:14px;height:14px;border-width:1.5px;"></div>
+        <div class="css-ring" style="width:32px;height:32px;border-width:3px;"></div>
+      </div>
+    </div>
+
+    <!-- Ring: SVG SMIL (animateTransform, no JS) -->
+    <div>
+      <div class="label" style="margin-bottom:1rem;">Ring · SVG SMIL</div>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <svg width="22" height="22" viewBox="0 0 22 22">
+          <circle cx="11" cy="11" r="8" fill="none" stroke="rgba(10,124,128,0.2)" stroke-width="2"/>
+          <circle cx="11" cy="11" r="8" fill="none" stroke="#0a7c80" stroke-width="2"
+                  stroke-dasharray="28 24" stroke-linecap="round">
+            <animateTransform attributeName="transform" type="rotate"
+                              from="0 11 11" to="360 11 11" dur="0.9s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+        <svg width="32" height="32" viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(10,124,128,0.2)" stroke-width="2.5"/>
+          <circle cx="16" cy="16" r="12" fill="none" stroke="#0a7c80" stroke-width="2.5"
+                  stroke-dasharray="40 36" stroke-linecap="round">
+            <animateTransform attributeName="transform" type="rotate"
+                              from="0 16 16" to="360 16 16" dur="0.9s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Waveform: CSS -->
+    <div>
+      <div class="label" style="margin-bottom:1rem;">Waveform · CSS</div>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <div class="css-waveform">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="css-waveform" style="height:28px; gap:3px;">
+          <span style="width:4px;"></span><span style="width:4px;"></span>
+          <span style="width:4px;"></span><span style="width:4px;"></span>
+          <span style="width:4px;"></span><span style="width:4px;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Waveform: SVG SMIL -->
+    <div>
+      <div class="label" style="margin-bottom:1rem;">Waveform · SVG SMIL</div>
+      <svg width="36" height="22" viewBox="0 0 36 22">
+        <rect x="0"  y="0" width="4" height="22" rx="2" fill="#0a7c80">
+          <animate attributeName="height" values="4;22;4" dur="0.9s" repeatCount="indefinite" begin="0s"/>
+          <animate attributeName="y"      values="9;0;9"  dur="0.9s" repeatCount="indefinite" begin="0s"/>
+        </rect>
+        <rect x="8"  y="0" width="4" height="22" rx="2" fill="#0a7c80">
+          <animate attributeName="height" values="4;22;4" dur="0.9s" repeatCount="indefinite" begin="0.15s"/>
+          <animate attributeName="y"      values="9;0;9"  dur="0.9s" repeatCount="indefinite" begin="0.15s"/>
+        </rect>
+        <rect x="16" y="0" width="4" height="22" rx="2" fill="#0a7c80">
+          <animate attributeName="height" values="4;22;4" dur="0.9s" repeatCount="indefinite" begin="0.30s"/>
+          <animate attributeName="y"      values="9;0;9"  dur="0.9s" repeatCount="indefinite" begin="0.30s"/>
+        </rect>
+        <rect x="24" y="0" width="4" height="22" rx="2" fill="#0a7c80">
+          <animate attributeName="height" values="4;22;4" dur="0.9s" repeatCount="indefinite" begin="0.15s"/>
+          <animate attributeName="y"      values="9;0;9"  dur="0.9s" repeatCount="indefinite" begin="0.15s"/>
+        </rect>
+        <rect x="32" y="0" width="4" height="22" rx="2" fill="#0a7c80">
+          <animate attributeName="height" values="4;22;4" dur="0.9s" repeatCount="indefinite" begin="0s"/>
+          <animate attributeName="y"      values="9;0;9"  dur="0.9s" repeatCount="indefinite" begin="0s"/>
+        </rect>
+      </svg>
+    </div>
+
+    <!-- Dots: CSS -->
+    <div>
+      <div class="label" style="margin-bottom:1rem;">Dot pulse · CSS</div>
+      <div class="css-dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- Dots: SVG SMIL -->
+    <div>
+      <div class="label" style="margin-bottom:1rem;">Dot pulse · SVG SMIL</div>
+      <svg width="40" height="10" viewBox="0 0 40 10">
+        <circle cx="5"  cy="5" r="4" fill="#0a7c80">
+          <animate attributeName="opacity" values="0.2;1;0.2" dur="1.2s" repeatCount="indefinite" begin="0s"/>
+          <animate attributeName="r"       values="3;4;3"     dur="1.2s" repeatCount="indefinite" begin="0s"/>
+        </circle>
+        <circle cx="20" cy="5" r="4" fill="#0a7c80">
+          <animate attributeName="opacity" values="0.2;1;0.2" dur="1.2s" repeatCount="indefinite" begin="0.2s"/>
+          <animate attributeName="r"       values="3;4;3"     dur="1.2s" repeatCount="indefinite" begin="0.2s"/>
+        </circle>
+        <circle cx="35" cy="5" r="4" fill="#0a7c80">
+          <animate attributeName="opacity" values="0.2;1;0.2" dur="1.2s" repeatCount="indefinite" begin="0.4s"/>
+          <animate attributeName="r"       values="3;4;3"     dur="1.2s" repeatCount="indefinite" begin="0.4s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- In-context: audio player state -->
+    <div style="width:100%; padding-top:1rem; border-top:1px solid rgba(0,0,0,0.07);">
+      <div class="label" style="margin-bottom:1rem;">In context · audio player state</div>
+      <div style="display:flex; align-items:center; gap:0.85rem; font-family:et-book,Georgia,serif; font-size:0.85rem; color:rgba(28,26,23,0.6);">
+        <div class="css-waveform" style="height:18px;">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        Playing — <em>First Room</em> · 1:42 / 4:30
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     6 · CUSTOM CURSOR · CSS only
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="label">6 — Custom cursor · CSS-only · hover inside the box</div>
+  <div class="row">
+
+    <div class="page cursor-demo" style="width:400px; min-height:120px; display:flex; align-items:center;">
+      <p class="body" style="margin:0;">Move around in here to see the custom quill cursor. No JS — pure <code>cursor: url()</code>.</p>
+    </div>
+
+    <div>
+      <div class="label" style="margin-bottom:1rem;">Three cursor options (shown 3×)</div>
+      <div style="background:var(--page); border:1px solid rgba(0,0,0,0.08); padding:2rem; border-radius:2px; display:flex; gap:2.5rem; align-items:flex-end;">
+
+        <div style="text-align:center;">
+          <svg viewBox="0 0 28 28" width="84" height="84">
+            <path d="M4 24 L6 14 L14 4 L20 10 Z" fill="#fffff8" stroke="#1c1a17" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M14 4 L20 10 L17 7 Z" fill="#1c1a17"/>
+            <line x1="6" y1="14" x2="13" y2="7" stroke="#1c1a17" stroke-width="1"/>
+          </svg>
+          <div class="label" style="margin-top:0.5rem;">Quill nib</div>
+        </div>
+
+        <div style="text-align:center;">
+          <svg viewBox="0 0 28 28" width="84" height="84">
+            <line x1="14" y1="2" x2="14" y2="26" stroke="#1c1a17" stroke-width="1.5"/>
+            <line x1="2"  y1="14" x2="26" y2="14" stroke="#1c1a17" stroke-width="1.5"/>
+            <circle cx="14" cy="14" r="3" fill="#0a7c80" stroke="#1c1a17" stroke-width="1"/>
+          </svg>
+          <div class="label" style="margin-top:0.5rem;">Crosshair</div>
+        </div>
+
+        <div style="text-align:center;">
+          <svg viewBox="0 0 28 28" width="84" height="84">
+            <path d="M8 26 L8 12 Q8 8 12 8 L12 6 Q12 4 14 4 Q16 4 16 6 L16 8 Q20 8 20 12 L20 26 Z"
+                  fill="#fffff8" stroke="#1c1a17" stroke-width="1.2" stroke-linejoin="round"/>
+            <circle cx="14" cy="5" r="1.5" fill="#0a7c80"/>
+          </svg>
+          <div class="label" style="margin-top:0.5rem;">Hand</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     7 · TEACHING PIECE
+     Author-provided JS — per-work exception
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="label">7 — Teaching piece · card-sequential · author-provided JS (per-work exception)</div>
+  <div class="row">
+    <div>
+      <div class="teaching-wrap">
+        <div class="teaching-nav">
+          <span class="site-name">Labyrinth</span>
+          <div class="progress">
+            <div class="pip-row">
+              <div class="pip done"   id="pip-0"></div>
+              <div class="pip done"   id="pip-1"></div>
+              <div class="pip active" id="pip-2"></div>
+              <div class="pip"        id="pip-3"></div>
+              <div class="pip"        id="pip-4"></div>
+            </div>
+            <span id="counter">3 / 5</span>
+          </div>
+        </div>
+        <div class="teaching-body">
+          <div class="diagram-panel" id="diagram"></div>
+          <div class="text-panel">
+            <div>
+              <div class="term-name" id="term-name"></div>
+              <div class="term-alt"  id="term-alt"></div>
+              <div class="term-def"  id="term-def"></div>
+            </div>
+            <div class="card-nav">
+              <button onclick="prev()">← Back</button>
+              <button class="primary" onclick="next()">Next →</button>
+            </div>
+          </div>
+        </div>
+        <div class="teaching-footer">
+          <!-- CSS dot animation instead of LDRS -->
+          <div class="css-dots"><span></span><span></span><span></span></div>
+          <span>Loading next card…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+const AC = '#0a7c80';
+const CARDS = [
+  { name:"Baseline", alt:"the ground", def:"The invisible line on which most letters sit. Descenders drop below it; the baseline is the typographic floor that holds a line of text together.", diagram: d_baseline },
+  { name:"X-height", alt:"body height", def:"The height of a lowercase letter with no ascender or descender. A large x-height improves legibility at small sizes.", diagram: d_xheight },
+  { name:"Ascender", alt:"upper stroke", def:"The part of a lowercase letter that rises above the x-height, as in b, d, h, k, l. Ascenders give a typeface its vertical rhythm.", diagram: d_ascender },
+  { name:"Counter",  alt:"enclosed space", def:"The partially or fully enclosed space inside a letter — the white inside 'o', 'b', 'e'. Counters affect how open a typeface reads at small sizes.", diagram: d_counter },
+  { name:"Serif",    alt:"finishing stroke", def:"The small stroke that terminates the main stems of a letter. Serifs create a horizontal rhythm that aids reading in long passages.", diagram: d_serif },
+];
+let idx = 2;
+const N = CARDS.length;
+
+function d_baseline(c) { return `<svg class="diagram-svg" viewBox="0 0 320 180" width="320" height="180"><text class="letter-glyph" x="40" y="140" font-size="100">bpx</text><line x1="20" y1="143" x2="300" y2="143" stroke="${c}" stroke-width="1.5"/><text class="guide-label" x="20" y="157" fill="${c}">BASELINE</text></svg>`; }
+function d_xheight(c) { return `<svg class="diagram-svg" viewBox="0 0 320 200" width="320" height="200"><text class="letter-glyph" x="60" y="148" font-size="100">nx</text><line class="guide-line" x1="20" y1="150" x2="300" y2="150"/><text class="guide-label" x="20" y="163">BASELINE</text><line x1="20" y1="84" x2="300" y2="84" stroke="${c}" stroke-width="1.5"/><text class="guide-label" x="20" y="78" fill="${c}">X-HEIGHT</text><line x1="16" y1="84" x2="16" y2="150" stroke="${c}" stroke-width="1" opacity="0.4"/><line x1="12" y1="84" x2="20" y2="84" stroke="${c}" stroke-width="1" opacity="0.4"/><line x1="12" y1="150" x2="20" y2="150" stroke="${c}" stroke-width="1" opacity="0.4"/></svg>`; }
+function d_ascender(c) { return `<svg class="diagram-svg" viewBox="0 0 320 220" width="320" height="220"><text class="letter-glyph" x="70" y="160" font-size="110">bh</text><line class="guide-line" x1="20" y1="162" x2="300" y2="162"/><text class="guide-label" x="20" y="176">BASELINE</text><line class="guide-line" x1="20" y1="98" x2="300" y2="98"/><text class="guide-label" x="20" y="94">X-HEIGHT</text><line x1="20" y1="32" x2="300" y2="32" stroke="${c}" stroke-width="1.5"/><text class="guide-label" x="20" y="26" fill="${c}">ASCENDER</text><line x1="16" y1="32" x2="16" y2="98" stroke="${c}" stroke-width="1" opacity="0.4"/><line x1="12" y1="32" x2="20" y2="32" stroke="${c}" stroke-width="1" opacity="0.4"/><line x1="12" y1="98" x2="20" y2="98" stroke="${c}" stroke-width="1" opacity="0.4"/></svg>`; }
+function d_counter(c) { return `<svg class="diagram-svg" viewBox="0 0 320 180" width="320" height="180"><text class="letter-glyph" x="55" y="145" font-size="110">ob</text><ellipse cx="105" cy="114" rx="28" ry="30" fill="none" stroke="${c}" stroke-width="2" opacity="0.6" stroke-dasharray="4 2"/><ellipse cx="226" cy="116" rx="26" ry="27" fill="none" stroke="${c}" stroke-width="2" opacity="0.6" stroke-dasharray="4 2"/><text class="guide-label" x="85" y="170" fill="${c}">counter</text><text class="guide-label" x="205" y="170" fill="${c}">counter</text><line class="guide-line" x1="20" y1="148" x2="300" y2="148"/></svg>`; }
+function d_serif(c) { return `<svg class="diagram-svg" viewBox="0 0 320 200" width="320" height="200"><text class="letter-glyph" x="75" y="155" font-size="120">Il</text><line x1="78" y1="175" x2="100" y2="175" stroke="${c}" stroke-width="1.5" opacity="0.7"/><line x1="78" y1="158" x2="100" y2="158" stroke="${c}" stroke-width="1.5" opacity="0.7"/><line x1="78" y1="158" x2="78" y2="175" stroke="${c}" stroke-width="1" opacity="0.4"/><line x1="76" y1="166" x2="42" y2="166" stroke="${c}" stroke-width="1" opacity="0.5"/><text class="guide-label" x="8" y="170" fill="${c}">SERIF</text><line class="guide-line" x1="20" y1="160" x2="300" y2="160"/><text class="guide-label" x="20" y="174">BASELINE</text></svg>`; }
+
+function render() {
+  const c = CARDS[idx];
+  document.getElementById('term-name').textContent = c.name;
+  document.getElementById('term-alt').textContent  = c.alt;
+  document.getElementById('term-def').textContent  = c.def;
+  document.getElementById('diagram').innerHTML     = c.diagram(AC);
+  document.getElementById('counter').textContent   = `${idx+1} / ${N}`;
+  for (let i = 0; i < N; i++) {
+    const p = document.getElementById(`pip-${i}`);
+    if (p) p.className = 'pip' + (i < idx ? ' done' : i === idx ? ' active' : '');
+  }
+}
+function next() { idx = (idx+1)%N; render(); }
+function prev() { idx = (idx-1+N)%N; render(); }
+render();
+</script>
+</body>
+</html>

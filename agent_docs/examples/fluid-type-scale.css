@@ -1,0 +1,73 @@
+/*
+  Labyrinth — stylesheet reference
+  Illustrative values for key design decisions.
+  Tune to taste once rendered in ET Book.
+*/
+
+
+/* ══ Colors ══════════════════════════════════════════════════════ */
+
+:root {
+  --color-bg:     #fffff8;  /* page background          */
+  --color-ink:    #1c1a17;  /* body text                */
+  --color-accent: #0a7c80;  /* links, active, emphasis  */
+}
+
+
+/* ══ Type scale ═══════════════════════════════════════════════════
+   Ratio: perfect fourth (1.333)
+   Base: 1rem (user root font size — never override)
+
+   Uses CSS pow() (CSS Values Level 4, modern browsers).
+   Change --ratio to reshape the entire scale.
+   The vw coefficient in each clamp() controls how fast that step
+   scales with viewport width — tune to taste.                    */
+
+:root {
+  --ratio: 1.333;   /* perfect fourth; try 1.200 minor third, 1.250 major third */
+  --base:  1rem;
+
+  /* step = base × ratio^n                                         */
+  --step-n2: calc(var(--base) * pow(var(--ratio), -2)); /* ≈ 0.56rem */
+  --step-n1: calc(var(--base) * pow(var(--ratio), -1)); /* ≈ 0.75rem */
+  --step-0:  var(--base);                               /*   1.00rem */
+  --step-p1: calc(var(--base) * pow(var(--ratio),  1)); /* ≈ 1.33rem */
+  --step-p2: calc(var(--base) * pow(var(--ratio),  2)); /* ≈ 1.78rem */
+  --step-p3: calc(var(--base) * pow(var(--ratio),  3)); /* ≈ 2.37rem */
+  --step-p4: calc(var(--base) * pow(var(--ratio),  4)); /* ≈ 3.16rem */
+  --step-p5: calc(var(--base) * pow(var(--ratio),  5)); /* ≈ 4.21rem */
+
+  /* clamp(min, preferred, max)                                    */
+  /* min = this step — floor at narrow viewports                   */
+  /* max = next step  — ceiling at wide viewports                  */
+  /* preferred = min + vw — continuous slide between the two       */
+  --text-xs:   clamp(var(--step-n2), var(--step-n2) + 0.5vw, var(--step-n1)); /* meta, captions    */
+  --text-sm:   clamp(var(--step-n1), var(--step-n1) + 0.5vw, var(--step-0));  /* labels, dates     */
+  --text-base: clamp(var(--step-0),  var(--step-0)  + 1.0vw, var(--step-p1)); /* body              */
+  --text-md:   clamp(var(--step-p1), var(--step-p1) + 1.5vw, var(--step-p2)); /* h3, section title */
+  --text-lg:   clamp(var(--step-p2), var(--step-p2) + 2.0vw, var(--step-p3)); /* h2                */
+  --text-xl:   clamp(var(--step-p3), var(--step-p3) + 3.0vw, var(--step-p4)); /* h1, work title    */
+  --text-2xl:  clamp(var(--step-p4), var(--step-p4) + 5.0vw, var(--step-p5)); /* homepage title    */
+}
+
+body            { font-size: var(--text-base); }
+h1              { font-size: var(--text-xl);   }
+h2              { font-size: var(--text-lg);   }
+h3              { font-size: var(--text-md);   }
+.site-title     { font-size: var(--text-2xl);  }
+.meta, caption  { font-size: var(--text-xs);   }
+.label, time    { font-size: var(--text-sm);   }
+
+
+/* ══ Cursor ═══════════════════════════════════════════════════════
+   CSS-only. SVG inline as data URI. No JS.                      */
+
+/* Default — filled circle */
+body {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='6' fill='rgba(0,0,0,0.35)'/></svg>") 7 7, auto;
+}
+
+/* Links and interactive elements — outlined circle */
+a[href], button, [role="button"] {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='6' fill='none' stroke='rgba(0,0,0,0.4)' stroke-width='1.5'/></svg>") 7 7, pointer;
+}

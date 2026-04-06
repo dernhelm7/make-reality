@@ -1,56 +1,29 @@
 # Look
 
-## 1. Purpose
-This document defines the visual system that gives one consistent reading experience across the cover, contents page, and work pages.
+## Purpose
+This document says how the site feels to read.
 
-## 2. Decisions Owned
+## Decisions Owned
 - The overall visual direction
-- The color system
-- The typography system
-- Surface rhythm
-- Link, image, caption, and audio presentation
-- Mobile behavior
+- The visual anchors
+- The reading layout
+- How the layout restacks on narrow screens
+- How media and motion fit into it
 
-## 3. Requirements
-
-### 3.1 Visual Direction
+## Requirements
 1. The site feels closer to a printed book or small press publication than to a blog or app.
-2. One visual system supports three surfaces: the cover page, the table of contents, and the reading page.
-3. Type, spacing, and hierarchy carry the design. Ornament is minimal.
+2. One visual system carries the reader from the cover page to the table of contents to the reading page. Type, spacing, and hierarchy do most of the work. Ornament is minimal.
+3. That system uses `#fffff8` for the page, `#1c1a17` for body text, and `#0a7c80` as the accent.
+4. ET Book, self-hosted, is the main face. A secondary face may be used for labels, dates, and the global links block.
+5. Size and layout stay fluid. Use `rem`, `em`, `ch`, `%`, `vh`, or `vw`. Do not set the root font size or use `px`.
+6. The cover page keeps a left-aligned title-page rhythm with generous top spacing.
+7. Work pages use a Tufte-style reading layout: a narrow body column, a left-side section index when present, and a sidenote margin.
+8. Body line-height is `1.5`. Major sections use generous spacing. The global links block stays compact and consistent as readers move through the site.
+9. On narrow screens, the reading layout restacks without horizontal scrolling. The section index moves above the body, sidenotes move inline or beneath their paragraph, and images and audio controls fit the available width.
+10. Images are unframed and flow with the page.
+11. Motion, if used, stays light and uses CSS or inline SVG only. The cursor on links is a semi-transparent outlined circle.
 
-### 3.2 Color And Material
-1. The page background uses a warm paper tone and the text uses a dark ink tone with strong reading contrast.
-2. The site uses one muted accent color for links, rules, and small emphasis.
-3. Thin rules may separate sections. Heavy borders, panels, shadows, textures, badges, and glossy effects are not used.
-
-### 3.3 Typography
-1. The primary reading typeface is a serif.
-2. The site may use one quiet secondary face for the global links block, labels, and dates.
-3. The home title has the strongest scale on the site.
-4. Body copy uses a comfortable reading measure on large screens.
-5. Meta text is quieter than body copy and titles.
-6. Links stay clearly distinct from surrounding copy.
-
-### 3.4 Surface Rhythm
-1. The shared site frame and shared site stylesheet stay visually consistent across page types.
-2. The homepage uses a title-page rhythm with generous top spacing and a compact content stack centered on the title-page content.
-3. The works index uses a table-of-contents rhythm with visible section breaks and tight, scannable entries.
-4. Work pages use a single reading column.
-5. The global links block may use a more expanded treatment on the homepage and a more compact treatment on other pages.
-
-### 3.5 Media Treatment
-1. Images sit cleanly in the page flow with simple, unframed treatment.
-2. Captions are smaller than body text and visually tied to their media.
-3. Audio players align with the reading column and have enough surrounding space to feel intentional.
-
-### 3.6 Mobile Behavior
-1. The visual system works on mobile and desktop without separate templates.
-2. On small screens, spacing tightens before type becomes cramped.
-3. The layout avoids horizontal scrolling for the global links block and reading content.
-4. Images and audio controls scale to the available width.
-
-## 4. Acceptance Checks
-1. Review `/`, `/works`, and one work page on desktop and mobile and confirm that the visual system satisfies this document.
-
-## 5. Open Questions
-None.
+## Acceptance Checks
+1. Review the page-shape fixtures named in `agent_docs/examples/README.md` on desktop and mobile.
+2. Inspect the reading-layout fixture named in `agent_docs/examples/README.md` in wide and narrow layouts.
+3. Inspect the generated stylesheet for the visual anchors in this document.

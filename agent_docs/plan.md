@@ -1,49 +1,34 @@
 # Website Spec Plan
 
 ## Goal
-Write a spec in 'agent_docs/' for my site which can be implemented by LLM coding agents.
-Use `README.md` in this folder and this plan as the governing inputs for that spec.
+Write a spec in `agent_docs/` for my site so LLM coding agents can implement it.
+Use `README.md` in this folder and this plan as the governing inputs.
 Keep the spec itself in `agent_docs/`.
 
-There's a main page, with contact and gift links.
-There's an index of works with subheadings I can customize.
-There's a folder where I can add new works, and it will be shown in the index of works automatically using the folder name and an explicit created timestamp. But if I customize it, that overrides the defaults.
+The site has a homepage with contact and gift links.
+The site has a works index with section headings I can customize.
+When I add a new work in the works area, it should appear in the index automatically. Each work uses its folder name, publishes at `/<folder-name>`, and carries an explicit created date. A work may name one section from the site config.
 
 ## Scopes 
 
 ### web-rules.md
-- Specify the generated web standards for the published output: accessibility, progressive enhancement, semantics, and interoperability.
+- Say what the built site gives the browser, the reader, and other systems.
 
 ### shape.md
-- Specify the page relationships, page structure, and navigation.
-
-### bones.md
-- Specify the site and work content models: what the site and a work are, what metadata they carry, and how defaults and overrides work.
+- Say how people use the site: how the author adds work, what pages people use, and how readers move through the site and reach the author.
 
 ### look.md
-- Specify the visual system.
+- Say how the cover page, the table of contents, and the reading page hold together visually.
 
 ### build.md
-- Specify the build process, outputs, and validation behavior.
-
-## Guidance
-
-- Use the Aim section in `README.md` to understand product intent. Clarify open questions.
-- Make each file the source of truth for its own decision scope.
-- When one doc needs a concept owned by another doc, refer to that doc instead of redefining it.
-- If a requirement could fit in more than one doc, assign it once to the narrowest scope and have the other docs use it.
-- Use a standard format: Purpose, Decisions Owned, Requirements, Acceptance Checks.
-- Use direct, positive language; state what the site does. Reserve negative requirements for constraints and explicit exceptions.
-- Use traditional section numbering.
-- Write testable requirements.
-- Mark guesses explicitly. Resolve guesses before calling the plan complete.
+- Say how site files become published output, and what the build does when something goes wrong.
 
 ## Acceptance Criteria
-- Page types are defined: `/`, `/works`, and `/<slug>`.
-- A public RSS feed is defined at `/feed.xml`.
+- Adding a work is enough to make it show up on the site.
+- Public page types are defined for the homepage, the works index, individual work pages, and the feed.
 - Contact and gift links are available.
-- Default indexing and how customization overrides it are defined.
+- Section names and short published paths are defined.
 - Each doc is a complete set of instructions for its own scope.
-- Each requirement is defined in only one place; prevent conflicting definitions.
-- Site structure and content model support adding works post-launch.
-- `build.md` is sufficient to build the site.
+- Each requirement is defined in only one place.
+- The spec supports adding works after launch.
+- `build.md` is enough to define the local build and publication contract.
