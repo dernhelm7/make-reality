@@ -1,0 +1,49 @@
+#!/bin/sh
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+usage() {
+  cat <<EOF
+Usage: ./preview-site [site-root] [publish-root] [port]
+
+Defaults:
+  site-root    $script_dir/site
+  publish-root /tmp/labyrinth-preview
+  port         8000
+
+Examples:
+  ./preview-site
+  ./preview-site agent_docs/examples/reading-microfeatures /tmp/labyrinth-visual-check 8001
+EOF
+}
+
+case "${1:-}" in
+  -h|--help)
+    usage
+    exit 0
+    ;;
+esac
+
+site_root=${1:-"$script_dir/site"}
+publish_root=${2:-/tmp/labyrinth-preview}
+port=${3:-8000}
+
+case "$site_root" in
+  /*) ;;
+  *) site_root="$script_dir/$site_root" ;;
+esac
+
+case "$publish_root" in
+  /*) ;;
+  *) publish_root="$script_dir/$publish_root" ;;
+esac
+
+"$script_dir/build-site" "$site_root" "$publish_root"
+
+printf 'Built %s\n' "$publish_root"
+printf 'Previewing at http://localhost:%s\n' "$port"
+
+# Python 3.14 still reads the process cwd while parsing http.server args.
+cd /
+exec python3 -m http.server "$port" --directory "$publish_root"

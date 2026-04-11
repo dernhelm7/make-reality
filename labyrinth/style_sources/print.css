@@ -1,0 +1,24 @@
+@media print {
+  .site-shell {
+    padding: 0;
+  }
+
+  .page-surface {
+    width: 100%;
+  }
+
+  .site-sidebar {
+    display: none;
+  }
+
+  body {
+    line-height: 1.45;
+    color: #000;
+    background: #fff;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

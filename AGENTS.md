@@ -6,7 +6,7 @@ This file sets general policy for agents working on this repo.
 
 "Do less, do it better."
 
-- Use plain English.
+- Use concrete nouns, name the action or choice that changes the outcome, and stop once you have named the lever that matters.
 - Say what to do. Change the structure so correct behavior is the default. Use a negative instruction only if the contrast removes ambiguity.
 - Check the repo before assuming what exists.
 - Update the spec to keep it aligned with the code.
@@ -14,7 +14,6 @@ This file sets general policy for agents working on this repo.
 - Solve the right problem. Fix the origin, not the output.
 - Follow the grain of the problem. Work with the natural structure.
 - Frame the central idea efficiently. Don't just cut extra words. Distill the essence.
-- In specs and plans, describe what changes what. Use concrete nouns, name the action or choice that changes the outcome, and stop once you have named the lever that matters. Do not pad it out with theory, inventories, or obvious consequences.
 
 
 ## Standards
@@ -44,7 +43,6 @@ Apply these standards to planning, specification, and implementation.
 - Run the most relevant local validation commands that already exist in the repo before finishing.
 - For spec-only changes, review the affected docs and examples for duplicated or conflicting requirements.
 - Do not restate requirements in validation or acceptance checks.
-- If `Requirements` or an example's `expected.md` already defines the outcome, name the fixture, command, page, or inspection method instead of repeating the behavior. Spell behavior out only when the check adds a cross-document integration case, a failure mode, or a distinct verification method.
 - If a task changes acceptance behavior, update the affected acceptance checks and example expectations in the same change.
 
 ## Done Means
@@ -52,8 +50,13 @@ Apply these standards to planning, specification, and implementation.
 - The changed behavior matches the owning spec.
 - The spec, examples, and implementation agree.
 - Relevant acceptance checks, examples, and validation steps are updated or explicitly confirmed unchanged.
+- Correct behavior is described. Negative instructions are used only when the contrast removes ambiguity.
+- Concrete nouns are used, the action or choice that changes the outcome is named, and instructions stop once the lever that matters is named.
+- any rule that got inverted or edited, but could instead be deleted, is deleted.
 
 
 ## Hard Constraints
 
 - No build-generated JavaScript in the shared site output; I wannt the site dependencies super light and clean. A specific work may use author-provided JavaScript. 
+- Use concrete nouns, name the action or choice that changes the outcome, and stop once you have named the lever that matters.
+

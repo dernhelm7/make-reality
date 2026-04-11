@@ -12,7 +12,7 @@ A personal publishing site + portfolio; a medium for thinking and a way to share
 
 Editorial, typographic, restrained. It should feel more like an interactive book than a blog.
 
-The homepage purpose is to act like the cover and title page of a book. The index page feels like a table of contents to my works. The works (poems, projects, art pieces) I create share the same navigation and some aesthetics but may have custom layouts.
+The homepage purpose is to act like the cover and title page of a book. Its contents section feels like a table of contents to my works. The works (poems, projects, art pieces) I create share the same navigation and some aesthetics but may have custom layouts.
 
 ## Idiosyncratic Design Preferences
 

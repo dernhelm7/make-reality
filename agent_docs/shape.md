@@ -16,21 +16,30 @@ Specify relationships and flow of use by author and reader.
 ## Requirements
 1. The author adds works to a folder.
 2. Adding a work there is enough to make it part of the site.
-3. The author lists section names in `site.toml` in the order they should appear on `/works`.
-4. A work may set `section` to one of those section names. If it does not, or if the name does not match, the work falls into `Other works`.
-5. Each work derives its title from its folder name. The works index uses that same title.
-6. Each work is published at `/<folder-name>` so work links stay short, direct, and slashless.
+3. The author lists section names in `site.toml` in the order they should appear in the home-page `Contents` section.
+4. A work may set `section` to one of those section names. Unnamed or unmatched works go to `Other works`.
+5. Each work derives its title from its folder name. The home-page contents index uses that same title.
+6. Publish each work at `/<folder-name>`.
 7. A work can be written in Markdown or HTML body content.
-8. People using the site get a cover page, `/`; table of contents, `/works`; one work page for each work, and `/feed.xml`.
-9. Every page (RSS feed is an exception) uses the shared site frame.
-10. That frame lets readers navigate the site and contact or pay the author.
+8. People using the site get a cover page at `/`, one work page for each work, and `/feed.xml`.
+9. The home page places the site `Contents` section beneath the cover.
+10. Every page except the RSS feed uses the shared site frame.
+11. Put navigation in a left-side rail.
+12. Put the global links block at the bottom of that rail.
+13. Link `Content` to the home-page `Contents` section.
+14. Reserve the home slot on the cover as non-interactive space.
+15. Build the home-page contents index and the work-page site contents groups from one section-and-work list.
+16. On work pages, put a back link, the current section label, and that section's works in the left rail. Nest the current-work heading index under the current work entry.
+17. Show only the current section in that rail.
+18. Use row entries in the home-page contents index. Pair each work title with its dotted leader and date.
+19. Keep the work body and backlinks in one page body.
 
 ## Micro-Features
-- `Heading self-links`: Each body heading gets an id from its visible text and a self-link.
-- `Content nav sidebar`: Two or more top-level body headings add a Contents sidebar with links based on headings.
-- `wikilinks`: A `[[...]]` link is a soft reference to a work. If it matches a work, link to that work's published path. A label in the link becomes the visible text. If it does not match a work, render plain text.
+- `Heading self-links`: Give each body heading an id from its visible text. Link the heading text to that id.
+- `Content nav sidebar`: Two or more top-level body headings add current-work links under the current work entry in the left rail. The current target marks the matching entry there. Without a target, the first entry is current.
+- `wikilinks`: A `[[...]]` link is a soft reference to a work. Match against the work title, folder name, and any aliases in `meta.toml`. Ignore case and treat spaces, underscores, and hyphens as the same. Link matches to the work's published path. Use the label as the visible text when present. Render plain text for misses.
 - `Backlinks`: A work-to-work link adds the source work title to a backlinks section on the destination work page. The backlinks section appears after the body content.
 
 ## Acceptance Checks
 1. Build the examples named in `agent_docs/examples/README.md` and compare the results with each `expected.md`.
-2. Inspect `/`, `/works`, and one work page.
+2. Inspect `/` and one work page.

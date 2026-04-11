@@ -1,9 +1,10 @@
 # Expected Outcome
 
 - `field-notes` renders self-linking body headings with ids `materials`, `turn`, `turn-2`, and `marks`.
-- `field-notes` renders a linked section index for the work body.
-- That section index lists `Materials`, `Turn`, and `Turn` in source order and links to `#materials`, `#turn`, and `#turn-2`.
-- On wide screens, the section index sits to the left of the main body column. On narrow screens, it appears before the body content.
+- `field-notes` keeps the work header to the title and places the publish date at the top of the margin-note track as muted metadata.
+- Those self-linking body headings keep a plain heading treatment without an underline.
+- The left rail nests linked section entries for `Materials`, `Turn`, and `Turn` under `Field Notes` as one close-set list with a guide line and current-entry dot.
+- The left rail shows `Other works` as a static section label and lists `Garden Path`.
 - The link to `[[Garden Path]]` resolves to the published path `/garden-path`.
-- The external link to `https://archive.example/atlas` remains external and is visibly distinguished from the internal work link without relying on color alone.
+- The external link to `https://archive.example/atlas` uses the appended link marker.
 - `garden-path` renders a backlinks section after the body content listing `Field Notes`.

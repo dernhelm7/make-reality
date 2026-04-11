@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+script_dir=${0:A:h}
+export PYTHONPATH="${script_dir}${PYTHONPATH:+:${PYTHONPATH}}"
+
+python3 -m labyrinth build "$@"

@@ -14,6 +14,9 @@ It leaves out placeholder URLs, assistant-only research links, and operational r
 - `https://laminae.org/`
   Reinforced an essay-first reading rhythm and stronger typographic hierarchy.
 
+- `https://bachtogauss.com/about/`
+  Reference for narrow reading measure, one scale driving type and spacing, and rare media-query pivots.
+
 - `https://2020.typographics.com/schedule/`
   Pushed the spec toward dense but highly legible information layout.
 

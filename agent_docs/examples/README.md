@@ -12,7 +12,7 @@ Keep each example small and focused. When a rule changes, update the owning spec
 Current entries:
 
 - `minimal-markdown`: one Markdown work with derived defaults
-- `named-sections`: one work assigned to a named section from `site.toml`
+- `named-sections`: works assigned to named sections from `site.toml`
 - `html-work`: one authored HTML body fragment, including author-provided JavaScript
 - `reading-microfeatures`: automatic heading anchors, linked section index, backlinks, and link treatment
 - `section-fallback`: one work whose section falls back to `Other works`

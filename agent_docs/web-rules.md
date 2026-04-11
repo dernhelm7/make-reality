@@ -16,7 +16,7 @@ Specify accessibility and interoperability rules.
 3. Every interactive element is reachable and usable with a keyboard alone.
 4. Focus is always visible and visually distinct from surrounding text.
 5. Link text names the destination or action in plain language.
-6. External links stay visibly distinct from internal work links without relying on color alone.
+6. Mark external links with an appended marker.
 7. Readers can read and move through the site without scripting.
 8. Public URLs stay stable for unchanged content across rebuilds.
 9. Each work page exposes an `h-entry` for the work title, canonical URL, and main body content.

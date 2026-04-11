@@ -12,16 +12,27 @@ Specify how the site looks.
 
 ## Requirements
 1. The site feels closer to a printed book or small press publication than to a blog or app.
-2. One visual system carries the reader from the cover page to the table of contents to the reading page. Type, spacing, and hierarchy do most of the work. Ornament is minimal.
-3. That system uses `#fffff8` for the page, `#1c1a17` for body text, and `#0a7c80` as the accent.
-4. ET Book, self-hosted, is the main face. A secondary face may be used for labels, dates, and the global links block.
-5. Size and layout stay fluid. Use `rem`, `em`, `ch`, `%`, `vh`, or `vw`. Do not set the root font size or use `px`.
-6. The cover page keeps a left-aligned title-page rhythm with generous top spacing.
-7. Work pages use a Tufte-style reading layout: a narrow body column, a left-side section index when present, and a sidenote margin.
-8. Body line-height is `1.5`. Major sections use generous spacing. The global links block stays compact and consistent as readers move through the site.
-9. On narrow screens, the reading layout restacks without horizontal scrolling. The section index moves above the body, sidenotes move inline or beneath their paragraph, and images and audio controls fit the available width.
-10. Images are unframed and flow with the page.
-11. Motion, if used, stays light and uses CSS or inline SVG only. The cursor on links is a semi-transparent outlined circle.
+2. One visual system spans the cover page, the contents, and the reading page.
+3. Use a left-side navigation rail, restrained page heads, and a continuous page field.
+4. Let type, spacing, and hierarchy carry most of the visual work. Keep ornament minimal.
+5. Use `#fffff8` for the page, `#1c1a17` for body text, and `#0a7c80` as the accent.
+6. Use ET Book, self-hosted, as the main face. A secondary face may label dates and navigation.
+7. Use one fluid scale for text and major spacing. Express it with `rem`, `em`, `ch`, `%`, `vh`, or `vw`. Do not set the root font size or use `px`.
+8. Use a title-page cover on the home page: left-aligned title, generous top spacing, and a clean page head.
+9. Keep the visible `Contents` section below the first screen on narrow and wide layouts.
+10. Use a Tufte-style reading layout on work pages: narrow body column, title-only page head, publish date in the top of the margin-note track aligned with the rail header row, a margin-note track wide enough for one-line dates, current section label in the left rail, current-work index nested under the current work entry, and gutters that widen before the body column widens.
+11. Use `1.5` body line-height and generous section spacing.
+12. Anchor the left rail to the page gutter. Match its top inset to that gutter.
+13. Set the desktop utility links at the same inset from the bottom-left corner as from the left edge.
+14. Use one sans-serif face throughout the navigation rail.
+15. Use the back-link text size for work names and current-work outline items in the navigation rail.
+16. Use a faint guide line for nested current-work headings and a spaced dot for the current entry. Anchor the dot to the line box with font-relative units.
+17. Remove underlines from heading self-links and nested current-work heading links. Keep the nested current-work heading spacing tight.
+18. Reserve accent hover color in the rail for links that change pages.
+19. Use semantic-only labels for link groups when spacing and typography already define their role.
+20. On narrow screens, restack the reading layout without horizontal scrolling. Keep the current-work index nested with the current work entry, move sidenotes inline or beneath their paragraph, and fit images and audio controls to the available width.
+21. Let images flow unframed with the page.
+22. Keep motion light and use CSS or inline SVG only. Use a semi-transparent outlined circle for link cursors.
 
 ## Acceptance Checks
 1. Review the page-shape fixtures named in `agent_docs/examples/README.md` on desktop and mobile.
