@@ -1,78 +1,30 @@
 from __future__ import annotations
 
-import hashlib
-from pathlib import Path
-import subprocess
-import sys
-import tempfile
-import unittest
-
 from labyrinth.builder import build_site
 
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
-EXAMPLES_ROOT = REPO_ROOT / "agent_docs" / "examples"
-ET_BOOK_ROMAN = "fonts/et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff"
-ET_BOOK_ITALIC = (
-    "fonts/et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff"
+from .fixture_support import (
+    ET_BOOK_BOLD,
+    ET_BOOK_ITALIC,
+    ET_BOOK_LICENSE,
+    ET_BOOK_ROMAN,
+    FixtureSiteTestCase,
+    tree_digest,
 )
-ET_BOOK_BOLD = "fonts/et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff"
-ET_BOOK_LICENSE = "fonts/et-book/LICENSE.txt"
 
 
-class ExampleBuildTests(unittest.TestCase):
-    def build_fixture(self, fixture_name: str) -> Path:
-        publish_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "public"
-        build_site(EXAMPLES_ROOT / fixture_name, publish_root)
-        return publish_root
-
-    def test_cli_build_command(self) -> None:
-        publish_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "public"
-        result = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "labyrinth",
-                "build",
-                str(EXAMPLES_ROOT / "minimal-markdown"),
-                str(publish_root),
-            ],
-            cwd=REPO_ROOT,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertTrue((publish_root / "index.html").exists())
-        self.assertTrue((publish_root / ET_BOOK_ROMAN).exists())
-
-    def test_build_script_works_outside_repo_root(self) -> None:
-        publish_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "public"
-        outside_cwd = Path(self.enterContext(tempfile.TemporaryDirectory()))
-        result = subprocess.run(
-            [
-                str(REPO_ROOT / "build-site"),
-                str(EXAMPLES_ROOT / "minimal-markdown"),
-                str(publish_root),
-            ],
-            cwd=outside_cwd,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertTrue((publish_root / "index.html").exists())
-        self.assertTrue((publish_root / ET_BOOK_ROMAN).exists())
-
+class AcceptanceTests(FixtureSiteTestCase):
     def test_minimal_markdown_fixture(self) -> None:
-        publish_root = self.build_fixture("minimal-markdown")
-        first_room = read_text(publish_root / "first-room" / "index.html")
-        home_page = read_text(publish_root / "index.html")
-        stylesheet = read_text(publish_root / "site.css")
+        _, publish_root = self.build_fixture("minimal-markdown")
+        self.assert_common_public_layout(publish_root, ["/first-room"])
+
+        first_room = self.page_text(publish_root, "/first-room")
+        home_page = self.page_text(publish_root, "/")
+        stylesheet = (publish_root / "site.css").read_text(encoding="utf-8")
 
         self.assertIn("First Room", home_page)
         self.assertIn("Other works", home_page)
         self.assertIn('class="works-entry"', home_page)
+        self.assertNotIn('class="works-entry-date works-date"', home_page)
         self.assertIn('<h1 class="page-title work-title p-name">First Room</h1>', first_room)
         self.assertNotIn('page-kicker work-meta', first_room)
         self.assertIn('<aside class="work-date-note" aria-label="Published">', first_room)
@@ -99,34 +51,35 @@ class ExampleBuildTests(unittest.TestCase):
         self.assertIn('page-head', home_page)
         self.assertNotIn('page-rule', home_page)
         self.assertIn('page-deck', home_page)
-        self.assertIn('class="site-sidebar"', home_page)
-        self.assertIn('class="site-bar"', home_page)
-        self.assertIn('site-nav--primary', home_page)
-        self.assertIn('href="#contents">Content</a>', home_page)
-        self.assertIn('href="#contents">Enter the content</a>', home_page)
+        self.assertNotIn('class="site-sidebar"', home_page)
+        self.assertNotIn('class="site-bar"', home_page)
+        self.assertIn('class="home-cover-meta"', home_page)
+        self.assertNotIn('site-nav--primary', home_page)
+        self.assertNotIn('href="#contents">Content</a>', home_page)
+        self.assertNotIn('Enter the content', home_page)
         self.assertIn('id="contents"', home_page)
         self.assertIn('>Contents</h2>', home_page)
         self.assertIn('href="/first-room"', home_page)
-        self.assertNotIn('href="/works">Content</a>', home_page)
         self.assertIn('site-nav--global', home_page)
         self.assertIn('site-bar-section--global', home_page)
         self.assertIn('class="site-global-label visually-hidden"', home_page)
-        self.assertIn('site-title-link--placeholder', home_page)
+        self.assertNotIn('site-title-link--placeholder', home_page)
         self.assertNotIn('<a class="site-title-link"', home_page)
         self.assertNotIn('site-header', home_page)
         self.assertNotIn('site-footer', home_page)
         self.assertNotIn('<p class="site-global-label">Links</p>', home_page)
         self.assertNotIn('<p class="page-kicker">Table of contents</p>', home_page)
-        self.assertIn('@font-face {', stylesheet)
+        self.assertIn("@font-face {", stylesheet)
         self.assertIn(
             'src: url("/fonts/et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff") format("woff");',
             stylesheet,
         )
-        self.assertIn('font-display: swap;', stylesheet)
-        self.assertIn("#fffff8", stylesheet)
-        self.assertIn("#1c1a17", stylesheet)
+        self.assertIn("font-display: swap;", stylesheet)
+        self.assertIn("#ffffff", stylesheet)
+        self.assertIn("#202020", stylesheet)
+        self.assertIn("#3a3a3a", stylesheet)
         self.assertIn("#0a7c80", stylesheet)
-        self.assertIn("line-height: 1.5;", stylesheet)
+        self.assertNotIn("line-height: 1.5;", stylesheet)
         self.assertIn("cursor: url(", stylesheet)
         self.assertIn(".site-sidebar", stylesheet)
         self.assertIn(".site-layout", stylesheet)
@@ -134,13 +87,42 @@ class ExampleBuildTests(unittest.TestCase):
         self.assertNotIn(".page-rule", stylesheet)
         self.assertIn(".page-deck", stylesheet)
         self.assertIn(".works-entry", stylesheet)
+        self.assertNotIn(".works-entry-date", stylesheet)
+        self.assertIn("--leader-dot-size: var(--text-xs);", stylesheet)
+        self.assertIn("--leader-dot-step: 0.18em;", stylesheet)
+        self.assertIn("white-space: nowrap;", stylesheet)
+        self.assertIn("letter-spacing: var(--leader-dot-step);", stylesheet)
         self.assertIn(".page--home", stylesheet)
         self.assertIn(".home-contents", stylesheet)
+        self.assertRegex(
+            stylesheet,
+            r"\.page--home\s*\{[^}]*grid-template-columns:\s*var\(--sidebar-width\) minmax\(0, var\(--reading-span\)\)[^}]*column-gap:\s*var\(--page-column-gap\)",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.site-page--home \.page-head--cover\s*\{[^}]*grid-column:\s*2",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.site-page--home \.page-head--cover\s*\{[^}]*max-width:\s*var\(--home-column-measure\)",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.home-cover-meta\s*\{[^}]*grid-column:\s*2",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.home-cover-meta\s*\{[^}]*max-width:\s*var\(--home-column-measure\)",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.home-contents\s*\{[^}]*grid-column:\s*2[^}]*max-width:\s*var\(--home-column-measure\)",
+        )
         self.assertIn("min-height: 100svh;", stylesheet)
         self.assertIn(".site-bar", stylesheet)
-        self.assertIn(".site-nav--primary", stylesheet)
         self.assertIn(".site-nav--global", stylesheet)
-        self.assertIn(".link-row", stylesheet)
+        self.assertIn(".home-cover-meta", stylesheet)
+        self.assertNotIn(".link-row", stylesheet)
         self.assertIn(".reading-prose", stylesheet)
         self.assertIn(
             'url("/fonts/et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff")',
@@ -152,11 +134,14 @@ class ExampleBuildTests(unittest.TestCase):
         )
 
     def test_named_sections_fixture(self) -> None:
-        publish_root = self.build_fixture("named-sections")
-        home_page = read_text(publish_root / "index.html")
-        folded_map = read_text(publish_root / "folded-map" / "index.html")
+        _, publish_root = self.build_fixture("named-sections")
+        self.assert_common_public_layout(publish_root, ["/essay-fragment", "/folded-map"])
+
+        home_page = self.page_text(publish_root, "/")
+        folded_map = self.page_text(publish_root, "/folded-map")
 
         self.assertIn('class="works-entry"', home_page)
+        self.assertNotIn('class="works-entry-date works-date"', home_page)
         self.assertIn(">Essays</h2>", home_page)
         self.assertIn(">Projects</h2>", home_page)
         essays_index = home_page.index(">Essays</h2>")
@@ -177,30 +162,36 @@ class ExampleBuildTests(unittest.TestCase):
         self.assertNotIn('class="site-link site-contents-link" href="/essay-fragment">Essay Fragment</a>', folded_map)
 
     def test_section_fallback_fixture(self) -> None:
-        publish_root = self.build_fixture("section-fallback")
-        home_page = read_text(publish_root / "index.html")
+        _, publish_root = self.build_fixture("section-fallback")
+        self.assert_common_public_layout(publish_root, ["/night-walk"])
 
+        home_page = self.page_text(publish_root, "/")
         self.assertIn(">Other works</h2>", home_page)
         self.assertIn(">Night Walk<", home_page)
 
     def test_html_work_fixture(self) -> None:
-        publish_root = self.build_fixture("html-work")
-        studio_note = read_text(publish_root / "studio-note" / "index.html")
+        _, publish_root = self.build_fixture("html-work")
+        self.assert_common_public_layout(publish_root, ["/studio-note"])
+
+        studio_note = self.page_text(publish_root, "/studio-note")
 
         self.assertIn('<h1 class="page-title work-title p-name">Studio Note</h1>', studio_note)
+        self.assertIn('<div class="work-body e-content">', studio_note)
         self.assertIn("<section>", studio_note)
         self.assertIn('document.documentElement.dataset.work = "studio-note";', studio_note)
         self.assertLess(
             studio_note.index('<h1 class="page-title work-title p-name">Studio Note</h1>'),
             studio_note.index("document.documentElement.dataset.work"),
         )
-        self.assertEqual(list(publish_root.rglob("*.js")), [])
 
     def test_reading_microfeatures_fixture(self) -> None:
-        publish_root = self.build_fixture("reading-microfeatures")
-        field_notes = read_text(publish_root / "field-notes" / "index.html")
-        garden_path = read_text(publish_root / "garden-path" / "index.html")
-        stylesheet = read_text(publish_root / "site.css")
+        _, publish_root = self.build_fixture("reading-microfeatures")
+        self.assert_common_public_layout(publish_root, ["/field-notes", "/garden-path"])
+
+        field_notes = self.page_text(publish_root, "/field-notes")
+        garden_path = self.page_text(publish_root, "/garden-path")
+        home_page = self.page_text(publish_root, "/")
+        stylesheet = (publish_root / "site.css").read_text(encoding="utf-8")
 
         self.assertIn('page-head work-header', field_notes)
         self.assertNotIn('page-rule', field_notes)
@@ -249,10 +240,10 @@ class ExampleBuildTests(unittest.TestCase):
         self.assertNotIn('site-header', field_notes)
         self.assertNotIn('site-footer', field_notes)
         self.assertNotIn('<p class="site-global-label">Links</p>', field_notes)
-        home_page = read_text(publish_root / "index.html")
         self.assertIn('id="contents"', home_page)
         self.assertIn('>Contents</h2>', home_page)
         self.assertIn('href="/garden-path"', home_page)
+        self.assertNotIn('class="works-entry-date works-date"', home_page)
         self.assertIn(".external-link::after", stylesheet)
         self.assertIn(".site-sidebar", stylesheet)
         self.assertIn(".site-layout", stylesheet)
@@ -267,13 +258,12 @@ class ExampleBuildTests(unittest.TestCase):
         self.assertIn("color: var(--meta-muted);", stylesheet)
         self.assertIn("font-variant-numeric: tabular-nums;", stylesheet)
         self.assertIn("gap: var(--page-column-gap);", stylesheet)
-        self.assertIn("margin-left: var(--page-column-gap);", stylesheet)
-        self.assertIn("width: min(var(--note-width), 36%);", stylesheet)
-        self.assertIn("grid-template-columns: minmax(0, var(--measure)) minmax(var(--date-width), var(--margin-width));", stylesheet)
+        self.assertIn("width: var(--margin-width);", stylesheet)
+        self.assertIn("margin-right: calc(var(--margin-track-span) * -1);", stylesheet)
+        self.assertIn("grid-template-columns: minmax(0, var(--measure)) var(--margin-width);", stylesheet)
         self.assertIn("max-width: var(--margin-width);", stylesheet)
         self.assertIn("grid-column: 2;", stylesheet)
         self.assertIn("grid-row: 1;", stylesheet)
-        self.assertIn(".site-nav--primary", stylesheet)
         self.assertIn(".site-link--work-index", stylesheet)
         self.assertIn(".site-back-link", stylesheet)
         self.assertIn(".site-bar-section--contents", stylesheet)
@@ -285,54 +275,95 @@ class ExampleBuildTests(unittest.TestCase):
         self.assertIn(".site-work-headings-list", stylesheet)
         self.assertIn(".site-work-headings-item", stylesheet)
         self.assertIn(".site-bar-section--global", stylesheet)
-        self.assertIn(".site-title-link--placeholder", stylesheet)
         self.assertIn(".site-nav--global", stylesheet)
-        self.assertIn(".link-row", stylesheet)
+        self.assertNotIn(".link-row", stylesheet)
         self.assertIn(".reading-prose", stylesheet)
         self.assertIn("--scale-base: 1rem;", stylesheet)
-        self.assertIn("--scale-ratio: 1.18;", stylesheet)
-        self.assertIn("--step-n3: calc(var(--scale-base) * pow(var(--scale-ratio), -3));", stylesheet)
-        self.assertIn("--step-p9: calc(var(--scale-base) * pow(var(--scale-ratio), 9));", stylesheet)
-        self.assertIn("--text-base: clamp(var(--step-0), calc(var(--step-0) + 0.42vw), var(--step-p1));", stylesheet)
-        self.assertIn("--page-title-display-size: clamp(var(--step-p6), calc(var(--step-p5) + 3.2vw), var(--step-p9));", stylesheet)
-        self.assertIn("--reading-h1-size: clamp(var(--step-p2), calc(var(--step-p2) + 0.85vw), var(--step-p4));", stylesheet)
-        self.assertIn("--rail-group-gap: 1.5rem;", stylesheet)
-        self.assertIn("--rail-section-gap: 0.58rem;", stylesheet)
-        self.assertIn("--rail-item-gap: 0.34rem;", stylesheet)
-        self.assertIn("--rail-inline-gap: 0.1rem;", stylesheet)
-        self.assertIn("--rail-inline-indent: 0.72rem;", stylesheet)
+        self.assertIn("--scale-ratio: calc(7 / 6);", stylesheet)
+        self.assertIn("--step-n4: calc(var(--scale-base) * pow(var(--scale-ratio), -4));", stylesheet)
+        self.assertIn("--step-p16: calc(var(--scale-base) * pow(var(--scale-ratio), 16));", stylesheet)
+        self.assertIn("--text-2xs: clamp(var(--step-n2), calc(var(--step-n2) + 0.18vw), var(--step-n1));", stylesheet)
+        self.assertIn("--text-xs: clamp(var(--step-n1), calc(var(--step-n1) + 0.22vw), var(--step-0));", stylesheet)
+        self.assertIn("--text-sm: clamp(var(--step-0), calc(var(--step-0) + 0.24vw), var(--step-p1));", stylesheet)
+        self.assertIn("--text-base: clamp(var(--step-0), calc(var(--step-0) + 0.32vw), var(--step-p1));", stylesheet)
+        self.assertIn("--page-title-display-size: clamp(var(--step-p6), calc(var(--step-p5) + 2.8vw), var(--step-p10));", stylesheet)
+        self.assertIn("--page-title-section-size: clamp(var(--step-p3), calc(var(--step-p3) + 0.6vw), var(--step-p5));", stylesheet)
+        self.assertIn("--page-title-work-size: clamp(var(--step-p5), calc(var(--step-p4) + 1.45vw), var(--step-p8));", stylesheet)
+        self.assertIn("--reading-h1-size: clamp(var(--step-p2), calc(var(--step-p1) + 0.75vw), var(--step-p4));", stylesheet)
+        self.assertIn("--reading-h2-size: clamp(var(--step-p1), calc(var(--step-p1) + 0.4vw), var(--step-p3));", stylesheet)
+        self.assertIn("--reading-h3-size: clamp(var(--step-0), calc(var(--step-0) + 0.18vw), var(--step-p1));", stylesheet)
+        self.assertIn("--leading-running: calc(var(--scale-ratio) * var(--scale-ratio));", stylesheet)
+        self.assertIn("--leading-tight: var(--scale-ratio);", stylesheet)
+        self.assertNotIn("--scale-ratio: 1.18;", stylesheet)
         self.assertIn("--rail-guide-left: 0.16rem;", stylesheet)
         self.assertIn("--rail-guide-width: 0.085rem;", stylesheet)
         self.assertIn("--rail-guide-dot-size: 0.44rem;", stylesheet)
         self.assertIn("--rail-guide-dot-gap: 0.15rem;", stylesheet)
         self.assertIn("--rail-guide-center-adjust: 0.03ex;", stylesheet)
-        self.assertIn("--measure: clamp(38rem, calc(34rem + 8vw), 42rem);", stylesheet)
+        self.assertIn("--rail-guide-dot-offset: calc(var(--step-n4) / 18);", stylesheet)
+        self.assertIn("--measure: clamp(66ch, calc(58ch + 4vw), 78ch);", stylesheet)
+        self.assertIn("--home-column-measure: clamp(52ch, calc(46ch + 5vw), 60ch);", stylesheet)
+        self.assertIn("--work-title-measure: 18ch;", stylesheet)
         self.assertIn("--sidebar-width: 11rem;", stylesheet)
-        self.assertIn("--note-width: 11rem;", stylesheet)
+        self.assertNotIn("--page-deck-measure:", stylesheet)
+        self.assertNotIn("--home-contents-measure:", stylesheet)
         self.assertIn("--date-width: clamp(12rem, calc(11rem + 1.5vw), 13rem);", stylesheet)
-        self.assertIn("--margin-width: max(var(--note-width), var(--date-width));", stylesheet)
-        self.assertIn("--page-column-gap: clamp(var(--step-p5), 5vw, var(--step-p9));", stylesheet)
-        self.assertIn("--reading-span: calc(var(--measure) + var(--page-column-gap) + var(--margin-width));", stylesheet)
+        self.assertIn("--margin-width: var(--date-width);", stylesheet)
+        self.assertIn("--page-column-gap: clamp(var(--step-p5), 5vw, var(--step-p10));", stylesheet)
+        self.assertIn("--margin-track-span: calc(var(--page-column-gap) + var(--margin-width));", stylesheet)
+        self.assertIn("--reading-span: calc(var(--measure) + var(--margin-track-span));", stylesheet)
         self.assertIn("--rail-corner-space: var(--site-side-space);", stylesheet)
         self.assertIn("--rail-link-size: var(--text-2xs);", stylesheet)
-        self.assertIn("--site-top-space: clamp(var(--step-p3), 5vh, var(--step-p6));", stylesheet)
+        self.assertIn("--site-top-space: clamp(var(--step-p3), 5vh, var(--step-p7));", stylesheet)
         self.assertIn("--site-side-space: clamp(var(--step-0), 3.2vw, var(--step-p3));", stylesheet)
-        self.assertIn("--site-bottom-space: clamp(var(--step-p6), 8vw, var(--step-p9));", stylesheet)
+        self.assertIn("--site-side-space-narrow: clamp(var(--step-0), 4vw, var(--step-p2));", stylesheet)
+        self.assertIn("--site-bottom-space: clamp(var(--step-p6), 8vw, var(--step-p10));", stylesheet)
         self.assertIn("--page-stack-gap: clamp(var(--step-p3), 4vw, var(--step-p5));", stylesheet)
-        self.assertIn("--home-stack-gap: clamp(var(--step-p7), 8vh, var(--step-p9));", stylesheet)
-        self.assertIn("--cover-top-space: clamp(var(--step-p5), 10vh, var(--step-p9));", stylesheet)
+        self.assertIn("--home-stack-gap: clamp(var(--step-p7), 8vh, var(--step-p10));", stylesheet)
+        self.assertIn("--cover-top-space: clamp(var(--step-p5), 10vh, var(--step-p10));", stylesheet)
         self.assertIn("--prose-flow-space: var(--step-0);", stylesheet)
-        self.assertIn("--prose-heading-space: clamp(var(--step-p4), 4vw, var(--step-p6));", stylesheet)
+        self.assertIn("--prose-heading-space: clamp(var(--step-p4), 4vw, var(--step-p7));", stylesheet)
         self.assertIn("--note-stack-gap: var(--step-0);", stylesheet)
+        self.assertIn("--rail-bar-gap: clamp(var(--step-p2), 2.2vw, var(--step-p4));", stylesheet)
+        self.assertIn("--rail-section-stack-gap: calc(var(--step-n1) - var(--rail-item-gap));", stylesheet)
+        self.assertIn("--rail-contents-gap: calc(var(--step-0) - var(--step-n3));", stylesheet)
+        self.assertIn("--rail-group-gap: clamp(var(--step-p2), 2vw, var(--step-p4));", stylesheet)
+        self.assertIn("--rail-section-gap: clamp(var(--step-n4), 0.6vw, var(--step-n2));", stylesheet)
+        self.assertIn("--rail-item-gap: calc(var(--step-n3) / 2);", stylesheet)
+        self.assertIn("--rail-inline-gap: calc(var(--step-n4) / 5);", stylesheet)
+        self.assertIn("--rail-inline-group-gap: calc(var(--step-n4) / 4);", stylesheet)
+        self.assertIn("--rail-inline-indent: calc(var(--step-n1) - var(--rail-inline-gap));", stylesheet)
+        self.assertIn("--rail-nav-gap: var(--step-n4);", stylesheet)
+        self.assertIn("--rail-summary-gap: calc(var(--step-0) - var(--rail-item-gap));", stylesheet)
+        self.assertIn("--works-entry-gap: calc(var(--step-n1) - var(--rail-item-gap));", stylesheet)
+        self.assertIn("--works-entry-pad-block: calc(var(--step-n2) / 2);", stylesheet)
+        self.assertIn("--leader-dot-offset: 0.02em;", stylesheet)
+        self.assertIn("--blockquote-pad-inline: var(--step-p1);", stylesheet)
+        self.assertIn("--list-indent: var(--step-p2);", stylesheet)
+        self.assertIn("--code-block-pad-inline: var(--step-0);", stylesheet)
+        self.assertIn("--sidenote-pad-inline: var(--step-n1);", stylesheet)
+        self.assertIn("--mobile-nav-gap: calc(var(--step-n1) - var(--rail-item-gap));", stylesheet)
+        self.assertIn("--mobile-contents-gap: var(--step-n1);", stylesheet)
         self.assertIn("--rail-marker-center: calc(0.5lh + var(--rail-guide-center-adjust));", stylesheet)
         self.assertIn(
             "--rail-marker-track-inset: calc(var(--rail-marker-center) - (var(--rail-guide-dot-size) / 2));",
             stylesheet,
         )
+        self.assertRegex(stylesheet, r"body\s*\{[^}]*line-height:\s*var\(--leading-running\)")
+        self.assertRegex(stylesheet, r"\.page-title\s*\{[^}]*line-height:\s*var\(--leading-tight\)")
         self.assertIn("padding: var(--site-top-space) var(--site-side-space) var(--site-bottom-space);", stylesheet)
         self.assertIn("min-height: calc(100vh - var(--site-top-space) - var(--rail-corner-space));", stylesheet)
         self.assertIn("@media (max-width: 62rem)", stylesheet)
-        self.assertEqual(3, stylesheet.count("@media "))
+        self.assertIn("@media (max-width: 50rem)", stylesheet)
+        self.assertEqual(4, stylesheet.count("@media "))
+        self.assertRegex(
+            stylesheet,
+            r"\.site-page--home \.page--home,\s*\.site-page--home \.page--cover\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"@media \(max-width: 50rem\)\s*\{[^}]*\.work-page\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)",
+        )
         self.assertRegex(stylesheet, r"\.site-frame\s*\{[^}]*width:\s*100%")
         self.assertNotIn("margin: 0 auto;", stylesheet)
         self.assertRegex(
@@ -341,7 +372,6 @@ class ExampleBuildTests(unittest.TestCase):
         )
         self.assertRegex(stylesheet, r"\.site-sidebar\s*\{[^}]*position:\s*sticky")
         self.assertRegex(stylesheet, r"\.site-sidebar\s*\{[^}]*top:\s*var\(--site-top-space\)")
-        self.assertNotRegex(stylesheet, r"\.site-nav--primary a\[aria-current=\"page\"\]\s*\{[^}]*border-left-color")
         self.assertNotIn(".feed-link::after", stylesheet)
         self.assertNotIn('a[href="/feed.xml"]::after', stylesheet)
         self.assertNotIn(".internal-link::after", stylesheet)
@@ -356,11 +386,15 @@ class ExampleBuildTests(unittest.TestCase):
         )
         self.assertRegex(
             stylesheet,
+            r"\.reading-prose \.internal-link,\s*\.external-link\s*\{[^}]*color:\s*var\(--accent\)[^}]*text-decoration:\s*none",
+        )
+        self.assertRegex(
+            stylesheet,
             r"\.site-contents-link,\s*\.site-contents-current,\s*\.site-link--work-index\s*\{[^}]*font-family:\s*var\(--sans\)[^}]*font-size:\s*var\(--rail-link-size\)",
         )
         self.assertRegex(
             stylesheet,
-            r"\.site-link--work-index\s*\{[^}]*line-height:\s*1\.1[^}]*text-decoration:\s*none",
+            r"\.site-link--work-index\s*\{[^}]*line-height:\s*var\(--leading-running\)[^}]*text-decoration:\s*none",
         )
         self.assertRegex(
             stylesheet,
@@ -376,7 +410,7 @@ class ExampleBuildTests(unittest.TestCase):
         )
         self.assertRegex(
             stylesheet,
-            r"\.site-contents-item\.is-current\s*\{[^}]*gap:\s*calc\(var\(--rail-inline-gap\) \+ 0\.04rem\)",
+            r"\.site-contents-item\.is-current\s*\{[^}]*gap:\s*var\(--rail-inline-group-gap\)",
         )
         self.assertRegex(
             stylesheet,
@@ -398,10 +432,15 @@ class ExampleBuildTests(unittest.TestCase):
             stylesheet,
             r"\.reading-layout,\s*\.reading-column\s*\{[^}]*max-width:\s*var\(--reading-span\)",
         )
-        self.assertRegex(
-            stylesheet,
-            r"\.site-title-link\s*\{[^}]*font-size:\s*var\(--rail-link-size\)",
-        )
+        self.assertNotIn("gap: 1.6rem;", stylesheet)
+        self.assertNotIn("gap: 0.75rem;", stylesheet)
+        self.assertNotIn("gap: 0.6rem;", stylesheet)
+        self.assertNotIn("gap: 0.55rem;", stylesheet)
+        self.assertNotIn("gap: 0.8rem;", stylesheet)
+        self.assertNotIn("padding: 0.4rem 0;", stylesheet)
+        self.assertNotIn("margin-top: 0.7rem;", stylesheet)
+        self.assertNotIn("margin-top: 0.45rem;", stylesheet)
+        self.assertNotIn("--measure: clamp(38rem, calc(34rem + 8vw), 42rem);", stylesheet)
         self.assertRegex(
             stylesheet,
             r"\.site-link--work-index:hover,\s*\.site-link--work-index:focus-visible\s*\{[^}]*color:\s*inherit",
@@ -414,8 +453,10 @@ class ExampleBuildTests(unittest.TestCase):
         )
 
     def test_wikilinks_and_assets_fixture(self) -> None:
-        publish_root = self.build_fixture("wikilinks-and-assets")
-        orchard_note = read_text(publish_root / "orchard-note" / "index.html")
+        _, publish_root = self.build_fixture("wikilinks-and-assets")
+        self.assert_common_public_layout(publish_root, ["/garden-path", "/orchard-note"])
+
+        orchard_note = self.page_text(publish_root, "/orchard-note")
 
         self.assertEqual(2, orchard_note.count('class="internal-link work-link" href="/garden-path"'))
         self.assertIn('class="site-link site-contents-link" href="/garden-path">Garden Path</a>', orchard_note)
@@ -428,35 +469,23 @@ class ExampleBuildTests(unittest.TestCase):
         self.assertNotIn(">Elsewhere</a>", orchard_note)
 
     def test_publish_root_is_deterministic(self) -> None:
-        first_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "first"
-        second_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "second"
-
-        build_site(EXAMPLES_ROOT / "minimal-markdown", first_root)
-        build_site(EXAMPLES_ROOT / "minimal-markdown", second_root)
+        first_root = self.build_fixture("minimal-markdown")[1]
+        second_root = self.build_fixture("minimal-markdown")[1]
 
         self.assertEqual(tree_digest(first_root), tree_digest(second_root))
-
-    def test_stylesheet_output_is_deterministic(self) -> None:
-        first_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "first"
-        second_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "second"
-
-        build_site(EXAMPLES_ROOT / "minimal-markdown", first_root)
-        build_site(EXAMPLES_ROOT / "minimal-markdown", second_root)
-
         self.assertEqual((first_root / "site.css").read_bytes(), (second_root / "site.css").read_bytes())
 
     def test_rebuild_removes_stale_files(self) -> None:
-        publish_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "public"
-        build_site(EXAMPLES_ROOT / "minimal-markdown", publish_root)
+        site_root, publish_root = self.build_fixture("minimal-markdown")
         stale = publish_root / "stale.txt"
         stale.write_text("leftover", encoding="utf-8")
 
-        build_site(EXAMPLES_ROOT / "minimal-markdown", publish_root)
+        build_site(site_root, publish_root)
 
         self.assertFalse(stale.exists())
 
     def test_publish_root_contains_only_public_files(self) -> None:
-        publish_root = self.build_fixture("reading-microfeatures")
+        _, publish_root = self.build_fixture("reading-microfeatures")
         files = sorted(path.relative_to(publish_root).as_posix() for path in publish_root.rglob("*") if path.is_file())
         self.assertIn("feed.xml", files)
         self.assertIn("site.css", files)
@@ -473,19 +502,3 @@ class ExampleBuildTests(unittest.TestCase):
                 or path.endswith("/index.html")
                 or path == "index.html"
             )
-
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
-
-
-def tree_digest(root: Path) -> str:
-    digest = hashlib.sha256()
-    for path in sorted(item for item in root.rglob("*") if item.is_file()):
-        digest.update(path.relative_to(root).as_posix().encode("utf-8"))
-        digest.update(path.read_bytes())
-    return digest.hexdigest()
-
-
-if __name__ == "__main__":
-    unittest.main()

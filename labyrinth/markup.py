@@ -3,11 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from html import escape
 from html.parser import HTMLParser
+import posixpath
 import re
 import unicodedata
+from urllib.parse import urlsplit
 
 
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
+STANDARD_LINK_RE = re.compile(r"\[(?P<label>[^\]]+)\]\((?P<href>[^)]+)\)")
 
 
 @dataclass(frozen=True)
@@ -25,24 +28,32 @@ class Heading:
 
 
 @dataclass(frozen=True)
+class BodyLink:
+    href: str
+    resolved_path: str | None
+    fragment: str | None
+    kind: str
+
+
+@dataclass(frozen=True)
 class BodyRender:
     html: str
     headings: list[Heading]
     anchor_ids: set[str]
-    authored_links: list[str]
-    outbound_work_paths: set[str]
+    links: list[BodyLink]
 
 
 @dataclass(frozen=True)
 class InlineRender:
     html: str
     visible_text: str
-    authored_links: list[str]
-    outbound_work_paths: set[str]
+    links: list[BodyLink]
 
 
 def render_markdown_body(
     body_text: str,
+    *,
+    current_public_path: str,
     work_lookup: dict[str, ResolvedWorkLink],
     work_paths: set[str],
 ) -> BodyRender:
@@ -76,14 +87,17 @@ def render_markdown_body(
 
     pieces: list[str] = []
     headings: list[Heading] = []
-    authored_links: list[str] = []
-    outbound_work_paths: set[str] = set()
+    links: list[BodyLink] = []
     used_ids: set[str] = set()
 
     for block_type, content, source_level in blocks:
-        inline = render_inline(content, work_lookup, work_paths)
-        authored_links.extend(inline.authored_links)
-        outbound_work_paths.update(inline.outbound_work_paths)
+        inline = render_inline(
+            content,
+            current_public_path=current_public_path,
+            work_lookup=work_lookup,
+            work_paths=work_paths,
+        )
+        links.extend(inline.links)
 
         if block_type == "paragraph":
             pieces.append(f"<p>{inline.html}</p>")
@@ -109,48 +123,58 @@ def render_markdown_body(
         html="\n".join(pieces),
         headings=headings,
         anchor_ids={heading.anchor_id for heading in headings},
-        authored_links=authored_links,
-        outbound_work_paths=outbound_work_paths,
+        links=links,
     )
 
 
 class HTMLFragmentRewriter(HTMLParser):
-    def __init__(self, work_paths: set[str]) -> None:
+    def __init__(self, current_public_path: str, work_paths: set[str]) -> None:
         super().__init__(convert_charrefs=False)
+        self.current_public_path = current_public_path
         self.work_paths = work_paths
         self.output: list[str] = []
         self.headings: list[Heading] = []
         self.anchor_ids: set[str] = set()
-        self.authored_links: list[str] = []
-        self.outbound_work_paths: set[str] = set()
+        self.links: list[BodyLink] = []
         self._heading_tag: str | None = None
         self._heading_attrs: list[tuple[str, str | None]] = []
         self._heading_inner: list[str] = []
         self._heading_text: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        rendered_attrs, link = rewrite_link_attributes(
+            tag,
+            attrs,
+            current_public_path=self.current_public_path,
+            work_paths=self.work_paths,
+        )
+        if link is not None:
+            self.links.append(link)
+        rendered_tag = render_start_tag(tag, rendered_attrs)
+
         if self._heading_tag is not None:
-            self._heading_inner.append(render_start_tag(tag, rewrite_link_attributes(tag, attrs, self.work_paths)))
-            self._collect_link(tag, attrs)
+            self._heading_inner.append(rendered_tag)
             return
 
         if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
             self._heading_tag = tag
-            self._heading_attrs = attrs
+            self._heading_attrs = rendered_attrs
             self._heading_inner = []
             self._heading_text = []
             return
 
-        self._collect_link(tag, attrs)
-        self.output.append(render_start_tag(tag, rewrite_link_attributes(tag, attrs, self.work_paths)))
+        self.output.append(rendered_tag)
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        self._collect_link(tag, attrs)
-        rendered = render_start_tag(
+        rendered_attrs, link = rewrite_link_attributes(
             tag,
-            rewrite_link_attributes(tag, attrs, self.work_paths),
-            self_closing=True,
+            attrs,
+            current_public_path=self.current_public_path,
+            work_paths=self.work_paths,
         )
+        if link is not None:
+            self.links.append(link)
+        rendered = render_start_tag(tag, rendered_attrs, self_closing=True)
         if self._heading_tag is not None:
             self._heading_inner.append(rendered)
             return
@@ -162,10 +186,7 @@ class HTMLFragmentRewriter(HTMLParser):
                 text = "".join(self._heading_text).strip()
                 anchor_id = unique_anchor_id(slugify_visible_text(text), self.anchor_ids)
                 source_level = int(self._heading_tag[1])
-                heading_attrs = merge_attributes(
-                    self._heading_attrs,
-                    {"id": anchor_id},
-                )
+                heading_attrs = merge_attributes(self._heading_attrs, {"id": anchor_id})
                 rendered = (
                     f"<{self._heading_tag}{render_attributes(heading_attrs)}>"
                     f'<a class="heading-anchor" href="#{escape(anchor_id)}">{"".join(self._heading_inner)}</a>'
@@ -226,25 +247,17 @@ class HTMLFragmentRewriter(HTMLParser):
             html="".join(self.output),
             headings=self.headings,
             anchor_ids=self.anchor_ids,
-            authored_links=self.authored_links,
-            outbound_work_paths=self.outbound_work_paths,
+            links=self.links,
         )
-
-    def _collect_link(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag != "a":
-            return
-        href = dict(attrs).get("href")
-        if not href:
-            return
-        self.authored_links.append(href)
 
 
 def render_html_body(
     body_text: str,
-    work_lookup: dict[str, ResolvedWorkLink],
+    *,
+    current_public_path: str,
     work_paths: set[str],
 ) -> BodyRender:
-    parser = HTMLFragmentRewriter(work_paths)
+    parser = HTMLFragmentRewriter(current_public_path, work_paths)
     parser.feed(body_text)
     parser.close()
     return parser.render()
@@ -252,13 +265,14 @@ def render_html_body(
 
 def render_inline(
     text: str,
+    *,
+    current_public_path: str,
     work_lookup: dict[str, ResolvedWorkLink],
     work_paths: set[str],
 ) -> InlineRender:
     pieces: list[str] = []
     visible: list[str] = []
-    authored_links: list[str] = []
-    outbound_work_paths: set[str] = set()
+    links: list[BodyLink] = []
     index = 0
 
     while index < len(text):
@@ -276,7 +290,14 @@ def render_inline(
                         f'<a class="internal-link work-link" href="{escape(resolved.public_path)}">'
                         f"{escape(visible_label)}</a>"
                     )
-                    outbound_work_paths.add(resolved.public_path)
+                    links.append(
+                        BodyLink(
+                            href=resolved.public_path,
+                            resolved_path=resolved.public_path,
+                            fragment=None,
+                            kind="work",
+                        )
+                    )
                 visible.append(visible_label)
                 index = end + 2
                 continue
@@ -286,12 +307,12 @@ def render_inline(
             if link_match:
                 label = link_match.group("label")
                 href = link_match.group("href")
-                link_class = classify_link(href, work_paths)
+                link = analyze_body_link(href, current_public_path=current_public_path, work_paths=work_paths)
                 pieces.append(
-                    f'<a class="{escape(link_class)}" href="{escape(href)}">{escape(label)}</a>'
+                    f'<a class="{escape(link_class_name(link))}" href="{escape(href)}">{escape(label)}</a>'
                 )
                 visible.append(label)
-                authored_links.append(href)
+                links.append(link)
                 index = link_match.end()
                 continue
 
@@ -303,12 +324,8 @@ def render_inline(
     return InlineRender(
         html="".join(pieces),
         visible_text="".join(visible),
-        authored_links=authored_links,
-        outbound_work_paths=outbound_work_paths,
+        links=links,
     )
-
-
-STANDARD_LINK_RE = re.compile(r"\[(?P<label>[^\]]+)\]\((?P<href>[^)]+)\)")
 
 
 def split_wikilink(raw: str) -> tuple[str, str | None]:
@@ -345,6 +362,38 @@ def unique_anchor_id(base: str, used_ids: set[str]) -> str:
         counter += 1
     used_ids.add(candidate)
     return candidate
+
+
+def analyze_body_link(href: str, *, current_public_path: str, work_paths: set[str]) -> BodyLink:
+    resolved = resolve_internal_path(current_public_path, href)
+    if resolved is None:
+        return BodyLink(href=href, resolved_path=None, fragment=None, kind="external")
+    resolved_path, fragment = resolved
+    kind = "work" if resolved_path in work_paths and resolved_path != current_public_path else "internal"
+    return BodyLink(href=href, resolved_path=resolved_path, fragment=fragment, kind=kind)
+
+
+def resolve_internal_path(current_public_path: str, href: str) -> tuple[str, str | None] | None:
+    parts = urlsplit(href)
+    if parts.scheme or parts.netloc:
+        return None
+
+    raw_path = parts.path
+    fragment = parts.fragment or None
+    if raw_path == "":
+        return current_public_path, fragment
+
+    if raw_path.startswith("/"):
+        normalized = posixpath.normpath(raw_path)
+    else:
+        base = posixpath.dirname(current_public_path) or "/"
+        normalized = posixpath.normpath(posixpath.join(base, raw_path))
+
+    if normalized == ".":
+        normalized = "/"
+    if not normalized.startswith("/"):
+        normalized = "/" + normalized
+    return normalized, fragment
 
 
 def render_start_tag(
@@ -404,17 +453,20 @@ def html_entity_name_map() -> dict[str, str]:
 def rewrite_link_attributes(
     tag: str,
     attrs: list[tuple[str, str | None]],
+    *,
+    current_public_path: str,
     work_paths: set[str],
-) -> list[tuple[str, str | None]]:
+) -> tuple[list[tuple[str, str | None]], BodyLink | None]:
     if tag != "a":
-        return attrs
+        return attrs, None
 
     attr_map = dict(attrs)
     href = attr_map.get("href")
     if not href:
-        return attrs
+        return attrs, None
 
-    class_value = merge_class_values(attr_map.get("class"), classify_link(href, work_paths))
+    link = analyze_body_link(href, current_public_path=current_public_path, work_paths=work_paths)
+    class_value = merge_class_values(attr_map.get("class"), link_class_name(link))
     ordered = [("class", class_value)]
     for key, value in attrs:
         if key == "class":
@@ -422,7 +474,7 @@ def rewrite_link_attributes(
         ordered.append((key, value))
     if not any(key == "href" for key, _value in ordered):
         ordered.append(("href", href))
-    return ordered
+    return ordered, link
 
 
 def merge_class_values(existing: str | None, additions: str) -> str:
@@ -433,11 +485,9 @@ def merge_class_values(existing: str | None, additions: str) -> str:
     return " ".join(current)
 
 
-def classify_link(href: str, work_paths: set[str]) -> str:
-    if href.startswith("http://") or href.startswith("https://"):
+def link_class_name(link: BodyLink) -> str:
+    if link.kind == "external":
         return "external-link"
-
-    path = href.split("#", 1)[0]
-    if path in work_paths:
+    if link.kind == "work":
         return "internal-link work-link"
     return "internal-link"

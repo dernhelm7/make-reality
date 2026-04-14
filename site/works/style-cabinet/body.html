@@ -1,0 +1,89 @@
+<p>
+  This room gathers the elements that already have reading styles, so the default preview shows more than plain paragraphs.
+</p>
+
+<aside class="sidenote">
+  Use <code>body.html</code> when the structure matters. Lists, tables, figures, and notes all pass through untouched.
+</aside>
+
+<h2>Inventory</h2>
+<p>
+  Start in <a href="/starter-note">Starter Note</a>, pass through <a href="/walking-notes">Walking Notes</a>,
+  and keep this cabinet nearby when you want a quick visual check.
+</p>
+
+<ul>
+  <li>A plain unordered list item.</li>
+  <li>
+    A nested list item.
+    <ul>
+      <li>One smaller branch.</li>
+      <li>One branch with <code>inline code</code>.</li>
+    </ul>
+  </li>
+  <li>A final item with an external link to <a href="https://archive.example/atlas">Archive Atlas</a>.</li>
+</ul>
+
+<h2>Sequence</h2>
+<ol>
+  <li>Light the lamp.</li>
+  <li>Open the ledger.</li>
+  <li>
+    Mark the wall.
+    <ol>
+      <li>Count the first turn.</li>
+      <li>Count the second turn.</li>
+    </ol>
+  </li>
+  <li>Leave a note for the next reader.</li>
+</ol>
+
+<blockquote>
+  <p>A restrained page can still hold a varied reading surface.</p>
+  <p>The point is not more features. The point is one clear example of each useful one.</p>
+</blockquote>
+
+<hr>
+
+<h2>Specimen</h2>
+<pre><code>north  -> lamp
+west   -> graphite
+south  -> string
+east   -> folded map</code></pre>
+
+<figure>
+  <svg viewBox="0 0 160 72" role="img" aria-label="A simple four-point diagram">
+    <rect x="1" y="1" width="158" height="70" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+    <line x1="80" y1="14" x2="80" y2="58" stroke="currentColor" stroke-width="1.5"></line>
+    <line x1="42" y1="36" x2="118" y2="36" stroke="currentColor" stroke-width="1.5"></line>
+    <circle cx="80" cy="36" r="4" fill="currentColor"></circle>
+  </svg>
+  <figcaption>The figure style also covers inline diagrams and captions.</figcaption>
+</figure>
+
+<table>
+  <thead>
+    <tr>
+      <th>Mark</th>
+      <th>Measure</th>
+      <th>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>H<sub>2</sub>O</td>
+      <td>2</td>
+      <td>Subscript keeps the line intact.</td>
+    </tr>
+    <tr>
+      <td>x<sup>2</sup></td>
+      <td>4</td>
+      <td>Superscript stays compact.</td>
+    </tr>
+    <tr>
+      <td>Margin</td>
+      <td>1</td>
+      <td><span class="marginnote">A marginnote uses the same reading rail style.</span></td>
+    </tr>
+  </tbody>
+</table>

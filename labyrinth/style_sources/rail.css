@@ -1,73 +1,49 @@
 .site-bar {
   display: flex;
   flex-direction: column;
-  gap: 1.6rem;
+  gap: var(--rail-bar-gap);
   min-height: calc(100vh - var(--site-top-space) - var(--rail-corner-space));
 }
 
 .site-bar-section {
   display: grid;
-  gap: 0.6rem;
+  gap: var(--rail-section-stack-gap);
 }
 
 .site-bar-section--contents {
-  gap: 0.75rem;
+  gap: var(--rail-contents-gap);
 }
 
 .site-bar-section--global {
   margin-top: auto;
 }
 
-.site-title-link,
+.home-cover-meta .site-bar-section--global {
+  margin-top: 0;
+}
+
 .site-nav a,
-.link-row a,
 .site-back-link {
+  line-height: var(--leading-running);
   text-decoration: none;
-}
-
-.site-title-link {
-  font-family: var(--sans);
-  font-size: var(--rail-link-size);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.site-title-link--placeholder {
-  visibility: hidden;
-  pointer-events: none;
-  user-select: none;
-}
-
-.link-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem 1.1rem;
-  align-items: baseline;
-  font-family: var(--sans);
-  font-size: var(--rail-link-size);
 }
 
 .site-nav {
   display: grid;
-  gap: 0.45rem;
+  gap: var(--rail-nav-gap);
   align-items: start;
   font-family: var(--sans);
   font-size: var(--rail-link-size);
 }
 
-.site-nav--primary a {
-  color: var(--rail-primary-color);
-}
-
-.site-nav--primary a:hover,
-.site-nav--primary a:focus-visible,
-.site-nav--primary a[aria-current="page"] {
-  color: var(--accent);
-}
-
 .site-nav--global a {
   color: var(--accent);
+}
+
+.home-cover-meta .site-nav--global {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mobile-nav-gap) var(--mobile-nav-column-gap);
 }
 
 .site-back-link {
@@ -82,25 +58,10 @@
   color: var(--accent);
 }
 
-.link-row--accent a {
-  color: var(--accent);
-  border-bottom: var(--accent-link-stroke) solid color-mix(in srgb, var(--accent) 58%, var(--page));
-  padding-bottom: 0.06rem;
-}
-
-.link-row--accent a:hover,
-.link-row--accent a:focus-visible {
-  border-bottom-color: currentColor;
-}
-
 .site-global-label {
   color: var(--label-muted);
 }
 
 .site-link {
   white-space: nowrap;
-}
-
-.site-link--primary {
-  color: var(--ink);
 }

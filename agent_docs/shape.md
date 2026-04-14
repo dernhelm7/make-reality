@@ -24,15 +24,13 @@ Specify relationships and flow of use by author and reader.
 8. People using the site get a cover page at `/`, one work page for each work, and `/feed.xml`.
 9. The home page places the site `Contents` section beneath the cover.
 10. Every page except the RSS feed uses the shared site frame.
-11. Put navigation in a left-side rail.
-12. Put the global links block at the bottom of that rail.
-13. Link `Content` to the home-page `Contents` section.
-14. Reserve the home slot on the cover as non-interactive space.
-15. Build the home-page contents index and the work-page site contents groups from one section-and-work list.
-16. On work pages, put a back link, the current section label, and that section's works in the left rail. Nest the current-work heading index under the current work entry.
-17. Show only the current section in that rail.
-18. Use row entries in the home-page contents index. Pair each work title with its dotted leader and date.
-19. Keep the work body and backlinks in one page body.
+11. Put work-page navigation in a left-side rail.
+12. Put the home-page global links block beneath the cover header in the main reading column.
+13. Build the home-page contents index and the work-page site contents groups from one section-and-work list.
+14. On work pages, put a back link, the current section label, and that section's works in the left rail. Nest the current-work heading index under the current work entry.
+15. Show only the current section in that rail.
+16. Use row entries in the home-page contents index. Pair each work title with an open dotted leader. Do not show publish dates there.
+17. Keep the work body and backlinks in one page body.
 
 ## Micro-Features
 - `Heading self-links`: Give each body heading an id from its visible text. Link the heading text to that id.

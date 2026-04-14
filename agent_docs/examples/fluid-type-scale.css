@@ -8,14 +8,14 @@
 /* ══ Colors ══════════════════════════════════════════════════════ */
 
 :root {
-  --color-bg:     #fffff8;  /* page background          */
-  --color-ink:    #1c1a17;  /* body text                */
+  --color-bg:     #ffffff;  /* page background          */
+  --color-ink:    #202020;  /* body text                */
   --color-accent: #0a7c80;  /* links, active, emphasis  */
 }
 
 
 /* ══ Type scale ═══════════════════════════════════════════════════
-   Ratio: perfect fourth (1.333)
+   Ratio: septimal minor third (7/6 ≈ 1.167)
    Base: 1rem (user root font size — never override)
 
    Uses CSS pow() (CSS Values Level 4, modern browsers).
@@ -24,18 +24,18 @@
    scales with viewport width — tune to taste.                    */
 
 :root {
-  --ratio: 1.333;   /* perfect fourth; try 1.200 minor third, 1.250 major third */
+  --ratio: calc(7 / 6);   /* current site interval; try 1.200 for a stronger hierarchy */
   --base:  1rem;
 
   /* step = base × ratio^n                                         */
-  --step-n2: calc(var(--base) * pow(var(--ratio), -2)); /* ≈ 0.56rem */
-  --step-n1: calc(var(--base) * pow(var(--ratio), -1)); /* ≈ 0.75rem */
+  --step-n2: calc(var(--base) * pow(var(--ratio), -2)); /* ≈ 0.73rem */
+  --step-n1: calc(var(--base) * pow(var(--ratio), -1)); /* ≈ 0.86rem */
   --step-0:  var(--base);                               /*   1.00rem */
-  --step-p1: calc(var(--base) * pow(var(--ratio),  1)); /* ≈ 1.33rem */
-  --step-p2: calc(var(--base) * pow(var(--ratio),  2)); /* ≈ 1.78rem */
-  --step-p3: calc(var(--base) * pow(var(--ratio),  3)); /* ≈ 2.37rem */
-  --step-p4: calc(var(--base) * pow(var(--ratio),  4)); /* ≈ 3.16rem */
-  --step-p5: calc(var(--base) * pow(var(--ratio),  5)); /* ≈ 4.21rem */
+  --step-p1: calc(var(--base) * pow(var(--ratio),  1)); /* ≈ 1.17rem */
+  --step-p2: calc(var(--base) * pow(var(--ratio),  2)); /* ≈ 1.36rem */
+  --step-p3: calc(var(--base) * pow(var(--ratio),  3)); /* ≈ 1.59rem */
+  --step-p4: calc(var(--base) * pow(var(--ratio),  4)); /* ≈ 1.85rem */
+  --step-p5: calc(var(--base) * pow(var(--ratio),  5)); /* ≈ 2.16rem */
 
   /* clamp(min, preferred, max)                                    */
   /* min = this step — floor at narrow viewports                   */
@@ -43,11 +43,11 @@
   /* preferred = min + vw — continuous slide between the two       */
   --text-xs:   clamp(var(--step-n2), var(--step-n2) + 0.5vw, var(--step-n1)); /* meta, captions    */
   --text-sm:   clamp(var(--step-n1), var(--step-n1) + 0.5vw, var(--step-0));  /* labels, dates     */
-  --text-base: clamp(var(--step-0),  var(--step-0)  + 1.0vw, var(--step-p1)); /* body              */
-  --text-md:   clamp(var(--step-p1), var(--step-p1) + 1.5vw, var(--step-p2)); /* h3, section title */
-  --text-lg:   clamp(var(--step-p2), var(--step-p2) + 2.0vw, var(--step-p3)); /* h2                */
-  --text-xl:   clamp(var(--step-p3), var(--step-p3) + 3.0vw, var(--step-p4)); /* h1, work title    */
-  --text-2xl:  clamp(var(--step-p4), var(--step-p4) + 5.0vw, var(--step-p5)); /* homepage title    */
+  --text-base: clamp(var(--step-0),  var(--step-0)  + 0.32vw, var(--step-p1)); /* body              */
+  --text-md:   clamp(var(--step-p1), var(--step-p1) + 0.40vw, var(--step-p3)); /* h3, section title */
+  --text-lg:   clamp(var(--step-p2), var(--step-p2) + 0.75vw, var(--step-p4)); /* h2                */
+  --text-xl:   clamp(var(--step-p5), var(--step-p4) + 1.45vw, calc(var(--base) * pow(var(--ratio), 8))); /* work title */
+  --text-2xl:  clamp(calc(var(--base) * pow(var(--ratio), 6)), calc(var(--step-p5) + 2.8vw), calc(var(--base) * pow(var(--ratio), 10))); /* homepage title */
 }
 
 body            { font-size: var(--text-base); }

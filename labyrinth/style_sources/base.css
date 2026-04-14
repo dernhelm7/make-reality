@@ -19,20 +19,18 @@ body {
   color: var(--ink);
   font-family: var(--serif);
   font-size: var(--text-base);
-  line-height: 1.5;
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='5.5' fill='rgba(28,26,23,0.28)'/></svg>") 7 7, auto;
+  line-height: var(--leading-running);
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='5.5' fill='rgba(32,32,32,0.28)'/></svg>") 7 7, auto;
 }
 
 a[href],
 button,
 summary {
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='5.5' fill='none' stroke='rgba(28,26,23,0.38)' stroke-width='1.4'/></svg>") 7 7, pointer;
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='5.5' fill='none' stroke='rgba(32,32,32,0.38)' stroke-width='1.4'/></svg>") 7 7, pointer;
 }
 
 a {
   color: inherit;
-  text-decoration-thickness: var(--link-stroke);
-  text-underline-offset: 0.16em;
 }
 
 a:hover,

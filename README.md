@@ -50,3 +50,16 @@ python3 -m unittest
 ```
 
 The canonical fixtures and expected outcomes live in `agent_docs/examples/`.
+
+## Deploy
+
+The repo includes a GitHub Pages workflow at [deploy-pages.yml](/Users/dernhelm/Projects/Labyrinth/.github/workflows/deploy-pages.yml). It runs the local test suite, builds `site/` to `public/`, uploads that publish root, and deploys it through GitHub Pages on pushes to `main`.
+
+Before it will publish, set the repository Pages source to `GitHub Actions` in GitHub.
+
+This generator emits root-relative public URLs such as `/site.css` and `/feed.xml`, so use GitHub Pages with a root path:
+
+- a custom domain such as `yourdomain.com`
+- a user site such as `<username>.github.io`
+
+Do not use a project-site subpath such as `<username>.github.io/Labyrinth` unless the generator gains base-path support.

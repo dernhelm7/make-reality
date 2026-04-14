@@ -70,6 +70,254 @@ body {
 .toc-entry a { text-decoration: none; color: var(--ink); }
 .toc-date    { font-size: 0.75rem; opacity: 0.4; font-style: italic; }
 
+.sample-note {
+  margin-top: 0.9rem;
+  max-width: 24rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.77rem;
+  line-height: 1.6;
+  color: rgba(28,26,23,0.62);
+}
+
+.page.toc-page {
+  width: 24rem;
+  min-height: 35rem;
+  padding: 2.6rem 2.4rem 2.8rem;
+}
+
+.page.toc-page .nav {
+  margin-bottom: 2.3rem;
+}
+
+.page.toc-page .h1.sm {
+  margin-bottom: 1.5rem;
+}
+
+.toc-page-copy {
+  font-family: system-ui, sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: #888;
+  margin-bottom: 2rem;
+  max-width: 60ch;
+}
+
+.toc-spine {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.toc-spine-group {
+  display: grid;
+  grid-template-columns: 5rem 1fr;
+  column-gap: 1.1rem;
+  align-items: start;
+}
+
+.toc-spine-label,
+.toc-synopsis-label,
+.toc-ledger-index {
+  font-family: system-ui, sans-serif;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vt);
+}
+
+.toc-spine-label,
+.toc-synopsis-label {
+  padding-top: 0.2rem;
+}
+
+.toc-spine-list,
+.toc-synopsis-list,
+.toc-ledger-list {
+  list-style: none;
+}
+
+.toc-spine-list {
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 1.15rem;
+  position: relative;
+}
+
+.toc-spine-list::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.15rem;
+  bottom: 0.15rem;
+  width: 1px;
+  background: rgba(10,124,128,0.3);
+}
+
+.toc-spine-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.toc-spine-entry::before {
+  content: "";
+  position: absolute;
+  left: -1.15rem;
+  top: 0.85em;
+  width: 0.72rem;
+  border-top: 1px solid rgba(10,124,128,0.3);
+}
+
+.toc-spine-entry a,
+.toc-synopsis-main a,
+.toc-ledger-entry a {
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.toc-spine-date,
+.toc-synopsis-date,
+.toc-ledger-date {
+  font-size: 0.74rem;
+  font-style: italic;
+  white-space: nowrap;
+  color: rgba(28,26,23,0.46);
+}
+
+.toc-synopsis {
+  display: grid;
+  gap: 1.55rem;
+}
+
+.toc-synopsis-group {
+  display: grid;
+  grid-template-columns: 4.9rem 1.5rem 1fr;
+  column-gap: 0.85rem;
+  align-items: start;
+}
+
+.toc-brace {
+  display: block;
+  width: 0.95rem;
+  align-self: stretch;
+  position: relative;
+  margin-top: 0.12rem;
+}
+
+.toc-brace::before,
+.toc-brace::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: 0.7rem;
+  border-right: 1px solid rgba(10,124,128,0.55);
+}
+
+.toc-brace::before {
+  top: 0;
+  bottom: 50%;
+  border-top: 1px solid rgba(10,124,128,0.55);
+  border-bottom: 1px solid rgba(10,124,128,0.55);
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+.toc-brace::after {
+  top: 50%;
+  bottom: 0;
+  border-top: 1px solid rgba(10,124,128,0.55);
+  border-bottom: 1px solid rgba(10,124,128,0.55);
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+.toc-brace--two {
+  min-height: 7.1rem;
+}
+
+.toc-brace--three {
+  min-height: 11.1rem;
+}
+
+.toc-synopsis-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.toc-synopsis-entry {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.toc-synopsis-detail {
+  display: block;
+  margin-top: 0.14rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  font-style: italic;
+  color: rgba(28,26,23,0.6);
+}
+
+.toc-synopsis-date {
+  padding-top: 0.12rem;
+}
+
+.toc-ledger {
+  border-top: 1px solid rgba(10,124,128,0.3);
+  padding-top: 0.35rem;
+}
+
+.toc-ledger-group + .toc-ledger-group {
+  margin-top: 1.45rem;
+}
+
+.toc-ledger-heading {
+  display: flex;
+  gap: 0.7rem;
+  align-items: baseline;
+  margin-bottom: 0.45rem;
+}
+
+.toc-ledger-name {
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.toc-ledger-entry {
+  display: grid;
+  grid-template-columns: 1.7rem auto 1fr auto;
+  gap: 0.65rem;
+  align-items: baseline;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+
+.toc-ledger-no {
+  font-family: system-ui, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: rgba(28,26,23,0.42);
+}
+
+.toc-ledger-rule {
+  position: relative;
+  min-width: 2rem;
+}
+
+.toc-ledger-rule::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.34em;
+  border-bottom: 1px dotted rgba(10,124,128,0.38);
+}
+
 /* ── Tufte layout mock ── */
 .tufte-wrap {
   display: grid;
@@ -259,26 +507,135 @@ body {
 
 
 <!-- ════════════════════════════════════════
-     2 · WORKS INDEX · flat scannable list
+     2 · CONTENTS EXPLORATIONS
 ════════════════════════════════════════ -->
 <div class="section">
-  <div class="label">2 — Works index · flat scannable list</div>
+  <div class="label">2 — Contents explorations · print-driven arrangements</div>
+  <p class="toc-page-copy">The same Notes and Studies list appears three ways here. The variables are the section marker, the spine, and the row rhythm.</p>
   <div class="row">
-    <div class="page">
-      <nav class="nav">
-        <span class="site-name">Labyrinth</span>
-        <a href="#" aria-current="page" style="color:var(--vt); border-bottom:1px solid var(--vt); padding-bottom:1px;">Works</a>
-        <a href="#">Contact</a>
-      </nav>
-      <h1 class="h1 sm" style="margin-bottom:1.5rem;">Works</h1>
-      <div class="toc-section">Poetry</div>
-      <div class="toc-entry"><a href="#">First Room</a><span class="toc-date">Mar 2025</span></div>
-      <div class="toc-entry"><a href="#">Night Walk</a><span class="toc-date">Jan 2025</span></div>
-      <div class="toc-section">Projects</div>
-      <div class="toc-entry"><a href="#">The Folded Map</a><span class="toc-date">Nov 2024</span></div>
-      <div class="toc-entry"><a href="#">Orchard Note</a><span class="toc-date">Sep 2024</span></div>
-      <div class="toc-section">Art</div>
-      <div class="toc-entry"><a href="#">Garden Path</a><span class="toc-date">Jun 2024</span></div>
+    <div>
+      <div class="page toc-page">
+        <nav class="nav">
+          <span class="site-name">Labyrinth</span>
+          <a href="#" aria-current="page" style="color:var(--vt); border-bottom:1px solid var(--vt); padding-bottom:1px;">Contents</a>
+          <a href="#">Contact</a>
+        </nav>
+        <h1 class="h1 sm">Contents</h1>
+        <div class="toc-spine">
+          <section class="toc-spine-group">
+            <div class="toc-spine-label">Notes</div>
+            <ol class="toc-spine-list">
+              <li class="toc-spine-entry"><a href="/starter-note">Starter Note</a><span class="toc-spine-date">01 Jan</span></li>
+              <li class="toc-spine-entry"><a href="/walking-notes">Walking Notes</a><span class="toc-spine-date">08 Jan</span></li>
+            </ol>
+          </section>
+          <section class="toc-spine-group">
+            <div class="toc-spine-label">Studies</div>
+            <ol class="toc-spine-list">
+              <li class="toc-spine-entry"><a href="/margin-study">Margin Study</a><span class="toc-spine-date">15 Jan</span></li>
+              <li class="toc-spine-entry"><a href="/style-cabinet">Style Cabinet</a><span class="toc-spine-date">22 Jan</span></li>
+              <li class="toc-spine-entry"><a href="/bibliography">Bibliography</a><span class="toc-spine-date">29 Jan</span></li>
+            </ol>
+          </section>
+        </div>
+      </div>
+      <p class="sample-note">Section spine: section names stay outside the list, so the vertical line becomes the organizing mark and the entries feel suspended from it.</p>
+    </div>
+
+    <div>
+      <div class="page toc-page">
+        <nav class="nav">
+          <span class="site-name">Labyrinth</span>
+          <a href="#" aria-current="page" style="color:var(--vt); border-bottom:1px solid var(--vt); padding-bottom:1px;">Contents</a>
+          <a href="#">Contact</a>
+        </nav>
+        <h1 class="h1 sm">Contents</h1>
+        <div class="toc-synopsis">
+          <section class="toc-synopsis-group">
+            <div class="toc-synopsis-label">Notes</div>
+            <span class="toc-brace toc-brace--two" aria-hidden="true"></span>
+            <ol class="toc-synopsis-list">
+              <li class="toc-synopsis-entry">
+                <div class="toc-synopsis-main">
+                  <a href="/starter-note">Starter Note</a>
+                  <span class="toc-synopsis-detail">A short opening room that sets the site voice.</span>
+                </div>
+                <span class="toc-synopsis-date">01 Jan</span>
+              </li>
+              <li class="toc-synopsis-entry">
+                <div class="toc-synopsis-main">
+                  <a href="/walking-notes">Walking Notes</a>
+                  <span class="toc-synopsis-detail">Field notes gathered while moving through place.</span>
+                </div>
+                <span class="toc-synopsis-date">08 Jan</span>
+              </li>
+            </ol>
+          </section>
+          <section class="toc-synopsis-group">
+            <div class="toc-synopsis-label">Studies</div>
+            <span class="toc-brace toc-brace--three" aria-hidden="true"></span>
+            <ol class="toc-synopsis-list">
+              <li class="toc-synopsis-entry">
+                <div class="toc-synopsis-main">
+                  <a href="/margin-study">Margin Study</a>
+                  <span class="toc-synopsis-detail">An experiment in how notes sit beside a reading line.</span>
+                </div>
+                <span class="toc-synopsis-date">15 Jan</span>
+              </li>
+              <li class="toc-synopsis-entry">
+                <div class="toc-synopsis-main">
+                  <a href="/style-cabinet">Style Cabinet</a>
+                  <span class="toc-synopsis-detail">Type, spacing, and ornamental boundaries for the site.</span>
+                </div>
+                <span class="toc-synopsis-date">22 Jan</span>
+              </li>
+              <li class="toc-synopsis-entry">
+                <div class="toc-synopsis-main">
+                  <a href="/bibliography">Bibliography</a>
+                  <span class="toc-synopsis-detail">The sources and references behind the publishing system.</span>
+                </div>
+                <span class="toc-synopsis-date">29 Jan</span>
+              </li>
+            </ol>
+          </section>
+        </div>
+      </div>
+      <p class="sample-note">Bracketed synopsis: the brace gives each section a printed-book gesture, and the short descriptors make the contents page read like an argument instead of an archive.</p>
+    </div>
+
+    <div>
+      <div class="page toc-page">
+        <nav class="nav">
+          <span class="site-name">Labyrinth</span>
+          <a href="#" aria-current="page" style="color:var(--vt); border-bottom:1px solid var(--vt); padding-bottom:1px;">Contents</a>
+          <a href="#">Contact</a>
+        </nav>
+        <h1 class="h1 sm">Contents</h1>
+        <div class="toc-ledger">
+          <section class="toc-ledger-group">
+            <div class="toc-ledger-heading">
+              <span class="toc-ledger-index">I.</span>
+              <span class="toc-ledger-name">Notes</span>
+            </div>
+            <ol class="toc-ledger-list">
+              <li class="toc-ledger-entry"><span class="toc-ledger-no">01</span><a href="/starter-note">Starter Note</a><span class="toc-ledger-rule" aria-hidden="true"></span><span class="toc-ledger-date">01 Jan</span></li>
+              <li class="toc-ledger-entry"><span class="toc-ledger-no">02</span><a href="/walking-notes">Walking Notes</a><span class="toc-ledger-rule" aria-hidden="true"></span><span class="toc-ledger-date">08 Jan</span></li>
+            </ol>
+          </section>
+          <section class="toc-ledger-group">
+            <div class="toc-ledger-heading">
+              <span class="toc-ledger-index">II.</span>
+              <span class="toc-ledger-name">Studies</span>
+            </div>
+            <ol class="toc-ledger-list">
+              <li class="toc-ledger-entry"><span class="toc-ledger-no">03</span><a href="/margin-study">Margin Study</a><span class="toc-ledger-rule" aria-hidden="true"></span><span class="toc-ledger-date">15 Jan</span></li>
+              <li class="toc-ledger-entry"><span class="toc-ledger-no">04</span><a href="/style-cabinet">Style Cabinet</a><span class="toc-ledger-rule" aria-hidden="true"></span><span class="toc-ledger-date">22 Jan</span></li>
+              <li class="toc-ledger-entry"><span class="toc-ledger-no">05</span><a href="/bibliography">Bibliography</a><span class="toc-ledger-rule" aria-hidden="true"></span><span class="toc-ledger-date">29 Jan</span></li>
+            </ol>
+          </section>
+        </div>
+      </div>
+      <p class="sample-note">Catalogue ledger: this stays closest to the current build, but the roman section markers and entry numbers make it feel more like a register than a flat blog list.</p>
     </div>
   </div>
 </div>

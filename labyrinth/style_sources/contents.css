@@ -11,7 +11,7 @@
 .site-contents-summary {
   display: flex;
   align-items: baseline;
-  gap: 0.65rem;
+  gap: var(--rail-summary-gap);
   margin: 0;
   font-family: var(--sans);
   font-size: var(--text-2xs);
@@ -39,7 +39,7 @@
 
 .site-contents-item.is-current {
   display: grid;
-  gap: calc(var(--rail-inline-gap) + 0.04rem);
+  gap: var(--rail-inline-group-gap);
 }
 
 .site-contents-link,
@@ -53,7 +53,7 @@
 .site-contents-link,
 .site-contents-current {
   display: block;
-  line-height: 1.22;
+  line-height: var(--leading-running);
 }
 
 .site-contents-link {
@@ -72,7 +72,7 @@
   display: grid;
   gap: var(--rail-inline-gap);
   position: relative;
-  line-height: 1.1;
+  line-height: var(--leading-running);
 }
 
 .site-work-headings-list::before {
@@ -93,7 +93,7 @@
 .site-work-headings-item::before {
   content: "";
   position: absolute;
-  left: calc(var(--rail-inline-indent) * -1 + var(--rail-guide-left) - (var(--rail-guide-dot-size) / 2) + 0.03rem);
+  left: calc(var(--rail-inline-indent) * -1 + var(--rail-guide-left) - (var(--rail-guide-dot-size) / 2) + var(--rail-guide-dot-offset));
   top: var(--rail-marker-center);
   width: var(--rail-guide-dot-size);
   height: var(--rail-guide-dot-size);
@@ -109,7 +109,7 @@
 }
 
 .site-link--work-index {
-  line-height: 1.1;
+  line-height: var(--leading-running);
   color: var(--rail-muted-color);
   text-decoration: none;
 }
@@ -125,7 +125,7 @@
 
 .works-section {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--works-section-gap);
 }
 
 .section-heading {
@@ -135,9 +135,8 @@
 .works-entry {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
-  padding: 0.4rem 0;
-  border-bottom: 0.06rem solid var(--line);
+  gap: var(--works-entry-gap);
+  padding: var(--works-entry-pad-block) 0;
 }
 
 .works-entry-link {
@@ -152,29 +151,16 @@
 .works-entry-leader,
 .toc-leader {
   flex: 1;
-  position: relative;
-  min-width: 1rem;
+  display: block;
+  min-width: var(--step-0);
   overflow: hidden;
-}
-
-.works-entry-leader::after,
-.toc-leader::after {
-  content: "";
-  position: absolute;
-  bottom: 0.32em;
-  left: 0;
-  right: 0;
-  border-bottom: 0.06rem dotted var(--leader-muted);
-}
-
-.works-entry-date,
-.works-date {
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-  font-style: italic;
   white-space: nowrap;
-  color: var(--rail-toggle-color);
-  flex-shrink: 0;
+  font-size: var(--leader-dot-size);
+  line-height: 1;
+  letter-spacing: var(--leader-dot-step);
+  color: var(--leader-muted);
+  transform: translateY(var(--leader-dot-offset));
+  pointer-events: none;
 }
 
 .work-date {

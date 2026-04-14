@@ -18,6 +18,10 @@
   align-items: start;
 }
 
+.site-page--home .site-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .site-sidebar {
   position: sticky;
   top: var(--site-top-space);
@@ -34,12 +38,15 @@
 }
 
 .page--home {
-  gap: var(--home-stack-gap);
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, var(--reading-span));
+  column-gap: var(--page-column-gap);
+  row-gap: var(--home-stack-gap);
 }
 
 .work-page {
   width: 100%;
-  grid-template-columns: minmax(0, var(--measure)) minmax(var(--date-width), var(--margin-width));
+  grid-template-columns: minmax(0, var(--measure)) var(--margin-width);
   column-gap: var(--page-column-gap);
   row-gap: var(--page-stack-gap);
   align-items: start;
@@ -50,6 +57,33 @@
   min-height: 100vh;
   min-height: 100svh;
   align-content: start;
+}
+
+.site-page--home .page--cover {
+  grid-column: 1 / -1;
+  grid-template-columns: var(--sidebar-width) minmax(0, var(--reading-span));
+  grid-template-rows: auto auto 1fr;
+  column-gap: var(--page-column-gap);
+  row-gap: var(--page-head-gap);
+  padding-top: 0;
+  min-height: calc(100vh - var(--site-top-space) - var(--site-bottom-space));
+  min-height: calc(100svh - var(--site-top-space) - var(--site-bottom-space));
+  align-content: stretch;
+}
+
+.site-page--home .page-head--cover {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  max-width: var(--home-column-measure);
+  padding-top: var(--cover-top-space);
+}
+
+.home-cover-meta {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+  max-width: var(--home-column-measure);
 }
 
 .page-head {
@@ -64,7 +98,7 @@
 .page-title {
   margin: 0;
   font-weight: 400;
-  line-height: 1.08;
+  line-height: var(--leading-tight);
   letter-spacing: -0.01em;
 }
 
@@ -77,15 +111,14 @@
 }
 
 .work-title {
-  max-width: 18ch;
+  max-width: var(--work-title-measure);
   font-size: var(--page-title-work-size);
 }
 
 .page-deck {
-  max-width: 32rem;
   margin: 0;
   font-size: var(--text-sm);
-  line-height: 1.6;
+  line-height: var(--leading-running);
   color: var(--ink-soft);
 }
 
@@ -99,16 +132,9 @@
   gap: var(--body-stack-gap);
 }
 
-.cover-body {
-  gap: var(--cover-body-gap);
-}
-
-.cover-actions {
-  margin: 0;
-}
-
 .home-contents {
-  max-width: 33rem;
+  grid-column: 2;
+  max-width: var(--home-column-measure);
   scroll-margin-top: var(--site-top-space);
 }
 

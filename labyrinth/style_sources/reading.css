@@ -28,7 +28,7 @@
 .reading-prose h5,
 .reading-prose h6 {
   margin: var(--prose-heading-space) 0 var(--prose-heading-trail);
-  line-height: 1.18;
+  line-height: var(--leading-tight);
   font-weight: 400;
 }
 
@@ -49,14 +49,14 @@
 
 .reading-prose blockquote {
   margin: var(--prose-block-space) 0 0;
-  padding: 0.1rem 0 0.1rem 1.1rem;
+  padding: var(--blockquote-pad-block) 0 var(--blockquote-pad-block) var(--blockquote-pad-inline);
   border-left: 0.18rem solid color-mix(in srgb, var(--accent) 45%, var(--page));
   font-style: italic;
   color: color-mix(in srgb, var(--ink) 80%, var(--page));
 }
 
 .reading-prose blockquote p {
-  margin-top: 0.6rem;
+  margin-top: var(--blockquote-flow-space);
 }
 
 .reading-prose blockquote p:first-child {
@@ -73,27 +73,27 @@
 .reading-prose ul,
 .reading-prose ol {
   margin: var(--prose-flow-space) 0 0;
-  padding-left: 1.4rem;
+  padding-left: var(--list-indent);
 }
 
 .reading-prose li + li {
-  margin-top: 0.3rem;
+  margin-top: var(--list-item-gap);
 }
 
 .reading-prose li > ul,
 .reading-prose li > ol {
-  margin-top: 0.3rem;
+  margin-top: var(--list-item-gap);
 }
 
 .reading-prose pre {
   margin: var(--prose-block-space) 0 0;
-  padding: 0.85rem 1rem;
+  padding: var(--code-block-pad-block) var(--code-block-pad-inline);
   background: color-mix(in srgb, var(--ink) 5%, var(--page));
   border: 0.06rem solid var(--line);
   border-radius: 0.1rem;
   overflow-x: auto;
   font-size: var(--text-xs);
-  line-height: 1.45;
+  line-height: var(--leading-running);
 }
 
 .reading-prose code {
@@ -115,9 +115,10 @@
 }
 
 .reading-prose figcaption {
-  margin-top: 0.5rem;
+  margin-top: var(--figure-caption-space);
   font-family: var(--sans);
   font-size: var(--text-xs);
+  line-height: var(--leading-running);
   color: color-mix(in srgb, var(--ink) 62%, var(--page));
 }
 
@@ -142,11 +143,12 @@
   width: 100%;
   margin: var(--prose-block-space) 0 0;
   font-size: var(--text-xs);
+  line-height: var(--leading-running);
 }
 
 .reading-prose th,
 .reading-prose td {
-  padding: 0.45rem 0.8rem;
+  padding: var(--table-cell-pad-block) var(--table-cell-pad-inline);
   text-align: left;
   border-bottom: 0.06rem solid var(--line);
 }
@@ -167,12 +169,10 @@
   text-decoration: none;
 }
 
-.internal-link.work-link {
-  text-decoration-style: solid;
-}
-
+.reading-prose .internal-link,
 .external-link {
-  text-decoration-style: dotted;
+  color: var(--accent);
+  text-decoration: none;
 }
 
 .external-link::after {
@@ -182,23 +182,22 @@
 
 .reading-prose .sidenote,
 .reading-prose .marginnote,
-.reading-prose aside.sidenote,
-.work-date-note {
+.reading-prose aside.sidenote {
   float: right;
   clear: right;
-  width: min(var(--note-width), 36%);
-  margin-right: calc(var(--margin-width) * -1);
-  margin-left: var(--page-column-gap);
+  width: var(--margin-width);
+  margin-right: calc(var(--margin-track-span) * -1);
+  margin-left: 0;
   margin-bottom: var(--note-stack-gap);
 }
 
 .reading-prose .sidenote,
 .reading-prose .marginnote,
 .reading-prose aside.sidenote {
-  padding-left: 0.75rem;
+  padding-left: var(--sidenote-pad-inline);
   border-left: 0.06rem solid color-mix(in srgb, var(--accent) 42%, var(--page));
   font-size: var(--text-xs);
-  line-height: 1.45;
+  line-height: var(--leading-running);
   color: var(--ink-soft);
 }
 
@@ -214,7 +213,7 @@
   border-left: 0;
   font-family: var(--sans);
   font-size: var(--text-2xs);
-  line-height: 1.35;
+  line-height: var(--leading-running);
   color: var(--meta-muted);
 }
 
@@ -233,7 +232,7 @@
 }
 
 .backlinks-title {
-  margin-bottom: 0.7rem;
+  margin-bottom: var(--backlinks-title-gap);
   color: var(--accent);
 }
 
@@ -244,7 +243,7 @@
 }
 
 .backlinks-list li + li {
-  margin-top: 0.45rem;
+  margin-top: var(--backlinks-item-gap);
 }
 
 .backlinks-list a {
@@ -254,8 +253,5 @@
 
 .backlinks-list a:hover,
 .backlinks-list a:focus-visible {
-  text-decoration: underline;
-  text-decoration-thickness: var(--link-stroke);
-  text-underline-offset: 0.16em;
   color: var(--accent);
 }

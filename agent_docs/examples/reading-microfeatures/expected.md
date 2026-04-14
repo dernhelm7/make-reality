@@ -5,6 +5,6 @@
 - Those self-linking body headings keep a plain heading treatment without an underline.
 - The left rail nests linked section entries for `Materials`, `Turn`, and `Turn` under `Field Notes` as one close-set list with a guide line and current-entry dot.
 - The left rail shows `Other works` as a static section label and lists `Garden Path`.
-- The link to `[[Garden Path]]` resolves to the published path `/garden-path`.
-- The external link to `https://archive.example/atlas` uses the appended link marker.
+- The link to `[[Garden Path]]` resolves to the published path `/garden-path` and reads as a body link without a heavy underline.
+- The external link to `https://archive.example/atlas` uses the appended link marker without a heavy underline.
 - `garden-path` renders a backlinks section after the body content listing `Field Notes`.

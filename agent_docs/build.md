@@ -14,6 +14,7 @@ Specify how to generate the static site from source files.
 ## Source Model
 - The local build command is `./build-site <site-root> <publish-root>`.
 - That command resolves the local `labyrinth` package from the repo itself. Calling it by path does not require the current shell directory to be the repo root.
+- The repo may define a GitHub Pages workflow. That workflow builds `site/` to `public/` with `python3 -m labyrinth build`.
 - The site root contains `site.toml` and may contain `works/`.
 - `site.toml` defines `url`, `lang`, `title`, `statement`, `contact_links`, `gift_links`, and `sections`.
 - Each work folder contains `meta.toml` and exactly one body file: `index.md` or `body.html`.
@@ -28,6 +29,7 @@ Specify how to generate the static site from source files.
 6. The build validates the required source fields, duplicate published paths, and broken explicit internal links written by the author. Unmatched wikilinks do not fail the build.
 7. The same site root produces the same publish root and public paths.
 8. On failure, the build stops and reports the file and rule that caused the failure.
+9. If the repo defines a GitHub Pages workflow, that workflow publishes the built `public/` root from the same build logic as the local command.
 
 ## Acceptance Checks
 1. Run `./build-site <site-root> <publish-root>` against the full-output examples and inspect the publish root against each `expected.md`.

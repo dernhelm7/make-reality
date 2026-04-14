@@ -2,6 +2,7 @@
 
 - The resolved work title is `First Room`.
 - The home-page contents label is `First Room`.
+- The home page puts the global links beneath the cover header and keeps the cover header and `Contents` on one home-column measure.
 - The work falls into the fallback section `Other works`.
 - The first Markdown heading appears inside the work body beneath the work header, not as a second page-level title.
 - The left rail shows `Other works` as a static section label and `First Room` as the current entry.
