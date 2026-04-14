@@ -4,4 +4,4 @@ This is starter content for the default preview. Replace or remove this folder w
 
 # Next
 
-See [[Walking Notes]] for the Markdown path, [[Margin Study]] for HTML sidenotes, and [[Style Cabinet]] for lists, tables, figures, and code blocks.
+See [[Margin Study]] for HTML sidenotes and [[Style Cabinet]] for lists, tables, figures, and code blocks.
