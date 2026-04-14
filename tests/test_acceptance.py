@@ -48,6 +48,9 @@ class AcceptanceTests(FixtureSiteTestCase):
         home_page = self.page_text(publish_root, "/")
         stylesheet = (publish_root / "site.css").read_text(encoding="utf-8")
 
+        self.assertIn("<!DOCTYPE html>\n<html", home_page)
+        self.assertIn("</head>\n<body", home_page)
+        self.assertIn("<main class=\"site-main\">\n", first_room)
         self.assertIn("First Room", home_page)
         self.assertIn("Other works", home_page)
         self.assertIn('class="works-entry"', home_page)
@@ -180,10 +183,8 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertLess(essays_index, projects_index)
         self.assertLess(essays_index, essay_fragment_index)
         self.assertLess(projects_index, folded_map_index)
-        self.assertIn(
-            '<section class="site-contents-group site-contents-group--current"><p class="site-contents-summary">Projects</p>',
-            folded_map,
-        )
+        self.assertIn('<section class="site-contents-group site-contents-group--current">', folded_map)
+        self.assertIn('<p class="site-contents-summary">Projects</p>', folded_map)
         self.assertIn('<span class="site-contents-current" aria-current="page">Folded Map</span>', folded_map)
         self.assertNotIn("<details", folded_map)
         self.assertNotIn("<summary", folded_map)
@@ -254,10 +255,8 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('<a class="site-back-link" href="../#contents">Back to contents</a>', field_notes)
         self.assertIn('class="site-bar"', field_notes)
         self.assertIn('site-bar-section--contents', field_notes)
-        self.assertIn(
-            '<section class="site-contents-group site-contents-group--current"><p class="site-contents-summary">Other works</p>',
-            field_notes,
-        )
+        self.assertIn('<section class="site-contents-group site-contents-group--current">', field_notes)
+        self.assertIn('<p class="site-contents-summary">Other works</p>', field_notes)
         self.assertIn('class="site-link site-contents-link" href="../garden-path">Garden Path</a>', field_notes)
         self.assertNotIn("<details", field_notes)
         self.assertNotIn("<summary", field_notes)
