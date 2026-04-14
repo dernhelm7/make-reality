@@ -13,6 +13,31 @@ from .fixture_support import (
 
 
 class AcceptanceTests(FixtureSiteTestCase):
+    def test_rendered_public_urls_are_relative_to_the_current_page(self) -> None:
+        site_root, publish_root = self.make_fixture("reading-microfeatures")
+        site_toml = site_root / "site.toml"
+        site_toml.write_text(
+            site_toml.read_text(encoding="utf-8").replace(
+                'url = "https://labyrinth.example"',
+                'url = "https://labyrinth.example/journal"',
+                1,
+            ),
+            encoding="utf-8",
+        )
+
+        build_site(site_root, publish_root)
+
+        home_page = self.page_text(publish_root, "/")
+        field_notes = self.page_text(publish_root, "/field-notes")
+
+        self.assertIn('href="site.css"', home_page)
+        self.assertIn('href="feed.xml"', home_page)
+        self.assertIn('href="field-notes"', home_page)
+        self.assertIn('<a class="site-back-link" href="../#contents">Back to contents</a>', field_notes)
+        self.assertIn('class="site-link site-contents-link" href="../garden-path">Garden Path</a>', field_notes)
+        self.assertIn('<a class="internal-link work-link" href="../garden-path">Garden Path</a>', field_notes)
+        self.assertIn('<link rel="canonical" href="https://labyrinth.example/journal/field-notes">', field_notes)
+
     def test_minimal_markdown_fixture(self) -> None:
         _, publish_root = self.build_fixture("minimal-markdown")
         self.assert_common_public_layout(publish_root, ["/first-room"])
@@ -30,7 +55,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('<aside class="work-date-note" aria-label="Published">', first_room)
         self.assertIn('<time class="work-date dt-published" datetime="2024-02-14T00:00:00+00:00">14 February 2024</time>', first_room)
         self.assertLess(first_room.index('<aside class="work-date-note" aria-label="Published">'), first_room.index('<div class="page-body">'))
-        self.assertIn('<a class="site-back-link" href="/#contents">Back to contents</a>', first_room)
+        self.assertIn('<a class="site-back-link" href="../#contents">Back to contents</a>', first_room)
         self.assertIn('site-bar-section--contents', first_room)
         self.assertIn('<section class="site-contents-group site-contents-group--current">', first_room)
         self.assertIn('<p class="site-contents-summary">Other works</p>', first_room)
@@ -59,7 +84,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertNotIn('Enter the content', home_page)
         self.assertIn('id="contents"', home_page)
         self.assertIn('>Contents</h2>', home_page)
-        self.assertIn('href="/first-room"', home_page)
+        self.assertIn('href="first-room"', home_page)
         self.assertIn('site-nav--global', home_page)
         self.assertIn('site-bar-section--global', home_page)
         self.assertIn('class="site-global-label visually-hidden"', home_page)
@@ -71,7 +96,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertNotIn('<p class="page-kicker">Table of contents</p>', home_page)
         self.assertIn("@font-face {", stylesheet)
         self.assertIn(
-            'src: url("/fonts/et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff") format("woff");',
+            'src: url("fonts/et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff") format("woff");',
             stylesheet,
         )
         self.assertIn("font-display: swap;", stylesheet)
@@ -125,11 +150,11 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertNotIn(".link-row", stylesheet)
         self.assertIn(".reading-prose", stylesheet)
         self.assertIn(
-            'url("/fonts/et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff")',
+            'url("fonts/et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff")',
             stylesheet,
         )
         self.assertIn(
-            'url("/fonts/et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff")',
+            'url("fonts/et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff")',
             stylesheet,
         )
 
@@ -159,7 +184,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertNotIn("<details", folded_map)
         self.assertNotIn("<summary", folded_map)
         self.assertNotIn('<p class="site-contents-summary">Essays</p>', folded_map)
-        self.assertNotIn('class="site-link site-contents-link" href="/essay-fragment">Essay Fragment</a>', folded_map)
+        self.assertNotIn('class="site-link site-contents-link" href="../essay-fragment">Essay Fragment</a>', folded_map)
 
     def test_section_fallback_fixture(self) -> None:
         _, publish_root = self.build_fixture("section-fallback")
@@ -219,17 +244,17 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('<style class="site-work-index-targets">', field_notes)
         self.assertIn('.site-page--work:has(.work-body [id="materials"]:target)', field_notes)
         self.assertNotIn('font-weight:', field_notes)
-        self.assertIn('<a class="internal-link work-link" href="/garden-path">Garden Path</a>', field_notes)
+        self.assertIn('<a class="internal-link work-link" href="../garden-path">Garden Path</a>', field_notes)
         self.assertIn('<a class="external-link" href="https://archive.example/atlas">Archive Atlas</a>', field_notes)
         self.assertIn('class="site-sidebar"', field_notes)
-        self.assertIn('<a class="site-back-link" href="/#contents">Back to contents</a>', field_notes)
+        self.assertIn('<a class="site-back-link" href="../#contents">Back to contents</a>', field_notes)
         self.assertIn('class="site-bar"', field_notes)
         self.assertIn('site-bar-section--contents', field_notes)
         self.assertIn(
             '<section class="site-contents-group site-contents-group--current"><p class="site-contents-summary">Other works</p>',
             field_notes,
         )
-        self.assertIn('class="site-link site-contents-link" href="/garden-path">Garden Path</a>', field_notes)
+        self.assertIn('class="site-link site-contents-link" href="../garden-path">Garden Path</a>', field_notes)
         self.assertNotIn("<details", field_notes)
         self.assertNotIn("<summary", field_notes)
         self.assertNotIn('site-nav--primary', field_notes)
@@ -242,7 +267,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertNotIn('<p class="site-global-label">Links</p>', field_notes)
         self.assertIn('id="contents"', home_page)
         self.assertIn('>Contents</h2>', home_page)
-        self.assertIn('href="/garden-path"', home_page)
+        self.assertIn('href="garden-path"', home_page)
         self.assertNotIn('class="works-entry-date works-date"', home_page)
         self.assertIn(".external-link::after", stylesheet)
         self.assertIn(".site-sidebar", stylesheet)
@@ -373,7 +398,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertRegex(stylesheet, r"\.site-sidebar\s*\{[^}]*position:\s*sticky")
         self.assertRegex(stylesheet, r"\.site-sidebar\s*\{[^}]*top:\s*var\(--site-top-space\)")
         self.assertNotIn(".feed-link::after", stylesheet)
-        self.assertNotIn('a[href="/feed.xml"]::after', stylesheet)
+        self.assertNotIn('a[href="feed.xml"]::after', stylesheet)
         self.assertNotIn(".internal-link::after", stylesheet)
         self.assertNotIn(".heading-anchor::before", stylesheet)
         self.assertNotIn('content: "#";', stylesheet)
@@ -446,7 +471,7 @@ class AcceptanceTests(FixtureSiteTestCase):
             r"\.site-link--work-index:hover,\s*\.site-link--work-index:focus-visible\s*\{[^}]*color:\s*inherit",
         )
         self.assertIn('<h2 class="backlinks-title" id="backlinks-title">Backlinks</h2>', garden_path)
-        self.assertIn('<a href="/field-notes">Field Notes</a>', garden_path)
+        self.assertIn('<a href="../field-notes">Field Notes</a>', garden_path)
         self.assertLess(
             garden_path.index("A hedge note for the return path."),
             garden_path.index("Backlinks"),
@@ -458,10 +483,10 @@ class AcceptanceTests(FixtureSiteTestCase):
 
         orchard_note = self.page_text(publish_root, "/orchard-note")
 
-        self.assertEqual(2, orchard_note.count('class="internal-link work-link" href="/garden-path"'))
-        self.assertIn('class="site-link site-contents-link" href="/garden-path">Garden Path</a>', orchard_note)
-        self.assertIn('<a class="internal-link work-link" href="/garden-path">Garden Path</a>', orchard_note)
-        self.assertIn('<a class="internal-link work-link" href="/garden-path">Mapped</a>', orchard_note)
+        self.assertEqual(2, orchard_note.count('class="internal-link work-link" href="../garden-path"'))
+        self.assertIn('class="site-link site-contents-link" href="../garden-path">Garden Path</a>', orchard_note)
+        self.assertIn('<a class="internal-link work-link" href="../garden-path">Garden Path</a>', orchard_note)
+        self.assertIn('<a class="internal-link work-link" href="../garden-path">Mapped</a>', orchard_note)
         self.assertIn("Cafe", orchard_note)
         self.assertIn("Elsewhere", orchard_note)
         self.assertNotIn('href="Cafe"', orchard_note)

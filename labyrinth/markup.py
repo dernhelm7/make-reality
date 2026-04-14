@@ -8,6 +8,8 @@ import re
 import unicodedata
 from urllib.parse import urlsplit
 
+from .urls import relative_public_href
+
 
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
 STANDARD_LINK_RE = re.compile(r"\[(?P<label>[^\]]+)\]\((?P<href>[^)]+)\)")
@@ -287,7 +289,7 @@ def render_inline(
                     pieces.append(escape(visible_label))
                 else:
                     pieces.append(
-                        f'<a class="internal-link work-link" href="{escape(resolved.public_path)}">'
+                        f'<a class="internal-link work-link" href="{escape(relative_public_href(current_public_path, resolved.public_path))}">'
                         f"{escape(visible_label)}</a>"
                     )
                     links.append(
@@ -308,8 +310,9 @@ def render_inline(
                 label = link_match.group("label")
                 href = link_match.group("href")
                 link = analyze_body_link(href, current_public_path=current_public_path, work_paths=work_paths)
+                rendered_href = render_body_href(link, current_public_path=current_public_path)
                 pieces.append(
-                    f'<a class="{escape(link_class_name(link))}" href="{escape(href)}">{escape(label)}</a>'
+                    f'<a class="{escape(link_class_name(link))}" href="{escape(rendered_href)}">{escape(label)}</a>'
                 )
                 visible.append(label)
                 links.append(link)
@@ -467,14 +470,29 @@ def rewrite_link_attributes(
 
     link = analyze_body_link(href, current_public_path=current_public_path, work_paths=work_paths)
     class_value = merge_class_values(attr_map.get("class"), link_class_name(link))
-    ordered = [("class", class_value)]
+    rendered_href = render_body_href(link, current_public_path=current_public_path)
+    ordered: list[tuple[str, str | None]] = [("class", class_value)]
     for key, value in attrs:
         if key == "class":
             continue
+        if key == "href":
+            ordered.append(("href", rendered_href))
+            continue
         ordered.append((key, value))
-    if not any(key == "href" for key, _value in ordered):
-        ordered.append(("href", href))
     return ordered, link
+
+
+def render_body_href(link: BodyLink, *, current_public_path: str) -> str:
+    if link.kind == "external" or link.resolved_path is None:
+        return link.href
+    if link.resolved_path == current_public_path:
+        if link.fragment:
+            return f"#{link.fragment}"
+        return relative_public_href(current_public_path, current_public_path)
+    rendered = relative_public_href(current_public_path, link.resolved_path)
+    if link.fragment:
+        return f"{rendered}#{link.fragment}"
+    return rendered
 
 
 def merge_class_values(existing: str | None, additions: str) -> str:

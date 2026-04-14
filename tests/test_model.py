@@ -49,6 +49,25 @@ class MarkupAndGraphTests(unittest.TestCase):
         )
         self.assertIn('class="internal-link work-link"', body.html)
 
+    def test_rendered_internal_links_are_relative_to_the_current_page(self) -> None:
+        markdown = render_markdown_body(
+            "Read [[Garden Path]]. Compare [Turn](./garden-path#turn). Stay [Here](#opening).",
+            current_public_path="/field-notes",
+            work_lookup={"garden path": ResolvedWorkLink(title="Garden Path", public_path="/garden-path")},
+            work_paths={"/field-notes", "/garden-path"},
+        )
+        html = render_html_body(
+            '<p><a href="/garden-path#turn">Turn</a> <a href="#note">Note</a></p>',
+            current_public_path="/field-notes",
+            work_paths={"/field-notes", "/garden-path"},
+        )
+
+        self.assertIn('href="../garden-path"', markdown.html)
+        self.assertIn('href="../garden-path#turn"', markdown.html)
+        self.assertIn('href="#opening"', markdown.html)
+        self.assertIn('href="../garden-path#turn"', html.html)
+        self.assertIn('href="#note"', html.html)
+
     def test_site_graph_derives_sections_backlinks_and_lookup_maps(self) -> None:
         site = load_site_config(EXAMPLES_ROOT / "reading-microfeatures")
         graph = build_site_graph(site, load_work_inputs(EXAMPLES_ROOT / "reading-microfeatures"))

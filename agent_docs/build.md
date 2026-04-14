@@ -17,6 +17,8 @@ Specify how to generate the static site from source files.
 - The repo may define a GitHub Pages workflow. That workflow builds `site/` to `public/` with `./build-site`.
 - The site root contains `site.toml` and may contain `works/`.
 - `site.toml` defines `url`, `lang`, `title`, `statement`, `contact_links`, `gift_links`, and `sections`.
+- The public HTML uses relative links for pages and assets.
+- The build uses `url` from `site.toml` for canonical URLs and feed item URLs.
 - Each work folder contains `meta.toml` and exactly one body file: `index.md` or `body.html`.
 - `meta.toml` requires `created`. It may also define `section` and `aliases`.
 

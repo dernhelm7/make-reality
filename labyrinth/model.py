@@ -13,6 +13,7 @@ from .markup import (
     render_html_body,
     render_markdown_body,
 )
+from .urls import canonical_url
 
 
 @dataclass(frozen=True)
@@ -401,13 +402,6 @@ def sort_and_dedupe_works(items: list[WorkDocument]) -> list[WorkDocument]:
     for item in items:
         deduped[item.public_path] = item
     return sorted(deduped.values(), key=lambda work: work.title)
-
-
-def canonical_url(base_url: str, public_path: str) -> str:
-    if public_path == "/":
-        return base_url
-    return f"{base_url}{public_path}"
-
 
 def read_toml(path: Path) -> dict[str, object]:
     if not path.exists():

@@ -57,9 +57,11 @@ The repo includes a GitHub Pages workflow at [deploy-pages.yml](/Users/dernhelm/
 
 Before it will publish, set the repository Pages source to `GitHub Actions` in GitHub.
 
-This generator emits root-relative public URLs such as `/site.css` and `/feed.xml`, so use GitHub Pages with a root path:
+The build emits relative page and asset links, so the published HTML works at a domain root or under a subpath without changing the renderer.
+Set `site/site.toml` `url` to the deployed site URL for canonical URLs and feed item URLs.
 
-- a custom domain such as `yourdomain.com`
-- a user site such as `<username>.github.io`
+Examples:
 
-Do not use a project-site subpath such as `<username>.github.io/Labyrinth` unless the generator gains base-path support.
+- custom domain: `https://yourdomain.com`
+- user site: `https://<username>.github.io`
+- project site: `https://<username>.github.io/<repo>`

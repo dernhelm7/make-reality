@@ -6,7 +6,8 @@ from html import escape
 from pathlib import Path
 
 from .markup import Heading
-from .model import BuildError, ContentsSection, SiteGraph, WorkDocument, canonical_url
+from .model import BuildError, ContentsSection, SiteGraph, WorkDocument
+from .urls import canonical_url, relative_public_href, rewrite_root_relative_url
 
 TOC_LEADER_DOTS = "&middot;&nbsp;" * 48
 
@@ -48,13 +49,13 @@ def render_home_page(graph: SiteGraph) -> str:
         f'<h1 class="page-title page-title--display cover-title">{escape(graph.site.title)}</h1>'
         f'<p class="page-deck cover-statement">{escape(graph.site.statement)}</p>'
         "</header>"
-        f'<div class="home-cover-meta">{render_global_links_section(graph)}</div>'
+        f'<div class="home-cover-meta">{render_global_links_section(graph, current_public_path="/")}</div>'
         "</section>"
         '<section class="page home-contents" id="contents" aria-labelledby="contents-heading">'
         '<header class="page-head">'
         '<h2 class="page-title page-title--section" id="contents-heading">Contents</h2>'
         "</header>"
-        f'<div class="page-body works-body">{render_contents_sections(graph.contents_sections)}</div>'
+        f'<div class="page-body works-body">{render_contents_sections(graph, current_public_path="/")}</div>'
         "</section>"
         "</div>"
     )
@@ -75,7 +76,7 @@ def render_work_page(graph: SiteGraph, work: WorkDocument) -> str:
     if backlinks:
         items = "".join(
             "<li>"
-            f'<a href="{escape(item.public_path)}">{escape(item.title)}</a>'
+            f'<a href="{escape(relative_public_href(work.public_path, item.public_path))}">{escape(item.title)}</a>'
             "</li>"
             for item in backlinks
         )
@@ -118,12 +119,12 @@ def render_work_page(graph: SiteGraph, work: WorkDocument) -> str:
     )
 
 
-def render_contents_sections(contents_sections: tuple[ContentsSection, ...]) -> str:
+def render_contents_sections(graph: SiteGraph, *, current_public_path: str) -> str:
     sections_html: list[str] = []
-    for section in contents_sections:
+    for section in graph.contents_sections:
         items = "".join(
             '<li class="works-entry">'
-            f'<a class="works-entry-link" href="{escape(work.public_path)}">{escape(work.title)}</a>'
+            f'<a class="works-entry-link" href="{escape(relative_public_href(current_public_path, work.public_path))}">{escape(work.title)}</a>'
             f'<span class="works-entry-leader toc-leader" aria-hidden="true">{TOC_LEADER_DOTS}</span>'
             "</li>"
             for work in section.works
@@ -158,8 +159,8 @@ def render_page(
         f'<meta name="description" content="{escape(graph.site.statement)}">'
         '<meta name="theme-color" content="#0a7c80">'
         f'<link rel="canonical" href="{escape(canonical)}">'
-        '<link rel="stylesheet" href="/site.css">'
-        f'<link rel="alternate" type="application/rss+xml" title="{escape(graph.site.title)} feed" href="/feed.xml">'
+        f'<link rel="stylesheet" href="{escape(relative_public_href(public_path, "/site.css"))}">'
+        f'<link rel="alternate" type="application/rss+xml" title="{escape(graph.site.title)} feed" href="{escape(relative_public_href(public_path, "/feed.xml"))}">'
         f"{head_extra_html}"
         "</head>"
         f'<body class="site-page site-page--{escape(page_kind)}">'
@@ -185,7 +186,7 @@ def render_site_sidebar(graph: SiteGraph, current_work: WorkDocument | None = No
         '<aside class="site-sidebar">'
         '<div class="site-bar">'
         f"{render_sidebar_primary(graph, current_work)}"
-        f"{render_global_links_section(graph)}"
+        f"{render_global_links_section(graph, current_public_path=current_work.public_path if current_work else '/')}"
         "</div>"
         "</aside>"
     )
@@ -208,7 +209,7 @@ def render_sidebar_primary(graph: SiteGraph, current_work: WorkDocument | None) 
     contents_groups_html = render_sidebar_contents_groups(graph, current_work)
     return (
         '<div class="site-bar-section site-bar-section--primary">'
-        '<a class="site-back-link" href="/#contents">Back to contents</a>'
+        f'<a class="site-back-link" href="{escape(relative_public_href(current_work.public_path, "/", fragment="contents"))}">Back to contents</a>'
         "</div>"
         '<section class="site-bar-section site-bar-section--contents" aria-labelledby="site-contents-label">'
         '<h2 class="site-contents-label visually-hidden" id="site-contents-label">Site contents</h2>'
@@ -218,10 +219,10 @@ def render_sidebar_primary(graph: SiteGraph, current_work: WorkDocument | None) 
         "</section>"
     )
 
-def render_global_links_section(graph: SiteGraph) -> str:
+def render_global_links_section(graph: SiteGraph, *, current_public_path: str) -> str:
     items = graph.site.contact_links + graph.site.gift_links + [("RSS", "/feed.xml")]
     links_html = "".join(
-        f'<a class="site-link{" feed-link" if href == "/feed.xml" else ""}" href="{escape(href)}">{escape(label)}</a>'
+        f'<a class="site-link{" feed-link" if href == "/feed.xml" else ""}" href="{escape(rewrite_root_relative_url(current_public_path, href))}">{escape(label)}</a>'
         for label, href in normalize_sidebar_items(items)
     )
     return (
@@ -238,7 +239,7 @@ def render_sidebar_contents_groups(graph: SiteGraph, current_work: WorkDocument)
         return ""
 
     items = "".join(
-        render_sidebar_contents_item(work, current_work) for work in current_section.works
+        render_sidebar_contents_item(graph, work, current_work) for work in current_section.works
     )
     return (
         '<section class="site-contents-group site-contents-group--current">'
@@ -248,7 +249,7 @@ def render_sidebar_contents_groups(graph: SiteGraph, current_work: WorkDocument)
     )
 
 
-def render_sidebar_contents_item(work: WorkDocument, current_work: WorkDocument) -> str:
+def render_sidebar_contents_item(graph: SiteGraph, work: WorkDocument, current_work: WorkDocument) -> str:
     if work.public_path == current_work.public_path:
         inline_headings_html = ""
         if len(current_work.top_level_headings) >= 2:
@@ -268,7 +269,7 @@ def render_sidebar_contents_item(work: WorkDocument, current_work: WorkDocument)
         )
     return (
         '<li class="site-contents-item">'
-        f'<a class="site-link site-contents-link" href="{escape(work.public_path)}">{escape(work.title)}</a>'
+        f'<a class="site-link site-contents-link" href="{escape(relative_public_href(current_work.public_path, work.public_path))}">{escape(work.title)}</a>'
         "</li>"
     )
 
