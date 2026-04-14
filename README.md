@@ -53,7 +53,7 @@ The canonical fixtures and expected outcomes live in `agent_docs/examples/`.
 
 ## Deploy
 
-The repo includes a GitHub Pages workflow at [deploy-pages.yml](/Users/dernhelm/Projects/Labyrinth/.github/workflows/deploy-pages.yml). It runs the local test suite, builds `site/` to `public/`, uploads that publish root, and deploys it through GitHub Pages on pushes to `main`.
+The repo includes a GitHub Pages workflow at [deploy-pages.yml](/Users/dernhelm/Projects/Labyrinth/.github/workflows/deploy-pages.yml). It runs the local test suite, builds `site/` to `public/` with [build-site](/Users/dernhelm/Projects/Labyrinth/build-site), uploads that publish root, and deploys it through GitHub Pages on pushes to `main`.
 
 Before it will publish, set the repository Pages source to `GitHub Actions` in GitHub.
 

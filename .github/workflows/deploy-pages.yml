@@ -34,7 +34,7 @@ jobs:
         run: python3 -m unittest
 
       - name: Build site
-        run: python3 -m labyrinth build site public
+        run: ./build-site site public
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
