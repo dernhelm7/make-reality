@@ -21,6 +21,12 @@ def canonical_url(base_url: str, public_path: str) -> str:
     return f"{base_url}{public_path}"
 
 
+def page_base_href(base_url: str, public_path: str) -> str:
+    if public_path == "/":
+        return f"{base_url}/"
+    return f"{canonical_url(base_url, public_path)}/"
+
+
 def relative_public_href(from_public_path: str, target_public_path: str, *, fragment: str | None = None) -> str:
     current_dir = "." if from_public_path == "/" else from_public_path.lstrip("/")
     if target_public_path == "/":

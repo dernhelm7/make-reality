@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .markup import Heading
 from .model import BuildError, ContentsSection, SiteGraph, WorkDocument
-from .urls import canonical_url, relative_public_href, rewrite_root_relative_url
+from .urls import canonical_url, page_base_href, relative_public_href, rewrite_root_relative_url
 
 TOC_LEADER_DOTS = "&middot;&nbsp;" * 48
 
@@ -149,6 +149,7 @@ def render_page(
     head_extra_html: str,
 ) -> str:
     canonical = canonical_url(graph.site.base_url, public_path)
+    base_href = page_base_href(graph.site.base_url, public_path)
     return (
         "<!DOCTYPE html>"
         f'<html lang="{escape(graph.site.lang)}">'
@@ -158,6 +159,7 @@ def render_page(
         f"<title>{escape(page_title)}</title>"
         f'<meta name="description" content="{escape(graph.site.statement)}">'
         '<meta name="theme-color" content="#0a7c80">'
+        f'<base href="{escape(base_href)}">'
         f'<link rel="canonical" href="{escape(canonical)}">'
         f'<link rel="stylesheet" href="{escape(relative_public_href(public_path, "/site.css"))}">'
         f'<link rel="alternate" type="application/rss+xml" title="{escape(graph.site.title)} feed" href="{escape(relative_public_href(public_path, "/feed.xml"))}">'
