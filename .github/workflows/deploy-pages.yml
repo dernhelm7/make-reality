@@ -36,21 +36,10 @@ jobs:
       - name: Build site
         run: ./build-site site public
 
-      - name: Pack Pages artifact
-        run: |
-          if find public -type l -print -quit | grep -q .; then
-            echo "public contains symlinks; GitHub Pages artifacts must not contain symlinks." >&2
-            exit 1
-          fi
-          tar --directory public -cf "$RUNNER_TEMP/github-pages.tar" .
-          gzip -f "$RUNNER_TEMP/github-pages.tar"
-
       - name: Upload Pages artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-pages-artifact@v4
         with:
-          name: github-pages
-          path: ${{ runner.temp }}/github-pages.tar.gz
-          retention-days: 1
+          path: public
 
   deploy:
     environment:
