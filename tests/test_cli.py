@@ -18,6 +18,8 @@ class CommandSmokeTests(unittest.TestCase):
                 "-m",
                 "labyrinth",
                 "build",
+                "--build-url",
+                "http://localhost:8005/preview",
                 str(EXAMPLES_ROOT / "minimal-markdown"),
                 str(publish_root),
             ],

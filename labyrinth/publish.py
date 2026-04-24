@@ -16,6 +16,7 @@ def write_public_files(
     publish_root: Path,
     rendered_pages: list[RenderedPage],
     stylesheet: str,
+    feed_stylesheet: str,
     feed: str,
 ) -> None:
     for page in rendered_pages:
@@ -24,6 +25,7 @@ def write_public_files(
         output_path.write_text(page.html, encoding="utf-8")
 
     (publish_root / "site.css").write_text(stylesheet, encoding="utf-8")
+    (publish_root / "feed.css").write_text(feed_stylesheet, encoding="utf-8")
     write_shared_public_assets(publish_root)
     (publish_root / "feed.xml").write_text(feed, encoding="utf-8")
 

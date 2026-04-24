@@ -77,11 +77,63 @@ class MarkupAndGraphTests(unittest.TestCase):
         self.assertIs(graph.contents_sections[0], graph.contents_section_by_name["Other works"])
         self.assertEqual(("/field-notes",), tuple(work.public_path for work in graph.backlinks["/garden-path"]))
 
+    def test_site_config_accepts_mixed_string_and_table_sections(self) -> None:
+        site_root = self.make_site(
+            {
+                "alpha": {
+                    "meta.toml": (
+                        'created = "2024-02-14T00:00:00Z"\n'
+                        'updated = "2024-02-14T00:00:00Z"\n'
+                        'atom_id = "https://labyrinth.example/id/alpha"\n'
+                        'section = "Notes"\n'
+                    ),
+                    "index.md": "# Opening\n\nA first note.",
+                }
+            }
+        )
+        (site_root / "site.toml").write_text(
+            textwrap.dedent(
+                """\
+                url = "https://labyrinth.example"
+                lang = "en"
+                title = "Labyrinth"
+                cover_line = "Visible cover line."
+                statement = "Metadata summary."
+                author_name = "Labyrinth Author"
+                updated = "2024-02-14T00:00:00Z"
+
+                [[contact_links]]
+                label = "Email"
+                href = "mailto:hello@labyrinth.example"
+
+                [[gift_links]]
+                label = "Gift"
+                href = "https://gifts.example/labyrinth"
+
+                sections = [
+                  "Notes",
+                  { name = "Guides", description = "Reusable methods." },
+                ]
+                """
+            ),
+            encoding="utf-8",
+        )
+
+        site = load_site_config(site_root)
+        graph = build_site_graph(site, load_work_inputs(site_root))
+
+        self.assertEqual(("Notes", "Guides"), tuple(section.name for section in site.sections))
+        self.assertEqual(("", "Reusable methods."), tuple(section.description for section in site.sections))
+        self.assertEqual(("Notes", "Guides"), tuple(section.name for section in graph.contents_sections))
+        self.assertEqual("", graph.contents_sections[0].description)
+        self.assertEqual("Reusable methods.", graph.contents_sections[1].description)
+        self.assertEqual((), graph.contents_sections[1].works)
+
     def test_site_graph_rejects_missing_heading_fragment(self) -> None:
         site_root = self.make_site(
             {
                 "alpha": {
-                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\n',
+                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
                     "index.md": "# Opening\n\n[Broken](#missing)",
                 }
             }
@@ -101,7 +153,10 @@ class MarkupAndGraphTests(unittest.TestCase):
                 url = "https://labyrinth.example"
                 lang = "en"
                 title = "Labyrinth"
+                cover_line = "A room for poems, projects, and notes."
                 statement = "A room for poems, projects, and notes."
+                author_name = "Labyrinth Author"
+                updated = "2024-02-14T00:00:00Z"
 
                 [[contact_links]]
                 label = "Email"

@@ -20,7 +20,7 @@ Specify accessibility and interoperability rules.
 7. Readers can read and move through the site without scripting.
 8. Public URLs stay stable for unchanged content across rebuilds.
 9. Each work page exposes an `h-entry` for the work title, canonical URL, and main body content.
-10. Published pages expose canonical URLs, and the homepage exposes feed discovery metadata.
+10. Public HTML pages expose canonical URLs and Atom feed discovery metadata.
 
 ## Acceptance Checks
 1. Build the `web-output fixtures` named in `agent_docs/examples/README.md`.

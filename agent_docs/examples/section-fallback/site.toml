@@ -1,7 +1,10 @@
 url = "https://labyrinth.example"
 lang = "en"
 title = "Labyrinth"
+cover_line = "A room for poems, projects, and notes."
 statement = "A room for poems, projects, and notes."
+author_name = "Labyrinth Author"
+updated = "2024-03-10T18:30:00Z"
 
 [[contact_links]]
 label = "Email"

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from email.utils import format_datetime
 from html import escape
+from html.parser import HTMLParser
 from pathlib import Path
 
 from .markup import Heading
 from .model import BuildError, ContentsSection, SiteGraph, WorkDocument
-from .urls import canonical_url, page_base_href, relative_public_href, rewrite_root_relative_url
+from .urls import absolute_href, canonical_url, page_base_href, relative_public_href, rewrite_root_relative_url
 
 TOC_LEADER_DOTS = "&middot;&nbsp;" * 48
 
@@ -56,7 +56,7 @@ def render_home_page(graph: SiteGraph) -> str:
         '  <section class="page page--cover cover">',
         '    <header class="page-head page-head--cover">',
         f'      <h1 class="page-title page-title--display cover-title">{escape(graph.site.title)}</h1>',
-        f'      <p class="page-deck cover-statement">{escape(graph.site.statement)}</p>',
+        indent_html(render_multiline_paragraph(graph.site.cover_line, class_name="page-deck cover-statement"), 6),
         "    </header>",
         '    <div class="home-cover-meta">',
         indent_html(render_global_links_section(graph, current_public_path="/"), 6),
@@ -157,12 +157,21 @@ def render_contents_section(section: ContentsSection, *, current_public_path: st
     items = join_html_lines(
         *(render_works_entry(work, current_public_path=current_public_path) for work in section.works)
     )
+    description_html = (
+        f'  <p class="section-description">{escape(section.description)}</p>' if section.description else ""
+    )
+    works_list_html = ""
+    if items:
+        works_list_html = join_html_lines(
+            '  <ol class="works-list">',
+            indent_html(items, 4),
+            "  </ol>",
+        )
     return join_html_lines(
         '<section class="works-section">',
         f'  <h2 class="section-heading" id="{escape(section.anchor_id)}">{escape(section.name)}</h2>',
-        '  <ol class="works-list">',
-        indent_html(items, 4),
-        "  </ol>",
+        description_html,
+        works_list_html,
         "</section>",
     )
 
@@ -186,8 +195,8 @@ def render_page(
     main_content: str,
     head_extra_html: str,
 ) -> str:
-    canonical = canonical_url(graph.site.base_url, public_path)
-    base_href = page_base_href(graph.site.base_url, public_path)
+    canonical = canonical_url(graph.site.site_url, public_path)
+    base_href = page_base_href(graph.site.build_url, public_path)
     return join_html_lines(
         "<!DOCTYPE html>",
         f'<html lang="{escape(graph.site.lang)}">',
@@ -200,7 +209,7 @@ def render_page(
         f'  <base href="{escape(base_href)}">',
         f'  <link rel="canonical" href="{escape(canonical)}">',
         f'  <link rel="stylesheet" href="{escape(relative_public_href(public_path, "/site.css"))}">',
-        f'  <link rel="alternate" type="application/rss+xml" title="{escape(graph.site.title)} feed" href="{escape(relative_public_href(public_path, "/feed.xml"))}">',
+        f'  <link rel="alternate" type="application/atom+xml" title="{escape(graph.site.title)} feed" href="{escape(relative_public_href(public_path, "/feed.xml"))}">',
         indent_html(head_extra_html, 2),
         "</head>",
         f'<body class="site-page site-page--{escape(page_kind)}">',
@@ -363,29 +372,33 @@ def render_work_heading_target_styles(headings: tuple[Heading, ...]) -> str:
 
 
 def render_feed(graph: SiteGraph) -> str:
-    items = []
-    for work in graph.works:
-        items.append(
-            "<item>"
-            f"<title>{xml_escape(work.title)}</title>"
-            f"<link>{xml_escape(work.canonical_url)}</link>"
-            f"<guid>{xml_escape(work.canonical_url)}</guid>"
-            f"<pubDate>{xml_escape(format_datetime(work.created))}</pubDate>"
-            f"<description>{xml_escape(work.title)}</description>"
-            "</item>"
-        )
-    return (
-        '<?xml version="1.0" encoding="UTF-8"?>'
-        '<rss version="2.0">'
-        "<channel>"
-        f"<title>{xml_escape(graph.site.title)}</title>"
-        f"<link>{xml_escape(graph.site.base_url + '/')}</link>"
-        f"<description>{xml_escape(graph.site.statement)}</description>"
-        f"<language>{xml_escape(graph.site.lang)}</language>"
-        f"{''.join(items)}"
-        "</channel>"
-        "</rss>"
+    feed_id = canonical_url(graph.site.site_url, "/feed.xml")
+    feed_self_url = canonical_url(graph.site.build_url, "/feed.xml")
+    home_url = canonical_url(graph.site.build_url, "/")
+    feed_updated = max([graph.site.updated, *(work.updated for work in graph.works)])
+    entries = join_html_lines(*(render_feed_entry(graph, work) for work in graph.works))
+    return join_html_lines(
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<?xml-stylesheet type="text/css" href="feed.css"?>',
+        '<feed xmlns="http://www.w3.org/2005/Atom">',
+        f"  <title>{xml_escape(graph.site.title)}</title>",
+        f"  <subtitle>{xml_escape(graph.site.statement)}</subtitle>",
+        f"  <id>{xml_escape(feed_id)}</id>",
+        f"  <updated>{xml_escape(format_atom_datetime(feed_updated))}</updated>",
+        '  <author>',
+        f"    <name>{xml_escape(graph.site.author_name)}</name>",
+        "  </author>",
+        f'  <link rel="self" type="application/atom+xml" href="{xml_escape(feed_self_url)}"/>',
+        f'  <link rel="alternate" type="text/html" href="{xml_escape(home_url)}"/>',
+        indent_html(entries, 2),
+        "</feed>",
     )
+
+
+def render_multiline_paragraph(text: str, *, class_name: str) -> str:
+    lines = [escape(line) for line in text.splitlines()] or [escape(text)]
+    content = "<br>\n".join(lines)
+    return f'<p class="{escape(class_name)}">{content}</p>'
 
 
 def validate_rendered_pages(rendered_pages: list[RenderedPage]) -> None:
@@ -396,6 +409,10 @@ def validate_rendered_pages(rendered_pages: list[RenderedPage]) -> None:
 
 def format_long_date(value) -> str:
     return value.strftime("%d %B %Y")
+
+
+def format_atom_datetime(value) -> str:
+    return value.isoformat().replace("+00:00", "Z")
 
 
 def css_string_literal(value: str) -> str:
@@ -410,3 +427,74 @@ def xml_escape(value: str) -> str:
         .replace('"', "&quot;")
         .replace("'", "&apos;")
     )
+
+
+def render_feed_entry(graph: SiteGraph, work: WorkDocument) -> str:
+    body_html = absolutize_feed_content(graph, work)
+    output_url = canonical_url(graph.site.build_url, work.public_path)
+    return join_html_lines(
+        "  <entry>",
+        f"    <title>{xml_escape(work.title)}</title>",
+        f"    <id>{xml_escape(work.atom_id)}</id>",
+        f"    <published>{xml_escape(format_atom_datetime(work.created))}</published>",
+        f"    <updated>{xml_escape(format_atom_datetime(work.updated))}</updated>",
+        f'    <link rel="alternate" type="text/html" href="{xml_escape(output_url)}"/>',
+        f'    <content type="html">{xml_escape(body_html)}</content>',
+        "  </entry>",
+    )
+
+
+def absolutize_feed_content(graph: SiteGraph, work: WorkDocument) -> str:
+    parser = FeedContentRewriter(graph.site.build_url, work.public_path)
+    parser.feed(work.body.html)
+    parser.close()
+    return parser.render()
+
+
+class FeedContentRewriter(HTMLParser):
+    def __init__(self, base_url: str, current_public_path: str) -> None:
+        super().__init__(convert_charrefs=False)
+        self.base_url = base_url
+        self.current_public_path = current_public_path
+        self.output: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.output.append(render_html_start_tag(tag, self.rewrite_attrs(attrs), self_closing=False))
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.output.append(render_html_start_tag(tag, self.rewrite_attrs(attrs), self_closing=True))
+
+    def handle_endtag(self, tag: str) -> None:
+        self.output.append(f"</{tag}>")
+
+    def handle_data(self, data: str) -> None:
+        self.output.append(data)
+
+    def handle_comment(self, data: str) -> None:
+        self.output.append(f"<!--{data}-->")
+
+    def handle_entityref(self, name: str) -> None:
+        self.output.append(f"&{name};")
+
+    def handle_charref(self, name: str) -> None:
+        self.output.append(f"&#{name};")
+
+    def rewrite_attrs(self, attrs: list[tuple[str, str | None]]) -> list[tuple[str, str | None]]:
+        rewritten: list[tuple[str, str | None]] = []
+        for name, value in attrs:
+            if value is None or name not in {"href", "src", "poster"}:
+                rewritten.append((name, value))
+                continue
+            rewritten.append((name, absolute_href(self.base_url, self.current_public_path, value)))
+        return rewritten
+
+    def render(self) -> str:
+        return "".join(self.output)
+
+
+def render_html_start_tag(tag: str, attrs: list[tuple[str, str | None]], *, self_closing: bool) -> str:
+    rendered_attrs = "".join(
+        f' {name}' if value is None else f' {name}="{escape(value, quote=True)}"' for name, value in attrs
+    )
+    closing = " />" if self_closing else ">"
+    return f"<{tag}{rendered_attrs}{closing}"

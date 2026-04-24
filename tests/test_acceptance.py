@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
+
 from labyrinth.builder import build_site
 
 from .fixture_support import (
@@ -8,11 +11,40 @@ from .fixture_support import (
     ET_BOOK_LICENSE,
     ET_BOOK_ROMAN,
     FixtureSiteTestCase,
+    REPO_ROOT,
     tree_digest,
 )
 
 
 class AcceptanceTests(FixtureSiteTestCase):
+    def test_build_url_override_keeps_canonical_urls_and_rewrites_preview_targets(self) -> None:
+        site_root, publish_root = self.make_fixture("minimal-markdown")
+
+        build_site(
+            site_root,
+            publish_root,
+            build_url="http://localhost:8009/preview",
+        )
+
+        first_room = self.page_text(publish_root, "/first-room")
+        feed = (publish_root / "feed.xml").read_text(encoding="utf-8")
+
+        self.assertIn('<base href="http://localhost:8009/preview/first-room/">', first_room)
+        self.assertIn('<link rel="canonical" href="https://labyrinth.example/first-room">', first_room)
+        self.assertIn('<a class="visually-hidden u-url" href="https://labyrinth.example/first-room">Permalink</a>', first_room)
+        self.assertIn('<id>https://labyrinth.example/feed.xml</id>', feed)
+        self.assertIn('<link rel="self" type="application/atom+xml" href="http://localhost:8009/preview/feed.xml"/>', feed)
+        self.assertIn('<link rel="alternate" type="text/html" href="http://localhost:8009/preview"/>', feed)
+        self.assertIn('<id>https://labyrinth.example/id/first-room</id>', feed)
+        self.assertIn(
+            '<link rel="alternate" type="text/html" href="http://localhost:8009/preview/first-room"/>',
+            feed,
+        )
+        self.assertIn(
+            '&lt;a class=&quot;heading-anchor&quot; href=&quot;http://localhost:8009/preview/first-room#opening&quot;&gt;Opening&lt;/a&gt;',
+            feed,
+        )
+
     def test_rendered_public_urls_are_relative_to_the_current_page(self) -> None:
         site_root, publish_root = self.make_fixture("reading-microfeatures")
         site_toml = site_root / "site.toml"
@@ -39,6 +71,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('class="site-link site-contents-link" href="../garden-path">Garden Path</a>', field_notes)
         self.assertIn('<a class="internal-link work-link" href="../garden-path">Garden Path</a>', field_notes)
         self.assertIn('<link rel="canonical" href="https://labyrinth.example/journal/field-notes">', field_notes)
+        self.assertIn('rel="alternate" type="application/atom+xml"', home_page)
 
     def test_minimal_markdown_fixture(self) -> None:
         _, publish_root = self.build_fixture("minimal-markdown")
@@ -46,6 +79,8 @@ class AcceptanceTests(FixtureSiteTestCase):
 
         first_room = self.page_text(publish_root, "/first-room")
         home_page = self.page_text(publish_root, "/")
+        feed = (publish_root / "feed.xml").read_text(encoding="utf-8")
+        feed_stylesheet = (publish_root / "feed.css").read_text(encoding="utf-8")
         stylesheet = (publish_root / "site.css").read_text(encoding="utf-8")
 
         self.assertIn("<!DOCTYPE html>\n<html", home_page)
@@ -78,9 +113,11 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('href="#opening">Opening</a>', first_room)
         self.assertNotIn('aria-label="On this page"', first_room)
         self.assertEqual(first_room.count("<h1"), 1)
-        self.assertIn('rel="alternate" type="application/rss+xml"', home_page)
+        self.assertIn('rel="alternate" type="application/atom+xml"', home_page)
         self.assertIn('page-head', home_page)
         self.assertIn('<base href="https://labyrinth.example/">', home_page)
+        self.assertIn('<p class="page-deck cover-statement">Visible cover line for the fixture.</p>', home_page)
+        self.assertIn('<meta name="description" content="Metadata summary for the fixture.">', home_page)
         self.assertNotIn('page-rule', home_page)
         self.assertIn('page-deck', home_page)
         self.assertNotIn('class="site-sidebar"', home_page)
@@ -156,6 +193,23 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn(".home-cover-meta", stylesheet)
         self.assertNotIn(".link-row", stylesheet)
         self.assertIn(".reading-prose", stylesheet)
+        self.assertIn(".section-description", stylesheet)
+        self.assertIn('@namespace url("http://www.w3.org/2005/Atom");', feed_stylesheet)
+        self.assertIn("feed > title", feed_stylesheet)
+        self.assertIn('entry > link[rel="alternate"]::before', feed_stylesheet)
+        self.assertIn('<?xml version="1.0" encoding="UTF-8"?>', feed)
+        self.assertIn('<?xml-stylesheet type="text/css" href="feed.css"?>', feed)
+        self.assertIn('<feed xmlns="http://www.w3.org/2005/Atom">', feed)
+        self.assertIn('<id>https://labyrinth.example/feed.xml</id>', feed)
+        self.assertIn('<name>Labyrinth Author</name>', feed)
+        self.assertIn('<link rel="self" type="application/atom+xml" href="https://labyrinth.example/feed.xml"/>', feed)
+        self.assertIn('<link rel="alternate" type="text/html" href="https://labyrinth.example"/>', feed)
+        self.assertIn('<subtitle>Metadata summary for the fixture.</subtitle>', feed)
+        self.assertIn('<id>https://labyrinth.example/id/first-room</id>', feed)
+        self.assertIn('<published>2024-02-14T00:00:00Z</published>', feed)
+        self.assertIn('<updated>2024-02-14T00:00:00Z</updated>', feed)
+        self.assertIn('<content type="html">&lt;h2 id=&quot;opening&quot;&gt;&lt;a class=&quot;heading-anchor&quot; href=&quot;https://labyrinth.example/first-room#opening&quot;&gt;Opening&lt;/a&gt;&lt;/h2&gt;', feed)
+        self.assertNotIn("<rss", feed)
         self.assertIn(
             'url("fonts/et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff")',
             stylesheet,
@@ -176,19 +230,27 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertNotIn('class="works-entry-date works-date"', home_page)
         self.assertIn(">Essays</h2>", home_page)
         self.assertIn(">Projects</h2>", home_page)
+        self.assertIn(">Cabinet</h2>", home_page)
+        self.assertIn("Reflective prose and finished arguments.", home_page)
+        self.assertIn("Built things and working artifacts.", home_page)
+        self.assertIn("References and adjacent material.", home_page)
         essays_index = home_page.index(">Essays</h2>")
         projects_index = home_page.index(">Projects</h2>")
+        cabinet_index = home_page.index(">Cabinet</h2>")
         essay_fragment_index = home_page.index(">Essay Fragment<")
         folded_map_index = home_page.index(">Folded Map<")
         self.assertLess(essays_index, projects_index)
+        self.assertLess(projects_index, cabinet_index)
         self.assertLess(essays_index, essay_fragment_index)
         self.assertLess(projects_index, folded_map_index)
+        self.assertEqual(2, home_page.count('class="works-entry"'))
         self.assertIn('<section class="site-contents-group site-contents-group--current">', folded_map)
         self.assertIn('<p class="site-contents-summary">Projects</p>', folded_map)
         self.assertIn('<span class="site-contents-current" aria-current="page">Folded Map</span>', folded_map)
         self.assertNotIn("<details", folded_map)
         self.assertNotIn("<summary", folded_map)
         self.assertNotIn('<p class="site-contents-summary">Essays</p>', folded_map)
+        self.assertNotIn("Built things and working artifacts.", folded_map)
         self.assertNotIn('class="site-link site-contents-link" href="../essay-fragment">Essay Fragment</a>', folded_map)
 
     def test_section_fallback_fixture(self) -> None:
@@ -221,6 +283,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         field_notes = self.page_text(publish_root, "/field-notes")
         garden_path = self.page_text(publish_root, "/garden-path")
         home_page = self.page_text(publish_root, "/")
+        feed = (publish_root / "feed.xml").read_text(encoding="utf-8")
         stylesheet = (publish_root / "site.css").read_text(encoding="utf-8")
 
         self.assertIn('page-head work-header', field_notes)
@@ -271,6 +334,16 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('id="contents"', home_page)
         self.assertIn('>Contents</h2>', home_page)
         self.assertIn('href="garden-path"', home_page)
+        self.assertIn('<id>https://labyrinth.example/id/field-notes</id>', feed)
+        self.assertIn('<updated>2024-08-04T10:00:00Z</updated>', feed)
+        self.assertIn(
+            '&lt;a class=&quot;internal-link work-link&quot; href=&quot;https://labyrinth.example/garden-path&quot;&gt;Garden Path&lt;/a&gt;',
+            feed,
+        )
+        self.assertIn(
+            '&lt;a class=&quot;external-link&quot; href=&quot;https://archive.example/atlas&quot;&gt;Archive Atlas&lt;/a&gt;',
+            feed,
+        )
         self.assertNotIn('class="works-entry-date works-date"', home_page)
         self.assertIn(".external-link::after", stylesheet)
         self.assertIn(".site-sidebar", stylesheet)
@@ -496,6 +569,27 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertNotIn(">Cafe</a>", orchard_note)
         self.assertNotIn(">Elsewhere</a>", orchard_note)
 
+    def test_starter_site_uses_make_reality_sections_and_write_link(self) -> None:
+        publish_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "public"
+        build_site(REPO_ROOT / "site", publish_root)
+
+        home_page = self.page_text(publish_root, "/")
+        bibliography = self.page_text(publish_root, "/bibliography")
+
+        self.assertIn('<h1 class="page-title page-title--display cover-title">Make Reality</h1>', home_page)
+        self.assertIn("Wanting to know one another<br>", home_page)
+        self.assertIn("they made the Universe.", home_page)
+        self.assertIn(">Poems</h2>", home_page)
+        self.assertIn(">Notes</h2>", home_page)
+        self.assertIn(">Studies</h2>", home_page)
+        self.assertIn(">Guides</h2>", home_page)
+        self.assertIn(">Projects</h2>", home_page)
+        self.assertIn(">Cabinet</h2>", home_page)
+        self.assertIn("nothing here is real, but it is the stuff of reality", home_page)
+        self.assertIn("how I&#x27;ve solved problems", home_page)
+        self.assertIn('href="https://tally.so/r/PLACEHOLDER">Write</a>', home_page)
+        self.assertIn("Mechanical Watch", bibliography)
+
     def test_publish_root_is_deterministic(self) -> None:
         first_root = self.build_fixture("minimal-markdown")[1]
         second_root = self.build_fixture("minimal-markdown")[1]
@@ -516,6 +610,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         _, publish_root = self.build_fixture("reading-microfeatures")
         files = sorted(path.relative_to(publish_root).as_posix() for path in publish_root.rglob("*") if path.is_file())
         self.assertIn("feed.xml", files)
+        self.assertIn("feed.css", files)
         self.assertIn("site.css", files)
         self.assertIn(ET_BOOK_ROMAN, files)
         self.assertIn(ET_BOOK_ITALIC, files)
@@ -525,6 +620,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         for path in files:
             self.assertTrue(
                 path == "feed.xml"
+                or path == "feed.css"
                 or path == "site.css"
                 or path.startswith("fonts/et-book/")
                 or path.endswith("/index.html")

@@ -7,4 +7,5 @@
 - The left rail shows `Other works` as a static section label and lists `Garden Path`.
 - The link to `[[Garden Path]]` resolves to the published path `/garden-path` and reads as a body link without a heavy underline.
 - The external link to `https://archive.example/atlas` uses the appended link marker without a heavy underline.
+- The Atom feed entry for `Field Notes` rewrites `Garden Path` and `Archive Atlas` to absolute URLs inside entry content.
 - `garden-path` renders a backlinks section after the body content listing `Field Notes`.

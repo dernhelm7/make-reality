@@ -16,21 +16,22 @@ Specify relationships and flow of use by author and reader.
 ## Requirements
 1. The author adds works to a folder.
 2. Adding a work there is enough to make it part of the site.
-3. The author lists section names in `site.toml` in the order they should appear in the home-page `Contents` section.
+3. The author lists sections in `site.toml` in the order they should appear in the home-page `Contents` section. A section may also define a description for the home-page shelf.
 4. A work may set `section` to one of those section names. Unnamed or unmatched works go to `Other works`.
 5. Each work derives its title from its folder name. The home-page contents index uses that same title.
 6. Publish each work at `/<folder-name>`.
 7. A work can be written in Markdown or HTML body content.
 8. People using the site get a cover page at `/`, one work page for each work, and `/feed.xml`.
 9. The home page places the site `Contents` section beneath the cover.
-10. Every page except the RSS feed uses the shared site frame.
+10. Every page except the Atom feed uses the shared site frame.
 11. Put work-page navigation in a left-side rail.
 12. Put the home-page global links block beneath the cover header in the main reading column.
 13. Build the home-page contents index and the work-page site contents groups from one section-and-work list.
 14. On work pages, put a back link, the current section label, and that section's works in the left rail. Nest the current-work heading index under the current work entry.
 15. Show only the current section in that rail.
-16. Use row entries in the home-page contents index. Pair each work title with an open dotted leader. Do not show publish dates there.
-17. Keep the work body and backlinks in one page body.
+16. Show every named section on the home page even when no works resolve there. Show `Other works` only when at least one work falls back there.
+17. Use row entries in the home-page contents index. Pair each work title with an open dotted leader. Do not show publish dates there.
+18. Keep the work body and backlinks in one page body.
 
 ## Micro-Features
 - `Heading self-links`: Give each body heading an id from its visible text. Link the heading text to that id.

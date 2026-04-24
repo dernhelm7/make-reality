@@ -1,0 +1,111 @@
+@namespace url("http://www.w3.org/2005/Atom");
+
+feed,
+entry,
+author,
+title,
+subtitle,
+updated,
+published,
+content,
+name {
+  display: block;
+}
+
+id,
+link[rel="self"] {
+  display: none;
+}
+
+feed {
+  margin: 0;
+  padding: 2.5rem 1.5rem 4rem;
+  background: #fbfaf5;
+  color: #202020;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+feed::before {
+  content: "Atom feed";
+  display: block;
+  margin-bottom: 1rem;
+  color: #6e6a63;
+  font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+feed > title {
+  max-width: 42rem;
+  font-size: 2.5rem;
+  line-height: 1.05;
+}
+
+feed > subtitle {
+  max-width: 36rem;
+  margin-top: 0.75rem;
+  color: #6e6a63;
+  font-size: 1.1rem;
+  font-style: italic;
+}
+
+feed > author,
+feed > updated {
+  max-width: 36rem;
+  margin-top: 0.75rem;
+  color: #6e6a63;
+  font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+author::before {
+  content: "By ";
+}
+
+name {
+  display: inline;
+}
+
+entry {
+  max-width: 42rem;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #d8d1c6;
+}
+
+entry > title {
+  font-size: 1.7rem;
+  line-height: 1.15;
+}
+
+entry > published,
+entry > updated {
+  margin-top: 0.35rem;
+  color: #6e6a63;
+  font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+entry > link[rel="alternate"] {
+  display: block;
+  margin-top: 0.6rem;
+  color: #0a7c80;
+  font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+entry > link[rel="alternate"]::before {
+  content: attr(href);
+}
+
+content {
+  display: none;
+}

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import posixpath
-from urllib.parse import SplitResult, urlsplit, urlunsplit
+from urllib.parse import SplitResult, urljoin, urlsplit, urlunsplit
 
 
 def site_path_prefix(base_url: str) -> str:
@@ -52,3 +52,34 @@ def rewrite_root_relative_url(from_public_path: str, href: str) -> str:
             fragment=fragment or "",
         )
     )
+
+
+def absolute_href(base_url: str, from_public_path: str, href: str) -> str:
+    parts = urlsplit(href)
+    if parts.scheme or parts.netloc:
+        return href
+
+    site = urlsplit(base_url)
+    if parts.path.startswith("/"):
+        return urlunsplit(
+            SplitResult(
+                scheme=site.scheme,
+                netloc=site.netloc,
+                path=public_url(base_url, parts.path),
+                query=parts.query,
+                fragment=parts.fragment,
+            )
+        )
+
+    if not parts.path:
+        return urlunsplit(
+            SplitResult(
+                scheme=site.scheme,
+                netloc=site.netloc,
+                path=public_url(base_url, from_public_path),
+                query=parts.query,
+                fragment=parts.fragment,
+            )
+        )
+
+    return urljoin(page_base_href(base_url, from_public_path), href)

@@ -15,11 +15,16 @@ STYLE_SOURCE_ORDER = (
     "responsive.css",
     "print.css",
 )
+FEED_STYLE_SOURCE = "feed.css"
 
 
 def render_stylesheet() -> str:
     parts = [read_stylesheet_source(name) for name in STYLE_SOURCE_ORDER]
     return "\n\n".join(part for part in parts if part) + "\n"
+
+
+def render_feed_stylesheet() -> str:
+    return read_stylesheet_source(FEED_STYLE_SOURCE) + "\n"
 
 
 def read_stylesheet_source(name: str) -> str:

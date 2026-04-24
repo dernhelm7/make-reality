@@ -52,6 +52,7 @@ class FixtureSiteTestCase(unittest.TestCase):
         self.assertTrue((publish_root / "index.html").is_file())
         self.assertFalse((publish_root / "works").exists())
         self.assertTrue((publish_root / "feed.xml").is_file())
+        self.assertTrue((publish_root / "feed.css").is_file())
         self.assertTrue((publish_root / "site.css").is_file())
         self.assertTrue((publish_root / ET_BOOK_ROMAN).is_file())
         self.assertTrue((publish_root / ET_BOOK_ITALIC).is_file())

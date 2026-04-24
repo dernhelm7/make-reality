@@ -8,13 +8,19 @@ The product aim and ownership rules live under `agent_docs/`; this README only d
 Run the local build command with one site root and one publish root:
 
 ```sh
-./build-site <site-root> <publish-root>
+./build-site [--build-url <url>] <site-root> <publish-root>
 ```
 
 Example:
 
 ```sh
 ./build-site agent_docs/examples/minimal-markdown /tmp/labyrinth-out
+```
+
+Use `--build-url` when the current build should point at a different host than `site.toml` `url`:
+
+```sh
+./build-site --build-url http://localhost:8000 site /tmp/labyrinth-preview
 ```
 
 The command also works when called by absolute path from outside the repo root.
@@ -28,6 +34,7 @@ Run the preview helper from any directory:
 ```
 
 That builds the starter site to `/tmp/labyrinth-preview` and serves it at `http://localhost:8000`.
+The preview helper sets `http://localhost:<port>` as the build URL, so feed links and other absolute preview targets stay local.
 The starter site includes editable sample works under `site/works/` so the default preview shows a real home page and multiple work pages.
 
 The authoring model is intentionally small:
@@ -58,7 +65,8 @@ The repo includes a GitHub Pages workflow at [deploy-pages.yml](/Users/dernhelm/
 Before it will publish, set the repository Pages source to `GitHub Actions` in GitHub.
 
 The build emits relative page and asset links, so the published HTML works at a domain root or under a subpath without changing the renderer.
-Set `site/site.toml` `url` to the deployed site URL for canonical URLs and feed item URLs.
+Set `site/site.toml` `url` to the deployed site URL for canonical URLs and Atom IDs.
+Use `--build-url` only when one build needs a different output host, such as local preview or a review deploy.
 
 Examples:
 

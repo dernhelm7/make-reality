@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 import tomllib
+from urllib.parse import urlsplit
 
 from .markup import (
     BodyRender,
@@ -34,15 +35,25 @@ class LinkItem:
 
 
 @dataclass(frozen=True)
+class SectionDefinition:
+    name: str
+    description: str
+
+
+@dataclass(frozen=True)
 class SiteConfig:
     source_path: Path
-    base_url: str
+    site_url: str
+    build_url: str
     lang: str
     title: str
+    cover_line: str
     statement: str
+    author_name: str
+    updated: datetime
     contact_links: list[LinkItem]
     gift_links: list[LinkItem]
-    sections: list[str]
+    sections: tuple[SectionDefinition, ...]
 
 
 @dataclass(frozen=True)
@@ -55,6 +66,8 @@ class WorkInput:
     body_format: str
     body_text: str
     created: datetime
+    updated: datetime
+    atom_id: str
     requested_section: str | None
     aliases: list[str]
     public_path: str
@@ -69,6 +82,8 @@ class WorkDocument:
     body_path: Path
     body_format: str
     created: datetime
+    updated: datetime
+    atom_id: str
     public_path: str
     canonical_url: str
     resolved_section: str
@@ -80,6 +95,7 @@ class WorkDocument:
 @dataclass(frozen=True)
 class ContentsSection:
     name: str
+    description: str
     anchor_id: str
     works: tuple[WorkDocument, ...]
 
@@ -96,28 +112,31 @@ class SiteGraph:
     work_by_path: dict[str, WorkDocument]
 
 
-def load_site_config(site_root: Path) -> SiteConfig:
+def load_site_config(site_root: Path, build_url: str | None = None) -> SiteConfig:
     site_path = site_root / "site.toml"
     raw_text = site_path.read_text(encoding="utf-8")
     data = read_toml(site_path)
-    base_url = require_string(data, "url", site_path)
+    site_url = require_absolute_url(data, "url", site_path).rstrip("/")
     lang = require_string(data, "lang", site_path)
     title = require_string(data, "title", site_path)
+    cover_line = require_string(data, "cover_line", site_path)
     statement = require_string(data, "statement", site_path)
+    author_name = require_string(data, "author_name", site_path)
+    updated = parse_timestamp(require_string(data, "updated", site_path), site_path, "updated")
     contact_links = load_link_list(data, "contact_links", site_path)
     gift_links = load_link_list(data, "gift_links", site_path)
-    sections = read_root_or_nested_field(data, "sections")
-    if sections is None:
-        sections = load_sections_from_text(raw_text)
-    if not isinstance(sections, list) or not all(isinstance(item, str) for item in sections):
-        raise BuildError(site_path, "missing-required-field", "sections must be a list of strings")
+    sections = load_sections(read_root_or_nested_field(data, "sections"), raw_text, site_path)
 
     return SiteConfig(
         source_path=site_path,
-        base_url=base_url.rstrip("/"),
+        site_url=site_url,
+        build_url=normalize_absolute_url(build_url or site_url, Path("<command-line>"), "build-url").rstrip("/"),
         lang=lang,
         title=title,
+        cover_line=cover_line,
         statement=statement,
+        author_name=author_name,
+        updated=updated,
         contact_links=contact_links,
         gift_links=gift_links,
         sections=sections,
@@ -136,6 +155,8 @@ def load_work_inputs(site_root: Path) -> list[WorkInput]:
         meta_path = work_dir / "meta.toml"
         meta = read_toml(meta_path)
         created_value = require_string(meta, "created", meta_path)
+        updated_value = require_string(meta, "updated", meta_path)
+        atom_id = require_absolute_url(meta, "atom_id", meta_path)
         requested_section = meta.get("section")
         if requested_section is not None and not isinstance(requested_section, str):
             raise BuildError(meta_path, "missing-required-field", "section must be a string when present")
@@ -156,7 +177,9 @@ def load_work_inputs(site_root: Path) -> list[WorkInput]:
                 body_path=body_path,
                 body_format=body_format,
                 body_text=body_path.read_text(encoding="utf-8"),
-                created=parse_created(created_value, meta_path),
+                created=parse_timestamp(created_value, meta_path, "created"),
+                updated=parse_timestamp(updated_value, meta_path, "updated"),
+                atom_id=atom_id,
                 requested_section=requested_section,
                 aliases=[item.strip() for item in aliases_value],
                 public_path=f"/{folder_name}",
@@ -209,16 +232,16 @@ def load_link_list(data: dict[str, object], field: str, source_path: Path) -> li
     return loaded
 
 
-def parse_created(value: str, source_path: Path) -> datetime:
+def parse_timestamp(value: str, source_path: Path, field: str) -> datetime:
     normalized = value.replace("Z", "+00:00")
     try:
-        created = datetime.fromisoformat(normalized)
+        parsed = datetime.fromisoformat(normalized)
     except ValueError as exc:
-        raise BuildError(source_path, "missing-required-field", "created must be ISO 8601") from exc
+        raise BuildError(source_path, "missing-required-field", f"{field} must be ISO 8601") from exc
 
-    if created.tzinfo is None:
-        created = created.replace(tzinfo=UTC)
-    return created.astimezone(UTC)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def find_body_path(work_dir: Path) -> tuple[Path, str]:
@@ -240,6 +263,7 @@ def validate_published_paths(site_root: Path, work_inputs: list[WorkInput]) -> N
     used_paths: dict[str, Path] = {
         "/": site_root / "site.toml",
         "/feed.xml": site_root / "site.toml",
+        "/feed.css": site_root / "site.toml",
         "/site.css": site_root / "site.toml",
     }
     for work in work_inputs:
@@ -282,8 +306,10 @@ def render_work_documents(
                 body_path=work.body_path,
                 body_format=work.body_format,
                 created=work.created,
+                updated=work.updated,
+                atom_id=work.atom_id,
                 public_path=work.public_path,
-                canonical_url=canonical_url(site.base_url, work.public_path),
+                canonical_url=canonical_url(site.site_url, work.public_path),
                 resolved_section=resolve_section(work.requested_section, site.sections),
                 body=body,
                 top_level_headings=top_level_headings(body),
@@ -312,8 +338,8 @@ def render_work_body(
     )
 
 
-def resolve_section(requested_section: str | None, site_sections: list[str]) -> str:
-    if requested_section in site_sections:
+def resolve_section(requested_section: str | None, site_sections: tuple[SectionDefinition, ...]) -> str:
+    if requested_section in {section.name for section in site_sections}:
         return requested_section
     return "Other works"
 
@@ -358,24 +384,28 @@ def validate_work_links(
                 )
 
 
-def build_contents_sections(site_sections: list[str], works: tuple[WorkDocument, ...]) -> tuple[ContentsSection, ...]:
+def build_contents_sections(
+    site_sections: tuple[SectionDefinition, ...],
+    works: tuple[WorkDocument, ...],
+) -> tuple[ContentsSection, ...]:
     sections: list[ContentsSection] = []
-    for section_name in site_sections:
-        section_works = tuple(work for work in works if work.resolved_section == section_name)
-        if section_works:
-            sections.append(
-                ContentsSection(
-                    name=section_name,
-                    anchor_id=section_id(section_name),
-                    works=section_works,
-                )
+    for section in site_sections:
+        section_works = tuple(work for work in works if work.resolved_section == section.name)
+        sections.append(
+            ContentsSection(
+                name=section.name,
+                description=section.description,
+                anchor_id=section_id(section.name),
+                works=section_works,
             )
+        )
 
     fallback = tuple(work for work in works if work.resolved_section == "Other works")
     if fallback:
         sections.append(
             ContentsSection(
                 name="Other works",
+                description="",
                 anchor_id=section_id("Other works"),
                 works=fallback,
             )
@@ -420,6 +450,18 @@ def require_string(data: dict[str, object], field: str, source_path: Path) -> st
     return value
 
 
+def require_absolute_url(data: dict[str, object], field: str, source_path: Path) -> str:
+    value = require_string(data, field, source_path)
+    return normalize_absolute_url(value, source_path, field)
+
+
+def normalize_absolute_url(value: str, source_path: Path, field: str) -> str:
+    parts = urlsplit(value)
+    if not parts.scheme or not parts.netloc:
+        raise BuildError(source_path, "missing-required-field", f"{field} must be an absolute URL")
+    return value
+
+
 def read_root_or_nested_field(data: dict[str, object], field: str) -> object | None:
     value = data.get(field)
     if value is not None:
@@ -434,13 +476,43 @@ def read_root_or_nested_field(data: dict[str, object], field: str) -> object | N
     return None
 
 
-def load_sections_from_text(raw_text: str) -> list[str]:
+def load_sections(raw_sections: object | None, raw_text: str, source_path: Path) -> tuple[SectionDefinition, ...]:
+    sections = raw_sections
+    if sections is None:
+        sections = load_sections_from_text(raw_text)
+    if not isinstance(sections, list):
+        raise BuildError(
+            source_path,
+            "missing-required-field",
+            "sections must be a list of strings or {name, description} tables",
+        )
+
+    loaded: list[SectionDefinition] = []
+    for index, item in enumerate(sections, start=1):
+        if isinstance(item, str) and item.strip():
+            loaded.append(SectionDefinition(name=item, description=""))
+            continue
+        if isinstance(item, dict):
+            name = item.get("name")
+            description = item.get("description", "")
+            if isinstance(name, str) and name.strip() and isinstance(description, str):
+                loaded.append(SectionDefinition(name=name, description=description))
+                continue
+        raise BuildError(
+            source_path,
+            "missing-required-field",
+            f"sections[{index}] must be a non-empty string or a table with string name and description fields",
+        )
+    return tuple(loaded)
+
+
+def load_sections_from_text(raw_text: str) -> list[object]:
     for line in raw_text.splitlines():
         if not line.startswith("sections ="):
             continue
         parsed = tomllib.loads(line)
         sections = parsed.get("sections")
-        if isinstance(sections, list) and all(isinstance(item, str) for item in sections):
+        if isinstance(sections, list):
             return sections
     return []
 

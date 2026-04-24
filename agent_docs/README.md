@@ -18,7 +18,7 @@ The homepage purpose is to act like the cover and title page of a book. Its cont
 
 - Static output, fast and lean
 - Indie-web-compatible. Ref: POSSE https://indieweb.org/POSSE
-- RSS feed
+- Atom feed
 - URLs should be names, not file paths: short, direct, and slashless. Ref https://sive.rs/su
 
 ## Plan

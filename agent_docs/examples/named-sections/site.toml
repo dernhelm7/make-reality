@@ -1,7 +1,10 @@
 url = "https://labyrinth.example"
 lang = "en"
 title = "Labyrinth"
+cover_line = "A room for shelf testing."
 statement = "A room for poems, projects, and notes."
+author_name = "Labyrinth Author"
+updated = "2024-05-01T09:30:00Z"
 
 [[contact_links]]
 label = "Email"
@@ -11,4 +14,8 @@ href = "mailto:hello@labyrinth.example"
 label = "Gift"
 href = "https://gifts.example/labyrinth"
 
-sections = ["Essays", "Projects"]
+sections = [
+  { name = "Essays", description = "Reflective prose and finished arguments." },
+  { name = "Projects", description = "Built things and working artifacts." },
+  { name = "Cabinet", description = "References and adjacent material." },
+]

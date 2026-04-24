@@ -39,7 +39,7 @@ case "$publish_root" in
   *) publish_root="$script_dir/$publish_root" ;;
 esac
 
-"$script_dir/build-site" "$site_root" "$publish_root"
+"$script_dir/build-site" --build-url "http://localhost:$port" "$site_root" "$publish_root"
 
 printf 'Built %s\n' "$publish_root"
 printf 'Previewing at http://localhost:%s\n' "$port"

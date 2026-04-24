@@ -32,6 +32,9 @@ It leaves out placeholder URLs, assistant-only research links, and operational r
 - `https://justinjackson.ca/words.html`
   Calibrated the lower bound for minimalism. Helped define how far to go.
 
+- `https://justinjackson.ca/xslt`
+  Reference for browser-readable feeds and feed-specific presentation.
+
 - `https://musa.bet/home.htm`
   Conceptual reference for featural symbol logic and internal consistency, not the site's visual style.
 
