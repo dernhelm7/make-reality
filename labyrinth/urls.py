@@ -1,7 +1,50 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import posixpath
 from urllib.parse import SplitResult, urljoin, urlsplit, urlunsplit
+
+
+HOME_PUBLIC_PATH = "/"
+FEED_PUBLIC_PATH = "/feed.xml"
+FEED_STYLESHEET_PUBLIC_PATH = "/feed.css"
+SITE_STYLESHEET_PUBLIC_PATH = "/site.css"
+FIXED_PUBLIC_PATHS = frozenset(
+    {
+        HOME_PUBLIC_PATH,
+        FEED_PUBLIC_PATH,
+        FEED_STYLESHEET_PUBLIC_PATH,
+        SITE_STYLESHEET_PUBLIC_PATH,
+    }
+)
+
+
+@dataclass(frozen=True)
+class PageUrls:
+    site_url: str
+    build_url: str
+    public_path: str
+
+    @property
+    def canonical_url(self) -> str:
+        return canonical_url(self.site_url, self.public_path)
+
+    @property
+    def output_url(self) -> str:
+        return canonical_url(self.build_url, self.public_path)
+
+    @property
+    def base_href(self) -> str:
+        return page_base_href(self.build_url, self.public_path)
+
+    def relative_href(self, target_public_path: str, *, fragment: str | None = None) -> str:
+        return relative_public_href(self.public_path, target_public_path, fragment=fragment)
+
+    def root_relative_href(self, href: str) -> str:
+        return rewrite_root_relative_url(self.public_path, href)
+
+    def absolute_href(self, href: str) -> str:
+        return absolute_href(self.build_url, self.public_path, href)
 
 
 def site_path_prefix(base_url: str) -> str:

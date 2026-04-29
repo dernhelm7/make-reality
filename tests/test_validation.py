@@ -53,7 +53,43 @@ class ValidationTests(unittest.TestCase):
             self.assertIn("site.toml", str(error.exception.source_path))
             self.assertIn(field, error.exception.message)
 
-    def test_missing_cover_line_fails_build(self) -> None:
+    def test_missing_home_markdown_fails_build(self) -> None:
+        site_root = self.make_site(
+            {
+                "alpha": {
+                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
+                    "index.md": "# Opening\n\nA first note.",
+                }
+            }
+        )
+        (site_root / "home.md").unlink()
+
+        with self.assertRaises(BuildError) as error:
+            build_site(site_root, site_root / "public")
+
+        self.assertEqual(error.exception.rule, "missing-required-field")
+        self.assertIn("home.md", str(error.exception.source_path))
+        self.assertIn("home.md", error.exception.message)
+
+    def test_missing_feed_markdown_fails_build(self) -> None:
+        site_root = self.make_site(
+            {
+                "alpha": {
+                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
+                    "index.md": "# Opening\n\nA first note.",
+                }
+            }
+        )
+        (site_root / "feed.md").unlink()
+
+        with self.assertRaises(BuildError) as error:
+            build_site(site_root, site_root / "public")
+
+        self.assertEqual(error.exception.rule, "missing-required-field")
+        self.assertIn("feed.md", str(error.exception.source_path))
+        self.assertIn("feed.md", error.exception.message)
+
+    def test_missing_sections_fails_build(self) -> None:
         site_root = self.make_site(
             {
                 "alpha": {
@@ -67,7 +103,7 @@ class ValidationTests(unittest.TestCase):
             "\n".join(
                 line
                 for line in site_toml.read_text(encoding="utf-8").splitlines()
-                if not line.startswith("cover_line = ")
+                if not line.startswith("sections = ")
             )
             + "\n",
             encoding="utf-8",
@@ -78,7 +114,7 @@ class ValidationTests(unittest.TestCase):
 
         self.assertEqual(error.exception.rule, "missing-required-field")
         self.assertIn("site.toml", str(error.exception.source_path))
-        self.assertIn("cover_line", error.exception.message)
+        self.assertIn("sections", error.exception.message)
 
     def test_missing_work_feed_fields_fail_build(self) -> None:
         for field in ("updated", "atom_id"):
@@ -177,10 +213,10 @@ class ValidationTests(unittest.TestCase):
                 url = "https://labyrinth.example"
                 lang = "en"
                 title = "Labyrinth"
-                cover_line = "A room for poems, projects, and notes."
                 statement = "A room for poems, projects, and notes."
                 author_name = "Labyrinth Author"
                 updated = "2024-02-14T00:00:00Z"
+                sections = []
 
                 [[contact_links]]
                 label = "Email"
@@ -189,10 +225,13 @@ class ValidationTests(unittest.TestCase):
                 [[gift_links]]
                 label = "Gift"
                 href = "https://gifts.example/labyrinth"
-
-                sections = []
                 """
             ),
+            encoding="utf-8",
+        )
+        (site_root / "home.md").write_text("A room for poems, projects, and notes.", encoding="utf-8")
+        (site_root / "feed.md").write_text(
+            "Web feed\n\nCopy [the feed URL]({feed_url}) into a feed reader.",
             encoding="utf-8",
         )
         works_root = site_root / "works"

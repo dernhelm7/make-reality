@@ -7,6 +7,7 @@ import tomllib
 from urllib.parse import urlsplit
 
 from .markup import (
+    BodyContext,
     BodyRender,
     Heading,
     ResolvedWorkLink,
@@ -14,7 +15,7 @@ from .markup import (
     render_html_body,
     render_markdown_body,
 )
-from .urls import canonical_url
+from .urls import FIXED_PUBLIC_PATHS
 
 
 @dataclass(frozen=True)
@@ -43,16 +44,19 @@ class SectionDefinition:
 @dataclass(frozen=True)
 class SiteConfig:
     source_path: Path
+    home_path: Path
+    feed_guide_path: Path
     site_url: str
     build_url: str
     lang: str
     title: str
-    cover_line: str
+    home_text: str
+    feed_guide_text: str
     statement: str
     author_name: str
     updated: datetime
-    contact_links: list[LinkItem]
-    gift_links: list[LinkItem]
+    contact_links: tuple[LinkItem, ...]
+    gift_links: tuple[LinkItem, ...]
     sections: tuple[SectionDefinition, ...]
 
 
@@ -69,7 +73,7 @@ class WorkInput:
     updated: datetime
     atom_id: str
     requested_section: str | None
-    aliases: list[str]
+    aliases: tuple[str, ...]
     public_path: str
 
 
@@ -85,7 +89,6 @@ class WorkDocument:
     updated: datetime
     atom_id: str
     public_path: str
-    canonical_url: str
     resolved_section: str
     body: BodyRender
     top_level_headings: tuple[Heading, ...]
@@ -114,26 +117,31 @@ class SiteGraph:
 
 def load_site_config(site_root: Path, build_url: str | None = None) -> SiteConfig:
     site_path = site_root / "site.toml"
-    raw_text = site_path.read_text(encoding="utf-8")
     data = read_toml(site_path)
+    home_path = site_root / "home.md"
+    feed_guide_path = site_root / "feed.md"
     site_url = require_absolute_url(data, "url", site_path).rstrip("/")
     lang = require_string(data, "lang", site_path)
     title = require_string(data, "title", site_path)
-    cover_line = require_string(data, "cover_line", site_path)
+    home_text = read_required_markdown(home_path)
+    feed_guide_text = read_required_markdown(feed_guide_path)
     statement = require_string(data, "statement", site_path)
     author_name = require_string(data, "author_name", site_path)
     updated = parse_timestamp(require_string(data, "updated", site_path), site_path, "updated")
     contact_links = load_link_list(data, "contact_links", site_path)
     gift_links = load_link_list(data, "gift_links", site_path)
-    sections = load_sections(read_root_or_nested_field(data, "sections"), raw_text, site_path)
+    sections = load_sections(data.get("sections"), site_path)
 
     return SiteConfig(
         source_path=site_path,
+        home_path=home_path,
+        feed_guide_path=feed_guide_path,
         site_url=site_url,
         build_url=normalize_absolute_url(build_url or site_url, Path("<command-line>"), "build-url").rstrip("/"),
         lang=lang,
         title=title,
-        cover_line=cover_line,
+        home_text=home_text,
+        feed_guide_text=feed_guide_text,
         statement=statement,
         author_name=author_name,
         updated=updated,
@@ -181,8 +189,8 @@ def load_work_inputs(site_root: Path) -> list[WorkInput]:
                 updated=parse_timestamp(updated_value, meta_path, "updated"),
                 atom_id=atom_id,
                 requested_section=requested_section,
-                aliases=[item.strip() for item in aliases_value],
-                public_path=f"/{folder_name}",
+                aliases=tuple(item.strip() for item in aliases_value),
+                public_path=work_public_path(folder_name),
             )
         )
     return work_inputs
@@ -191,8 +199,8 @@ def load_work_inputs(site_root: Path) -> list[WorkInput]:
 def build_site_graph(site: SiteConfig, work_inputs: list[WorkInput]) -> SiteGraph:
     validate_published_paths(site.source_path.parent, work_inputs)
     work_lookup = build_work_lookup(work_inputs)
-    work_paths = {work.public_path for work in work_inputs}
-    known_paths = frozenset({"/", "/feed.xml", *work_paths})
+    work_paths = frozenset(work.public_path for work in work_inputs)
+    known_paths = frozenset({*FIXED_PUBLIC_PATHS, *work_paths})
     works = tuple(sorted(render_work_documents(site, work_inputs, work_lookup, work_paths), key=sort_key))
     work_by_path = {work.public_path: work for work in works}
     validate_work_links(works, known_paths, work_by_path)
@@ -211,7 +219,7 @@ def build_site_graph(site: SiteConfig, work_inputs: list[WorkInput]) -> SiteGrap
     )
 
 
-def load_link_list(data: dict[str, object], field: str, source_path: Path) -> list[LinkItem]:
+def load_link_list(data: dict[str, object], field: str, source_path: Path) -> tuple[LinkItem, ...]:
     items = data.get(field)
     if not isinstance(items, list) or not items:
         raise BuildError(source_path, "missing-required-field", f"{field} must contain at least one link")
@@ -229,7 +237,16 @@ def load_link_list(data: dict[str, object], field: str, source_path: Path) -> li
                 f"{field}[{index}] must define string label and href fields",
             )
         loaded.append(LinkItem(label=label, href=href))
-    return loaded
+    return tuple(loaded)
+
+
+def read_required_markdown(path: Path) -> str:
+    if not path.is_file():
+        raise BuildError(path, "missing-required-field", f"{path.name} is required")
+    text = path.read_text(encoding="utf-8")
+    if not text.strip():
+        raise BuildError(path, "missing-required-field", f"{path.name} must not be empty")
+    return text
 
 
 def parse_timestamp(value: str, source_path: Path, field: str) -> datetime:
@@ -260,12 +277,7 @@ def find_body_path(work_dir: Path) -> tuple[Path, str]:
 
 
 def validate_published_paths(site_root: Path, work_inputs: list[WorkInput]) -> None:
-    used_paths: dict[str, Path] = {
-        "/": site_root / "site.toml",
-        "/feed.xml": site_root / "site.toml",
-        "/feed.css": site_root / "site.toml",
-        "/site.css": site_root / "site.toml",
-    }
+    used_paths: dict[str, Path] = {path: site_root / "site.toml" for path in FIXED_PUBLIC_PATHS}
     for work in work_inputs:
         prior = used_paths.get(work.public_path)
         if prior is not None:
@@ -292,9 +304,10 @@ def render_work_documents(
     site: SiteConfig,
     work_inputs: list[WorkInput],
     work_lookup: dict[str, ResolvedWorkLink],
-    work_paths: set[str],
+    work_paths: frozenset[str],
 ) -> list[WorkDocument]:
     documents: list[WorkDocument] = []
+    section_names = frozenset(section.name for section in site.sections)
     for work in work_inputs:
         body = render_work_body(work, work_lookup, work_paths)
         documents.append(
@@ -309,8 +322,7 @@ def render_work_documents(
                 updated=work.updated,
                 atom_id=work.atom_id,
                 public_path=work.public_path,
-                canonical_url=canonical_url(site.site_url, work.public_path),
-                resolved_section=resolve_section(work.requested_section, site.sections),
+                resolved_section=resolve_section(work.requested_section, section_names),
                 body=body,
                 top_level_headings=top_level_headings(body),
                 outbound_work_paths=extract_outbound_work_paths(work.public_path, body),
@@ -322,24 +334,26 @@ def render_work_documents(
 def render_work_body(
     work: WorkInput,
     work_lookup: dict[str, ResolvedWorkLink],
-    work_paths: set[str],
+    work_paths: frozenset[str],
 ) -> BodyRender:
+    context = BodyContext(
+        current_public_path=work.public_path,
+        work_lookup=work_lookup,
+        work_paths=work_paths,
+    )
     if work.body_format == "markdown":
         return render_markdown_body(
             work.body_text,
-            current_public_path=work.public_path,
-            work_lookup=work_lookup,
-            work_paths=work_paths,
+            context=context,
         )
     return render_html_body(
         work.body_text,
-        current_public_path=work.public_path,
-        work_paths=work_paths,
+        context=context,
     )
 
 
-def resolve_section(requested_section: str | None, site_sections: tuple[SectionDefinition, ...]) -> str:
-    if requested_section in {section.name for section in site_sections}:
+def resolve_section(requested_section: str | None, section_names: frozenset[str]) -> str:
+    if requested_section in section_names:
         return requested_section
     return "Other works"
 
@@ -388,26 +402,32 @@ def build_contents_sections(
     site_sections: tuple[SectionDefinition, ...],
     works: tuple[WorkDocument, ...],
 ) -> tuple[ContentsSection, ...]:
+    grouped_works: dict[str, list[WorkDocument]] = {section.name: [] for section in site_sections}
+    fallback_works: list[WorkDocument] = []
+    for work in works:
+        if work.resolved_section in grouped_works:
+            grouped_works[work.resolved_section].append(work)
+        else:
+            fallback_works.append(work)
+
     sections: list[ContentsSection] = []
     for section in site_sections:
-        section_works = tuple(work for work in works if work.resolved_section == section.name)
         sections.append(
             ContentsSection(
                 name=section.name,
                 description=section.description,
                 anchor_id=section_id(section.name),
-                works=section_works,
+                works=tuple(grouped_works[section.name]),
             )
         )
 
-    fallback = tuple(work for work in works if work.resolved_section == "Other works")
-    if fallback:
+    if fallback_works:
         sections.append(
             ContentsSection(
                 name="Other works",
                 description="",
                 anchor_id=section_id("Other works"),
-                works=fallback,
+                works=tuple(fallback_works),
             )
         )
     return tuple(sections)
@@ -462,24 +482,7 @@ def normalize_absolute_url(value: str, source_path: Path, field: str) -> str:
     return value
 
 
-def read_root_or_nested_field(data: dict[str, object], field: str) -> object | None:
-    value = data.get(field)
-    if value is not None:
-        return value
-    for container_name in ("gift_links", "contact_links"):
-        container = data.get(container_name)
-        if not isinstance(container, list):
-            continue
-        for item in reversed(container):
-            if isinstance(item, dict) and field in item:
-                return item[field]
-    return None
-
-
-def load_sections(raw_sections: object | None, raw_text: str, source_path: Path) -> tuple[SectionDefinition, ...]:
-    sections = raw_sections
-    if sections is None:
-        sections = load_sections_from_text(raw_text)
+def load_sections(sections: object | None, source_path: Path) -> tuple[SectionDefinition, ...]:
     if not isinstance(sections, list):
         raise BuildError(
             source_path,
@@ -506,15 +509,8 @@ def load_sections(raw_sections: object | None, raw_text: str, source_path: Path)
     return tuple(loaded)
 
 
-def load_sections_from_text(raw_text: str) -> list[object]:
-    for line in raw_text.splitlines():
-        if not line.startswith("sections ="):
-            continue
-        parsed = tomllib.loads(line)
-        sections = parsed.get("sections")
-        if isinstance(sections, list):
-            return sections
-    return []
+def work_public_path(folder_name: str) -> str:
+    return f"/{folder_name}"
 
 
 def humanize_folder_name(folder_name: str) -> str:

@@ -1,0 +1,4 @@
+[     159ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:8022/favicon.ico:0
+[ 7983098ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8000/favicon.ico:0
+[13062520ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://aboutfeeds.com/favicon.ico:0
+[16542131ms] [LOG] ✨ @ https://laminae.org/:1879

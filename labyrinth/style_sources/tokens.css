@@ -43,6 +43,11 @@
   --leading-tight: var(--scale-ratio);
   --measure: clamp(66ch, calc(58ch + 4vw), 78ch);
   --home-column-measure: clamp(52ch, calc(46ch + 5vw), 60ch);
+  --home-contents-measure: min(var(--reading-span), 70rem);
+  --home-main-indent: max(var(--site-side-space), calc((100vw - var(--home-contents-measure)) / 2));
+  --home-contents-column-gap: clamp(var(--step-p4), 7vw, var(--step-p9));
+  --home-contents-label-width: clamp(6.75rem, 8vw, 7.5rem);
+  --home-contents-label-gap: var(--step-p1);
   --work-title-measure: 18ch;
   --sidebar-width: 11rem;
   --date-width: clamp(12rem, calc(11rem + 1.5vw), 13rem);
@@ -89,8 +94,10 @@
   --rail-marker-center: calc(0.5lh + var(--rail-guide-center-adjust));
   --rail-marker-track-inset: calc(var(--rail-marker-center) - (var(--rail-guide-dot-size) / 2));
   --rail-link-size: var(--text-2xs);
-  --works-section-gap: var(--rail-item-gap);
-  --works-entry-gap: calc(var(--step-n1) - var(--rail-item-gap));
+  --works-section-stack-gap: clamp(var(--step-p3), 5vh, var(--step-p6));
+  --works-section-gap: calc(var(--step-0) - var(--rail-item-gap));
+  --works-list-gap: calc(var(--step-n4) / 2);
+  --works-entry-min-height: var(--step-p2);
   --works-entry-pad-block: calc(var(--step-n2) / 2);
   --blockquote-pad-block: calc(var(--step-n4) / 5);
   --blockquote-pad-inline: var(--step-p1);

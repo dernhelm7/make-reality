@@ -1,5 +1,3 @@
-@namespace url("http://www.w3.org/2005/Atom");
-
 feed,
 entry,
 author,
@@ -8,104 +6,199 @@ subtitle,
 updated,
 published,
 content,
-name {
+name,
+xhtml|section,
+xhtml|p {
   display: block;
 }
 
+xhtml|a,
+xhtml|em {
+  display: inline;
+}
+
 id,
-link[rel="self"] {
+feed > link,
+entry > link[rel="alternate"] {
   display: none;
 }
 
 feed {
+  --feed-bg: #073638;
+  --feed-row-bg: color-mix(in srgb, #ffffff 4%, var(--feed-bg));
+  --feed-guide-bg: #dcefed;
+  --feed-guide-ink: #202020;
+  --feed-guide-muted: #6e6a63;
+  --feed-ink: #dfe8e4;
+  --feed-muted: #aab8b3;
+  --feed-link: #0a7c80;
+  --feed-code-link: #78d5d7;
+  --feed-serif: Georgia, "Times New Roman", serif;
+  --feed-sans: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --feed-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace;
+  --feed-content-indent: var(--home-main-indent);
+  --feed-guide-measure: clamp(48ch, 66vw, 86ch);
+  --feed-cell-block: 0.35rem;
+  --feed-cell-inline: 0.5rem;
+  --feed-gutter: calc(var(--feed-content-indent) - var(--feed-cell-inline));
+  --feed-cell-padding: var(--feed-cell-block) var(--feed-cell-inline);
+
+  display: block;
   margin: 0;
-  padding: 2.5rem 1.5rem 4rem;
-  background: #fbfaf5;
-  color: #202020;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px;
+  min-height: 100vh;
+  padding: 0 var(--feed-gutter) 4rem;
+  background: var(--feed-bg);
+  color: var(--feed-ink);
+  font-family: var(--feed-serif);
+  font-size: 1rem;
   line-height: 1.45;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
-feed::before {
-  content: "Atom feed";
-  display: block;
-  margin-bottom: 1rem;
-  color: #6e6a63;
-  font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+xhtml|section[class~="feed-guide"] {
+  box-sizing: border-box;
+  width: calc(100% + (var(--feed-gutter) * 2));
+  max-width: none;
+  margin: 0 calc(var(--feed-gutter) * -1) var(--feed-gutter);
+  padding: 2.5rem var(--feed-content-indent) 1.75rem;
+  background: var(--feed-guide-bg);
+  color: var(--feed-guide-ink);
+  white-space: normal;
+}
+
+xhtml|section[class~="feed-guide"] xhtml|p {
+  max-width: var(--feed-guide-measure);
+  margin: 0.5rem 0 0;
+  text-wrap: balance;
+}
+
+xhtml|section[class~="feed-guide"] xhtml|p:first-child {
+  margin-top: 0;
+}
+
+xhtml|p[class~="feed-guide-label"] {
+  color: var(--feed-guide-muted);
+  font-family: var(--feed-sans);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
+xhtml|p[class~="feed-guide-url"] {
+  color: var(--feed-guide-muted);
+  font-family: var(--feed-sans);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+xhtml|section[class~="feed-guide"] xhtml|a {
+  color: var(--feed-link);
+  font-family: var(--feed-sans);
+  font-weight: 600;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+feed > title,
+feed > subtitle,
+feed > updated,
+feed > author {
+  display: inline;
+  margin: 0;
+  font-family: var(--feed-mono);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
 feed > title {
-  max-width: 42rem;
-  font-size: 2.5rem;
-  line-height: 1.05;
+  color: var(--feed-ink);
+  font-weight: 600;
+  padding-left: var(--feed-cell-inline);
 }
 
 feed > subtitle {
-  max-width: 36rem;
-  margin-top: 0.75rem;
-  color: #6e6a63;
-  font-size: 1.1rem;
-  font-style: italic;
+  color: var(--feed-muted);
 }
 
-feed > author,
 feed > updated {
-  max-width: 36rem;
-  margin-top: 0.75rem;
-  color: #6e6a63;
-  font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  color: var(--feed-muted);
 }
 
-author::before {
-  content: "By ";
+feed > author {
+  color: var(--feed-muted);
+  font-size: 0;
+}
+
+feed > title::after,
+feed > subtitle::after,
+feed > updated::after {
+  content: "  ";
+  white-space: pre;
 }
 
 name {
   display: inline;
+  font-size: 0.75rem;
 }
 
 entry {
-  max-width: 42rem;
-  margin-top: 2rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid #d8d1c6;
+  display: grid;
+  grid-template-columns: minmax(16ch, 18ch) 20ch 20ch max-content;
+  column-gap: 2ch;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 100%;
+  margin-top: 0.25rem;
+  background: var(--feed-row-bg);
+  font-family: var(--feed-mono);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  white-space: nowrap;
 }
 
 entry > title {
-  font-size: 1.7rem;
-  line-height: 1.15;
+  display: block;
+  color: var(--feed-ink);
+  font-family: var(--feed-mono);
+  font-size: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  padding: var(--feed-cell-padding);
 }
 
 entry > published,
 entry > updated {
-  margin-top: 0.35rem;
-  color: #6e6a63;
-  font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  display: block;
+  margin-top: 0;
+  color: var(--feed-muted);
+  font-family: var(--feed-mono);
+  font-size: inherit;
+  line-height: inherit;
+  padding: var(--feed-cell-padding);
 }
 
 entry > link[rel="alternate"] {
-  display: block;
-  margin-top: 0.6rem;
-  color: #0a7c80;
-  font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-entry > link[rel="alternate"]::before {
-  content: attr(href);
+  display: none;
 }
 
 content {
   display: none;
+}
+
+entry > xhtml|a[class~="feed-entry-url"] {
+  display: block;
+  margin-top: 0;
+  color: var(--feed-code-link);
+  font-family: var(--feed-mono);
+  font-size: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  padding: var(--feed-cell-padding);
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
 }

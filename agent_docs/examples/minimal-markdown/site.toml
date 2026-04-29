@@ -1,10 +1,10 @@
 url = "https://labyrinth.example"
 lang = "en"
 title = "Labyrinth"
-cover_line = "Visible cover line for the fixture."
 statement = "Metadata summary for the fixture."
 author_name = "Labyrinth Author"
 updated = "2024-02-14T00:00:00Z"
+sections = []
 
 [[contact_links]]
 label = "Email"
@@ -13,5 +13,3 @@ href = "mailto:hello@labyrinth.example"
 [[gift_links]]
 label = "Gift"
 href = "https://gifts.example/labyrinth"
-
-sections = []

@@ -5,9 +5,15 @@ from html import escape
 from html.parser import HTMLParser
 from pathlib import Path
 
-from .markup import Heading
-from .model import BuildError, ContentsSection, SiteGraph, WorkDocument
-from .urls import absolute_href, canonical_url, page_base_href, relative_public_href, rewrite_root_relative_url
+from .markup import BodyContext, Heading, render_markdown_paragraphs
+from .model import BuildError, ContentsSection, LinkItem, SiteGraph, WorkDocument
+from .urls import (
+    FEED_PUBLIC_PATH,
+    FEED_STYLESHEET_PUBLIC_PATH,
+    HOME_PUBLIC_PATH,
+    PageUrls,
+    SITE_STYLESHEET_PUBLIC_PATH,
+)
 
 TOC_LEADER_DOTS = "&middot;&nbsp;" * 48
 
@@ -29,10 +35,18 @@ def indent_html(html: str, spaces: int) -> str:
     return "\n".join(f"{prefix}{line}" if line else "" for line in html.splitlines())
 
 
+def page_urls(graph: SiteGraph, public_path: str) -> PageUrls:
+    return PageUrls(
+        site_url=graph.site.site_url,
+        build_url=graph.site.build_url,
+        public_path=public_path,
+    )
+
+
 def render_pages(graph: SiteGraph) -> list[RenderedPage]:
     rendered = [
         RenderedPage(
-            public_path="/",
+            public_path=HOME_PUBLIC_PATH,
             output_path=Path("index.html"),
             html=render_home_page(graph),
             source_path=graph.site.source_path,
@@ -51,30 +65,31 @@ def render_pages(graph: SiteGraph) -> list[RenderedPage]:
 
 
 def render_home_page(graph: SiteGraph) -> str:
+    urls = page_urls(graph, HOME_PUBLIC_PATH)
     content = join_html_lines(
         '<div class="page page--home">',
         '  <section class="page page--cover cover">',
         '    <header class="page-head page-head--cover">',
         f'      <h1 class="page-title page-title--display cover-title">{escape(graph.site.title)}</h1>',
-        indent_html(render_multiline_paragraph(graph.site.cover_line, class_name="page-deck cover-statement"), 6),
+        indent_html(render_home_cover_text(graph), 6),
         "    </header>",
         '    <div class="home-cover-meta">',
-        indent_html(render_global_links_section(graph, current_public_path="/"), 6),
+        indent_html(render_global_links_section(graph, urls=urls), 6),
         "    </div>",
         "  </section>",
         '  <section class="page home-contents" id="contents" aria-labelledby="contents-heading">',
         '    <header class="page-head">',
-        '      <h2 class="page-title page-title--section" id="contents-heading">Contents</h2>',
+        '      <h2 class="page-title page-title--section" id="contents-heading"><a class="home-contents-heading-link" href="#contents">Read</a></h2>',
         "    </header>",
         '    <div class="page-body works-body">',
-        indent_html(render_contents_sections(graph, current_public_path="/"), 6),
+        indent_html(render_contents_sections(graph, urls=urls), 6),
         "    </div>",
         "  </section>",
         "</div>",
     )
     return render_page(
         graph=graph,
-        public_path="/",
+        urls=urls,
         page_title=graph.site.title,
         page_kind="home",
         sidebar_html="",
@@ -84,7 +99,8 @@ def render_home_page(graph: SiteGraph) -> str:
 
 
 def render_work_page(graph: SiteGraph, work: WorkDocument) -> str:
-    backlinks_html = render_backlinks(graph, work)
+    urls = page_urls(graph, work.public_path)
+    backlinks_html = render_backlinks(graph, work, urls=urls)
     date_note_html = (
         '<aside class="work-date-note" aria-label="Published">'
         f'<time class="work-date dt-published" datetime="{escape(work.created.isoformat())}">{escape(format_long_date(work.created))}</time>'
@@ -94,7 +110,7 @@ def render_work_page(graph: SiteGraph, work: WorkDocument) -> str:
         '<article class="page page--work work-page h-entry">',
         '  <header class="page-head work-header">',
         f'    <h1 class="page-title work-title p-name">{escape(work.title)}</h1>',
-        f'    <a class="visually-hidden u-url" href="{escape(work.canonical_url)}">Permalink</a>',
+        f'    <a class="visually-hidden u-url" href="{escape(urls.canonical_url)}">Permalink</a>',
         "  </header>",
         f"  {date_note_html}",
         '  <div class="page-body">',
@@ -113,16 +129,16 @@ def render_work_page(graph: SiteGraph, work: WorkDocument) -> str:
     )
     return render_page(
         graph=graph,
-        public_path=work.public_path,
+        urls=urls,
         page_title=f"{work.title} - {graph.site.title}",
         page_kind="work",
-        sidebar_html=render_site_sidebar(graph, current_work=work),
+        sidebar_html=render_site_sidebar(graph, current_work=work, urls=urls),
         main_content=content,
         head_extra_html=render_work_heading_target_styles(work.top_level_headings),
     )
 
 
-def render_backlinks(graph: SiteGraph, work: WorkDocument) -> str:
+def render_backlinks(graph: SiteGraph, work: WorkDocument, *, urls: PageUrls) -> str:
     backlinks = graph.backlinks.get(work.public_path, ())
     if not backlinks:
         return ""
@@ -131,7 +147,7 @@ def render_backlinks(graph: SiteGraph, work: WorkDocument) -> str:
         *(
             join_html_lines(
                 "<li>",
-                f'  <a href="{escape(relative_public_href(work.public_path, item.public_path))}">{escape(item.title)}</a>',
+                f'  <a href="{escape(urls.relative_href(item.public_path))}">{escape(item.title)}</a>',
                 "</li>",
             )
             for item in backlinks
@@ -147,18 +163,35 @@ def render_backlinks(graph: SiteGraph, work: WorkDocument) -> str:
     )
 
 
-def render_contents_sections(graph: SiteGraph, *, current_public_path: str) -> str:
+def render_contents_sections(graph: SiteGraph, *, urls: PageUrls) -> str:
+    section_columns = split_contents_sections(graph.contents_sections)
     return join_html_lines(
-        *(render_contents_section(section, current_public_path=current_public_path) for section in graph.contents_sections)
+        *(render_contents_column(column, urls=urls) for column in section_columns if column)
     )
 
 
-def render_contents_section(section: ContentsSection, *, current_public_path: str) -> str:
+def split_contents_sections(sections: tuple[ContentsSection, ...]) -> tuple[tuple[ContentsSection, ...], ...]:
+    midpoint = (len(sections) + 1) // 2
+    return (sections[:midpoint], sections[midpoint:])
+
+
+def render_contents_column(sections: tuple[ContentsSection, ...], *, urls: PageUrls) -> str:
+    return join_html_lines(
+        '<div class="works-column">',
+        indent_html(
+            join_html_lines(*(render_contents_section(section, urls=urls) for section in sections)),
+            2,
+        ),
+        "</div>",
+    )
+
+
+def render_contents_section(section: ContentsSection, *, urls: PageUrls) -> str:
     items = join_html_lines(
-        *(render_works_entry(work, current_public_path=current_public_path) for work in section.works)
+        *(render_works_entry(work, urls=urls) for work in section.works)
     )
     description_html = (
-        f'  <p class="section-description">{escape(section.description)}</p>' if section.description else ""
+        f'      <p class="section-description">{escape(section.description)}</p>' if section.description else ""
     )
     works_list_html = ""
     if items:
@@ -168,35 +201,48 @@ def render_contents_section(section: ContentsSection, *, current_public_path: st
             "  </ol>",
         )
     return join_html_lines(
-        '<section class="works-section">',
-        f'  <h2 class="section-heading" id="{escape(section.anchor_id)}">{escape(section.name)}</h2>',
+        f'<section class="works-section" aria-labelledby="{escape(section.anchor_id)}">',
+        '  <header class="works-section-head">',
+        '    <div class="works-section-line">',
+        f'      <h3 class="section-heading" id="{escape(section.anchor_id)}">{escape(section.name)}</h3>',
         description_html,
+        "    </div>",
+        "  </header>",
         works_list_html,
         "</section>",
     )
 
 
-def render_works_entry(work: WorkDocument, *, current_public_path: str) -> str:
+def render_works_entry(work: WorkDocument, *, urls: PageUrls) -> str:
+    work_href = escape(urls.relative_href(work.public_path))
+    title = escape(work.title)
+    reference = escape(work_path_reference(work.public_path))
     return join_html_lines(
         '<li class="works-entry">',
-        f'  <a class="works-entry-link" href="{escape(relative_public_href(current_public_path, work.public_path))}">{escape(work.title)}</a>',
-        f'  <span class="works-entry-leader toc-leader" aria-hidden="true">{TOC_LEADER_DOTS}</span>',
+        f'  <a class="works-entry-link" href="{work_href}" aria-label="{title}">',
+        f'    <span class="works-entry-reference">{reference}</span>',
+        f'    <span class="works-entry-title">{title}</span>',
+        f'    <span class="works-entry-leader toc-leader" aria-hidden="true">{TOC_LEADER_DOTS}</span>',
+        '    <span class="works-entry-mark" aria-hidden="true">&gt;</span>',
+        "  </a>",
         "</li>",
     )
+
+
+def work_path_reference(public_path: str) -> str:
+    return public_path.strip("/") or "/"
 
 
 def render_page(
     *,
     graph: SiteGraph,
-    public_path: str,
+    urls: PageUrls,
     page_title: str,
     page_kind: str,
     sidebar_html: str,
     main_content: str,
     head_extra_html: str,
 ) -> str:
-    canonical = canonical_url(graph.site.site_url, public_path)
-    base_href = page_base_href(graph.site.build_url, public_path)
     return join_html_lines(
         "<!DOCTYPE html>",
         f'<html lang="{escape(graph.site.lang)}">',
@@ -206,10 +252,10 @@ def render_page(
         f"  <title>{escape(page_title)}</title>",
         f'  <meta name="description" content="{escape(graph.site.statement)}">',
         '  <meta name="theme-color" content="#0a7c80">',
-        f'  <base href="{escape(base_href)}">',
-        f'  <link rel="canonical" href="{escape(canonical)}">',
-        f'  <link rel="stylesheet" href="{escape(relative_public_href(public_path, "/site.css"))}">',
-        f'  <link rel="alternate" type="application/atom+xml" title="{escape(graph.site.title)} feed" href="{escape(relative_public_href(public_path, "/feed.xml"))}">',
+        f'  <base href="{escape(urls.base_href)}">',
+        f'  <link rel="canonical" href="{escape(urls.canonical_url)}">',
+        f'  <link rel="stylesheet" href="{escape(urls.relative_href(SITE_STYLESHEET_PUBLIC_PATH))}">',
+        f'  <link rel="alternate" type="application/atom+xml" title="{escape(graph.site.title)} feed" href="{escape(urls.relative_href(FEED_PUBLIC_PATH))}">',
         indent_html(head_extra_html, 2),
         "</head>",
         f'<body class="site-page site-page--{escape(page_kind)}">',
@@ -230,36 +276,25 @@ def render_page(
     )
 
 
-def render_site_sidebar(graph: SiteGraph, current_work: WorkDocument | None = None) -> str:
-    current_public_path = current_work.public_path if current_work else "/"
+def render_site_sidebar(graph: SiteGraph, current_work: WorkDocument | None = None, *, urls: PageUrls) -> str:
     return join_html_lines(
         '<aside class="site-sidebar">',
         '  <div class="site-bar">',
-        indent_html(render_sidebar_primary(graph, current_work), 4),
-        indent_html(render_global_links_section(graph, current_public_path=current_public_path), 4),
+        indent_html(render_sidebar_primary(graph, current_work, urls), 4),
+        indent_html(render_global_links_section(graph, urls=urls), 4),
         "  </div>",
         "</aside>",
     )
 
 
-def normalize_sidebar_items(items: list[object]) -> list[tuple[str, str]]:
-    normalized: list[tuple[str, str]] = []
-    for item in items:
-        if isinstance(item, tuple):
-            normalized.append(item)
-            continue
-        normalized.append((item.label, item.href))
-    return normalized
-
-
-def render_sidebar_primary(graph: SiteGraph, current_work: WorkDocument | None) -> str:
+def render_sidebar_primary(graph: SiteGraph, current_work: WorkDocument | None, urls: PageUrls) -> str:
     if current_work is None:
         return ""
 
-    contents_groups_html = render_sidebar_contents_groups(graph, current_work)
+    contents_groups_html = render_sidebar_contents_groups(graph, current_work, urls)
     return join_html_lines(
         '<div class="site-bar-section site-bar-section--primary">',
-        f'  <a class="site-back-link" href="{escape(relative_public_href(current_work.public_path, "/", fragment="contents"))}">Back to contents</a>',
+        f'  <a class="site-back-link" href="{escape(urls.relative_href(HOME_PUBLIC_PATH, fragment="contents"))}">Back to contents</a>',
         "</div>",
         '<section class="site-bar-section site-bar-section--contents" aria-labelledby="site-contents-label">',
         '  <h2 class="site-contents-label visually-hidden" id="site-contents-label">Site contents</h2>',
@@ -270,12 +305,12 @@ def render_sidebar_primary(graph: SiteGraph, current_work: WorkDocument | None) 
     )
 
 
-def render_global_links_section(graph: SiteGraph, *, current_public_path: str) -> str:
-    items = graph.site.contact_links + graph.site.gift_links + [("RSS", "/feed.xml")]
+def render_global_links_section(graph: SiteGraph, *, urls: PageUrls) -> str:
+    items = (*graph.site.contact_links, *graph.site.gift_links, LinkItem(label="RSS", href=FEED_PUBLIC_PATH))
     links_html = join_html_lines(
         *(
-            f'<a class="site-link{" feed-link" if href == "/feed.xml" else ""}" href="{escape(rewrite_root_relative_url(current_public_path, href))}">{escape(label)}</a>'
-            for label, href in normalize_sidebar_items(items)
+            f'<a class="site-link{" feed-link" if item.href == FEED_PUBLIC_PATH else ""}" href="{escape(urls.root_relative_href(item.href))}">{escape(item.label)}</a>'
+            for item in items
         )
     )
     return join_html_lines(
@@ -288,13 +323,13 @@ def render_global_links_section(graph: SiteGraph, *, current_public_path: str) -
     )
 
 
-def render_sidebar_contents_groups(graph: SiteGraph, current_work: WorkDocument) -> str:
+def render_sidebar_contents_groups(graph: SiteGraph, current_work: WorkDocument, urls: PageUrls) -> str:
     current_section = graph.contents_section_by_name.get(current_work.resolved_section)
     if current_section is None:
         return ""
 
     items = join_html_lines(
-        *(render_sidebar_contents_item(work, current_work) for work in current_section.works)
+        *(render_sidebar_contents_item(work, current_work, urls) for work in current_section.works)
     )
     return join_html_lines(
         '<section class="site-contents-group site-contents-group--current">',
@@ -306,7 +341,7 @@ def render_sidebar_contents_groups(graph: SiteGraph, current_work: WorkDocument)
     )
 
 
-def render_sidebar_contents_item(work: WorkDocument, current_work: WorkDocument) -> str:
+def render_sidebar_contents_item(work: WorkDocument, current_work: WorkDocument, urls: PageUrls) -> str:
     if work.public_path == current_work.public_path:
         inline_headings_html = ""
         if len(current_work.top_level_headings) >= 2:
@@ -334,7 +369,7 @@ def render_sidebar_contents_item(work: WorkDocument, current_work: WorkDocument)
 
     return join_html_lines(
         '<li class="site-contents-item">',
-        f'  <a class="site-link site-contents-link" href="{escape(relative_public_href(current_work.public_path, work.public_path))}">{escape(work.title)}</a>',
+        f'  <a class="site-link site-contents-link" href="{escape(urls.relative_href(work.public_path))}">{escape(work.title)}</a>',
         "</li>",
     )
 
@@ -372,33 +407,68 @@ def render_work_heading_target_styles(headings: tuple[Heading, ...]) -> str:
 
 
 def render_feed(graph: SiteGraph) -> str:
-    feed_id = canonical_url(graph.site.site_url, "/feed.xml")
-    feed_self_url = canonical_url(graph.site.build_url, "/feed.xml")
-    home_url = canonical_url(graph.site.build_url, "/")
+    feed_urls = page_urls(graph, FEED_PUBLIC_PATH)
+    home_urls = page_urls(graph, HOME_PUBLIC_PATH)
     feed_updated = max([graph.site.updated, *(work.updated for work in graph.works)])
     entries = join_html_lines(*(render_feed_entry(graph, work) for work in graph.works))
     return join_html_lines(
         '<?xml version="1.0" encoding="UTF-8"?>',
-        '<?xml-stylesheet type="text/css" href="feed.css"?>',
+        f'<?xml-stylesheet type="text/css" href="{FEED_STYLESHEET_PUBLIC_PATH.lstrip("/")}"?>',
         '<feed xmlns="http://www.w3.org/2005/Atom">',
+        indent_html(render_feed_guide(graph, feed_url=feed_urls.output_url), 2),
         f"  <title>{xml_escape(graph.site.title)}</title>",
         f"  <subtitle>{xml_escape(graph.site.statement)}</subtitle>",
-        f"  <id>{xml_escape(feed_id)}</id>",
+        f"  <id>{xml_escape(feed_urls.canonical_url)}</id>",
         f"  <updated>{xml_escape(format_atom_datetime(feed_updated))}</updated>",
         '  <author>',
         f"    <name>{xml_escape(graph.site.author_name)}</name>",
         "  </author>",
-        f'  <link rel="self" type="application/atom+xml" href="{xml_escape(feed_self_url)}"/>',
-        f'  <link rel="alternate" type="text/html" href="{xml_escape(home_url)}"/>',
+        f'  <link rel="self" type="application/atom+xml" href="{xml_escape(feed_urls.output_url)}"/>',
+        f'  <link rel="alternate" type="text/html" href="{xml_escape(home_urls.output_url)}"/>',
         indent_html(entries, 2),
         "</feed>",
     )
 
 
-def render_multiline_paragraph(text: str, *, class_name: str) -> str:
-    lines = [escape(line) for line in text.splitlines()] or [escape(text)]
-    content = "<br>\n".join(lines)
-    return f'<p class="{escape(class_name)}">{content}</p>'
+def render_feed_guide(graph: SiteGraph, *, feed_url: str) -> str:
+    guide_text = graph.site.feed_guide_text.replace("{feed_url}", feed_url)
+    paragraphs = render_markdown_paragraphs(
+        guide_text,
+        context=body_context(graph, FEED_PUBLIC_PATH),
+        tag_prefix="xhtml:",
+        include_link_class=False,
+    )
+    paragraph_html = []
+    for index, paragraph in enumerate(paragraphs):
+        class_name = ""
+        if index == 0:
+            class_name = ' class="feed-guide-label"'
+        elif index == len(paragraphs) - 1:
+            class_name = ' class="feed-guide-inspiration"'
+        paragraph_html.append(f"  <xhtml:p{class_name}>{paragraph.html}</xhtml:p>")
+    return join_html_lines(
+        '<xhtml:section xmlns:xhtml="http://www.w3.org/1999/xhtml" class="feed-guide" aria-label="How to use this feed">',
+        *paragraph_html,
+        "</xhtml:section>",
+    )
+
+
+def render_home_cover_text(graph: SiteGraph) -> str:
+    paragraphs = render_markdown_paragraphs(
+        graph.site.home_text,
+        context=body_context(graph, HOME_PUBLIC_PATH),
+    )
+    return join_html_lines(
+        *(f'<p class="page-deck cover-statement">{paragraph.html}</p>' for paragraph in paragraphs)
+    )
+
+
+def body_context(graph: SiteGraph, current_public_path: str) -> BodyContext:
+    return BodyContext(
+        current_public_path=current_public_path,
+        work_lookup=graph.work_lookup,
+        work_paths=frozenset(graph.work_by_path),
+    )
 
 
 def validate_rendered_pages(rendered_pages: list[RenderedPage]) -> None:
@@ -430,32 +500,33 @@ def xml_escape(value: str) -> str:
 
 
 def render_feed_entry(graph: SiteGraph, work: WorkDocument) -> str:
-    body_html = absolutize_feed_content(graph, work)
-    output_url = canonical_url(graph.site.build_url, work.public_path)
+    urls = page_urls(graph, work.public_path)
+    body_html = absolutize_feed_content(work, urls=urls)
+    output_url = xml_escape(urls.output_url)
     return join_html_lines(
         "  <entry>",
         f"    <title>{xml_escape(work.title)}</title>",
         f"    <id>{xml_escape(work.atom_id)}</id>",
         f"    <published>{xml_escape(format_atom_datetime(work.created))}</published>",
         f"    <updated>{xml_escape(format_atom_datetime(work.updated))}</updated>",
-        f'    <link rel="alternate" type="text/html" href="{xml_escape(output_url)}"/>',
+        f'    <link rel="alternate" type="text/html" href="{output_url}"/>',
+        f'    <xhtml:a xmlns:xhtml="http://www.w3.org/1999/xhtml" class="feed-entry-url" href="{output_url}">{output_url}</xhtml:a>',
         f'    <content type="html">{xml_escape(body_html)}</content>',
         "  </entry>",
     )
 
 
-def absolutize_feed_content(graph: SiteGraph, work: WorkDocument) -> str:
-    parser = FeedContentRewriter(graph.site.build_url, work.public_path)
+def absolutize_feed_content(work: WorkDocument, *, urls: PageUrls) -> str:
+    parser = FeedContentRewriter(urls)
     parser.feed(work.body.html)
     parser.close()
     return parser.render()
 
 
 class FeedContentRewriter(HTMLParser):
-    def __init__(self, base_url: str, current_public_path: str) -> None:
+    def __init__(self, urls: PageUrls) -> None:
         super().__init__(convert_charrefs=False)
-        self.base_url = base_url
-        self.current_public_path = current_public_path
+        self.urls = urls
         self.output: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
@@ -485,7 +556,7 @@ class FeedContentRewriter(HTMLParser):
             if value is None or name not in {"href", "src", "poster"}:
                 rewritten.append((name, value))
                 continue
-            rewritten.append((name, absolute_href(self.base_url, self.current_public_path, value)))
+            rewritten.append((name, self.urls.absolute_href(value)))
         return rewritten
 
     def render(self) -> str:

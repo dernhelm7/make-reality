@@ -35,6 +35,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('<id>https://labyrinth.example/feed.xml</id>', feed)
         self.assertIn('<link rel="self" type="application/atom+xml" href="http://localhost:8009/preview/feed.xml"/>', feed)
         self.assertIn('<link rel="alternate" type="text/html" href="http://localhost:8009/preview"/>', feed)
+        self.assertIn('Copy <xhtml:a href="http://localhost:8009/preview/feed.xml">the feed URL</xhtml:a> into a feed reader to follow new work.', feed)
         self.assertIn('<id>https://labyrinth.example/id/first-room</id>', feed)
         self.assertIn(
             '<link rel="alternate" type="text/html" href="http://localhost:8009/preview/first-room"/>',
@@ -127,7 +128,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertNotIn('href="#contents">Content</a>', home_page)
         self.assertNotIn('Enter the content', home_page)
         self.assertIn('id="contents"', home_page)
-        self.assertIn('>Contents</h2>', home_page)
+        self.assertIn('<h2 class="page-title page-title--section" id="contents-heading"><a class="home-contents-heading-link" href="#contents">Read</a></h2>', home_page)
         self.assertIn('href="first-room"', home_page)
         self.assertIn('site-nav--global', home_page)
         self.assertIn('site-bar-section--global', home_page)
@@ -165,11 +166,15 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn(".home-contents", stylesheet)
         self.assertRegex(
             stylesheet,
-            r"\.page--home\s*\{[^}]*grid-template-columns:\s*var\(--sidebar-width\) minmax\(0, var\(--reading-span\)\)[^}]*column-gap:\s*var\(--page-column-gap\)",
+            r"\.page--home\s*\{[^}]*grid-template-columns:\s*minmax\(0, var\(--home-contents-measure\)\)[^}]*justify-content:\s*center",
         )
         self.assertRegex(
             stylesheet,
-            r"\.site-page--home \.page-head--cover\s*\{[^}]*grid-column:\s*2",
+            r"\.site-page--home \.page--cover\s*\{[^}]*grid-column:\s*1[^}]*grid-template-columns:\s*minmax\(0, var\(--home-column-measure\)\)",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.site-page--home \.page-head--cover\s*\{[^}]*grid-column:\s*1",
         )
         self.assertRegex(
             stylesheet,
@@ -177,7 +182,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         )
         self.assertRegex(
             stylesheet,
-            r"\.home-cover-meta\s*\{[^}]*grid-column:\s*2",
+            r"\.home-cover-meta\s*\{[^}]*grid-column:\s*1",
         )
         self.assertRegex(
             stylesheet,
@@ -185,7 +190,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         )
         self.assertRegex(
             stylesheet,
-            r"\.home-contents\s*\{[^}]*grid-column:\s*2[^}]*max-width:\s*var\(--home-column-measure\)",
+            r"\.home-contents\s*\{[^}]*grid-column:\s*1[^}]*max-width:\s*var\(--home-contents-measure\)",
         )
         self.assertIn("min-height: 100svh;", stylesheet)
         self.assertIn(".site-bar", stylesheet)
@@ -195,8 +200,35 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn(".reading-prose", stylesheet)
         self.assertIn(".section-description", stylesheet)
         self.assertIn('@namespace url("http://www.w3.org/2005/Atom");', feed_stylesheet)
+        self.assertIn('@namespace xhtml url("http://www.w3.org/1999/xhtml");', feed_stylesheet)
         self.assertIn("feed > title", feed_stylesheet)
-        self.assertIn('entry > link[rel="alternate"]::before', feed_stylesheet)
+        self.assertIn('xhtml|section[class~="feed-guide"]', feed_stylesheet)
+        self.assertIn("--feed-bg: #073638;", feed_stylesheet)
+        self.assertIn("--feed-guide-bg: #dcefed;", feed_stylesheet)
+        self.assertIn("--home-main-indent: max(var(--site-side-space), calc((100vw - var(--home-contents-measure)) / 2));", feed_stylesheet)
+        self.assertIn("--feed-content-indent: var(--home-main-indent);", feed_stylesheet)
+        self.assertIn("--feed-gutter: calc(var(--feed-content-indent) - var(--feed-cell-inline));", feed_stylesheet)
+        self.assertIn("margin: 0 calc(var(--feed-gutter) * -1) var(--feed-gutter);", feed_stylesheet)
+        self.assertIn("padding: 2.5rem var(--feed-content-indent) 1.75rem;", feed_stylesheet)
+        self.assertIn("--feed-guide-measure: clamp(48ch, 66vw, 86ch);", feed_stylesheet)
+        self.assertIn("max-width: var(--feed-guide-measure);", feed_stylesheet)
+        self.assertIn("text-wrap: balance;", feed_stylesheet)
+        self.assertNotIn('xhtml|span[class~="feed-trademark"]', feed_stylesheet)
+        self.assertNotIn('xhtml|span[class~="feed-twitter-x"]', feed_stylesheet)
+        self.assertIn("grid-template-columns: minmax(16ch, 18ch) 20ch 20ch max-content;", feed_stylesheet)
+        self.assertIn("--feed-cell-inline: 0.5rem;", feed_stylesheet)
+        self.assertIn("--feed-cell-padding: var(--feed-cell-block) var(--feed-cell-inline);", feed_stylesheet)
+        self.assertIn("padding-left: var(--feed-cell-inline);", feed_stylesheet)
+        self.assertIn("text-decoration: underline;", feed_stylesheet)
+        self.assertNotIn("display: contents;", feed_stylesheet)
+        self.assertIn("white-space: nowrap;", feed_stylesheet)
+        self.assertNotIn("border-top:", feed_stylesheet)
+        self.assertNotIn("border-bottom:", feed_stylesheet)
+        self.assertNotIn('content: "<feed', feed_stylesheet)
+        self.assertNotIn('content: "<entry', feed_stylesheet)
+        self.assertNotIn('content: "href=', feed_stylesheet)
+        self.assertIn('entry > xhtml|a[class~="feed-entry-url"]', feed_stylesheet)
+        self.assertNotIn('entry > link[rel="alternate"]::before', feed_stylesheet)
         self.assertIn('<?xml version="1.0" encoding="UTF-8"?>', feed)
         self.assertIn('<?xml-stylesheet type="text/css" href="feed.css"?>', feed)
         self.assertIn('<feed xmlns="http://www.w3.org/2005/Atom">', feed)
@@ -204,10 +236,18 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('<name>Labyrinth Author</name>', feed)
         self.assertIn('<link rel="self" type="application/atom+xml" href="https://labyrinth.example/feed.xml"/>', feed)
         self.assertIn('<link rel="alternate" type="text/html" href="https://labyrinth.example"/>', feed)
+        self.assertIn('<xhtml:section xmlns:xhtml="http://www.w3.org/1999/xhtml" class="feed-guide" aria-label="How to use this feed">', feed)
+        self.assertIn('This is my feed; you can use it to follow my site. Feeds work in any reader;', feed)
+        self.assertIn('you don&#x27;t need a Facebook™ or Twitter (𝕏) to access them.', feed)
+        self.assertIn('Copy <xhtml:a href="https://labyrinth.example/feed.xml">the feed URL</xhtml:a> into a feed reader to follow new work.', feed)
+        self.assertIn("Better readers could make this as good as any social network", feed)
+        self.assertIn('The first step is to make feeds easy to use. More to come: in the meantime I recommend you start with <xhtml:a href="https://aboutfeeds.com/"><xhtml:em>About Feeds.</xhtml:em></xhtml:a>', feed)
+        self.assertIn('Human readable feed layout inspired by <xhtml:a href="https://justinjackson.ca/xslt"><xhtml:em>Don&#x27;t kill my pretty RSS feed.</xhtml:em></xhtml:a>', feed)
         self.assertIn('<subtitle>Metadata summary for the fixture.</subtitle>', feed)
         self.assertIn('<id>https://labyrinth.example/id/first-room</id>', feed)
         self.assertIn('<published>2024-02-14T00:00:00Z</published>', feed)
         self.assertIn('<updated>2024-02-14T00:00:00Z</updated>', feed)
+        self.assertIn('<xhtml:a xmlns:xhtml="http://www.w3.org/1999/xhtml" class="feed-entry-url" href="https://labyrinth.example/first-room">https://labyrinth.example/first-room</xhtml:a>', feed)
         self.assertIn('<content type="html">&lt;h2 id=&quot;opening&quot;&gt;&lt;a class=&quot;heading-anchor&quot; href=&quot;https://labyrinth.example/first-room#opening&quot;&gt;Opening&lt;/a&gt;&lt;/h2&gt;', feed)
         self.assertNotIn("<rss", feed)
         self.assertIn(
@@ -228,15 +268,15 @@ class AcceptanceTests(FixtureSiteTestCase):
 
         self.assertIn('class="works-entry"', home_page)
         self.assertNotIn('class="works-entry-date works-date"', home_page)
-        self.assertIn(">Essays</h2>", home_page)
-        self.assertIn(">Projects</h2>", home_page)
-        self.assertIn(">Cabinet</h2>", home_page)
+        self.assertIn(">Essays</h3>", home_page)
+        self.assertIn(">Projects</h3>", home_page)
+        self.assertIn(">Cabinet</h3>", home_page)
         self.assertIn("Reflective prose and finished arguments.", home_page)
         self.assertIn("Built things and working artifacts.", home_page)
         self.assertIn("References and adjacent material.", home_page)
-        essays_index = home_page.index(">Essays</h2>")
-        projects_index = home_page.index(">Projects</h2>")
-        cabinet_index = home_page.index(">Cabinet</h2>")
+        essays_index = home_page.index(">Essays</h3>")
+        projects_index = home_page.index(">Projects</h3>")
+        cabinet_index = home_page.index(">Cabinet</h3>")
         essay_fragment_index = home_page.index(">Essay Fragment<")
         folded_map_index = home_page.index(">Folded Map<")
         self.assertLess(essays_index, projects_index)
@@ -258,7 +298,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assert_common_public_layout(publish_root, ["/night-walk"])
 
         home_page = self.page_text(publish_root, "/")
-        self.assertIn(">Other works</h2>", home_page)
+        self.assertIn(">Other works</h3>", home_page)
         self.assertIn(">Night Walk<", home_page)
 
     def test_html_work_fixture(self) -> None:
@@ -332,7 +372,7 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertNotIn('site-footer', field_notes)
         self.assertNotIn('<p class="site-global-label">Links</p>', field_notes)
         self.assertIn('id="contents"', home_page)
-        self.assertIn('>Contents</h2>', home_page)
+        self.assertIn('<h2 class="page-title page-title--section" id="contents-heading"><a class="home-contents-heading-link" href="#contents">Read</a></h2>', home_page)
         self.assertIn('href="garden-path"', home_page)
         self.assertIn('<id>https://labyrinth.example/id/field-notes</id>', feed)
         self.assertIn('<updated>2024-08-04T10:00:00Z</updated>', feed)
@@ -407,7 +447,9 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn("--work-title-measure: 18ch;", stylesheet)
         self.assertIn("--sidebar-width: 11rem;", stylesheet)
         self.assertNotIn("--page-deck-measure:", stylesheet)
-        self.assertNotIn("--home-contents-measure:", stylesheet)
+        self.assertIn("--home-contents-measure: min(var(--reading-span), 70rem);", stylesheet)
+        self.assertIn("--home-main-indent: max(var(--site-side-space), calc((100vw - var(--home-contents-measure)) / 2));", stylesheet)
+        self.assertIn("--home-contents-label-width: clamp(6.75rem, 8vw, 7.5rem);", stylesheet)
         self.assertIn("--date-width: clamp(12rem, calc(11rem + 1.5vw), 13rem);", stylesheet)
         self.assertIn("--margin-width: var(--date-width);", stylesheet)
         self.assertIn("--page-column-gap: clamp(var(--step-p5), 5vw, var(--step-p10));", stylesheet)
@@ -436,7 +478,9 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn("--rail-inline-indent: calc(var(--step-n1) - var(--rail-inline-gap));", stylesheet)
         self.assertIn("--rail-nav-gap: var(--step-n4);", stylesheet)
         self.assertIn("--rail-summary-gap: calc(var(--step-0) - var(--rail-item-gap));", stylesheet)
-        self.assertIn("--works-entry-gap: calc(var(--step-n1) - var(--rail-item-gap));", stylesheet)
+        self.assertIn("--works-section-stack-gap: clamp(var(--step-p3), 5vh, var(--step-p6));", stylesheet)
+        self.assertIn("--works-list-gap: calc(var(--step-n4) / 2);", stylesheet)
+        self.assertIn("--works-entry-min-height: var(--step-p2);", stylesheet)
         self.assertIn("--works-entry-pad-block: calc(var(--step-n2) / 2);", stylesheet)
         self.assertIn("--leader-dot-offset: 0.02em;", stylesheet)
         self.assertIn("--blockquote-pad-inline: var(--step-p1);", stylesheet)
@@ -579,12 +623,13 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('<h1 class="page-title page-title--display cover-title">Make Reality</h1>', home_page)
         self.assertIn("Wanting to know one another<br>", home_page)
         self.assertIn("they made the Universe.", home_page)
-        self.assertIn(">Poems</h2>", home_page)
-        self.assertIn(">Notes</h2>", home_page)
-        self.assertIn(">Studies</h2>", home_page)
-        self.assertIn(">Guides</h2>", home_page)
-        self.assertIn(">Projects</h2>", home_page)
-        self.assertIn(">Cabinet</h2>", home_page)
+        self.assertIn('href="#contents">Read</a></h2>', home_page)
+        self.assertIn(">Poems</h3>", home_page)
+        self.assertIn(">Notes</h3>", home_page)
+        self.assertIn(">Studies</h3>", home_page)
+        self.assertIn(">Guides</h3>", home_page)
+        self.assertIn(">Projects</h3>", home_page)
+        self.assertIn(">Cabinet</h3>", home_page)
         self.assertIn("nothing here is real, but it is the stuff of reality", home_page)
         self.assertIn("how I&#x27;ve solved problems", home_page)
         self.assertIn('href="https://tally.so/r/PLACEHOLDER">Write</a>', home_page)

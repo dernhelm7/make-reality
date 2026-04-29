@@ -16,6 +16,12 @@ STYLE_SOURCE_ORDER = (
     "print.css",
 )
 FEED_STYLE_SOURCE = "feed.css"
+FEED_STYLESHEET_NAMESPACE = "\n".join(
+    (
+        '@namespace url("http://www.w3.org/2005/Atom");',
+        '@namespace xhtml url("http://www.w3.org/1999/xhtml");',
+    )
+)
 
 
 def render_stylesheet() -> str:
@@ -24,7 +30,12 @@ def render_stylesheet() -> str:
 
 
 def render_feed_stylesheet() -> str:
-    return read_stylesheet_source(FEED_STYLE_SOURCE) + "\n"
+    parts = [
+        FEED_STYLESHEET_NAMESPACE,
+        read_stylesheet_source("tokens.css"),
+        read_stylesheet_source(FEED_STYLE_SOURCE),
+    ]
+    return "\n\n".join(part for part in parts if part) + "\n"
 
 
 def read_stylesheet_source(name: str) -> str:

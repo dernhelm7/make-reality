@@ -38,26 +38,58 @@ class BodyLink:
 
 
 @dataclass(frozen=True)
+class BodyContext:
+    current_public_path: str
+    work_lookup: dict[str, ResolvedWorkLink]
+    work_paths: frozenset[str]
+
+    def resolve_wikilink(self, raw_target: str) -> ResolvedWorkLink | None:
+        return self.work_lookup.get(normalize_wikilink_key(raw_target))
+
+    def analyze_link(self, href: str) -> BodyLink:
+        resolved = resolve_internal_path(self.current_public_path, href)
+        if resolved is None:
+            return BodyLink(href=href, resolved_path=None, fragment=None, kind="external")
+        resolved_path, fragment = resolved
+        kind = (
+            "work"
+            if resolved_path in self.work_paths and resolved_path != self.current_public_path
+            else "internal"
+        )
+        return BodyLink(href=href, resolved_path=resolved_path, fragment=fragment, kind=kind)
+
+    def render_href(self, link: BodyLink) -> str:
+        if link.kind == "external" or link.resolved_path is None:
+            return link.href
+        if link.resolved_path == self.current_public_path:
+            if link.fragment:
+                return f"#{link.fragment}"
+            return relative_public_href(self.current_public_path, self.current_public_path)
+        rendered = relative_public_href(self.current_public_path, link.resolved_path)
+        if link.fragment:
+            return f"{rendered}#{link.fragment}"
+        return rendered
+
+
+@dataclass(frozen=True)
 class BodyRender:
     html: str
-    headings: list[Heading]
-    anchor_ids: set[str]
-    links: list[BodyLink]
+    headings: tuple[Heading, ...]
+    anchor_ids: frozenset[str]
+    links: tuple[BodyLink, ...]
 
 
 @dataclass(frozen=True)
 class InlineRender:
     html: str
     visible_text: str
-    links: list[BodyLink]
+    links: tuple[BodyLink, ...]
 
 
 def render_markdown_body(
     body_text: str,
     *,
-    current_public_path: str,
-    work_lookup: dict[str, ResolvedWorkLink],
-    work_paths: set[str],
+    context: BodyContext,
 ) -> BodyRender:
     lines = body_text.splitlines()
     blocks: list[tuple[str, str, int]] = []
@@ -95,9 +127,7 @@ def render_markdown_body(
     for block_type, content, source_level in blocks:
         inline = render_inline(
             content,
-            current_public_path=current_public_path,
-            work_lookup=work_lookup,
-            work_paths=work_paths,
+            context=context,
         )
         links.extend(inline.links)
 
@@ -123,17 +153,102 @@ def render_markdown_body(
 
     return BodyRender(
         html="\n".join(pieces),
-        headings=headings,
-        anchor_ids={heading.anchor_id for heading in headings},
-        links=links,
+        headings=tuple(headings),
+        anchor_ids=frozenset(heading.anchor_id for heading in headings),
+        links=tuple(links),
     )
 
 
+def render_markdown_paragraphs(
+    body_text: str,
+    *,
+    context: BodyContext,
+    tag_prefix: str = "",
+    include_link_class: bool = True,
+) -> tuple[InlineRender, ...]:
+    paragraphs: list[list[str]] = []
+    buffer: list[str] = []
+
+    def flush_paragraph() -> None:
+        if not buffer:
+            return
+        paragraphs.append([line for line in buffer if line.strip()])
+        buffer.clear()
+
+    for line in body_text.splitlines():
+        if not line.strip():
+            flush_paragraph()
+            continue
+        buffer.append(line)
+
+    flush_paragraph()
+
+    return tuple(
+        render_markdown_paragraph_lines(
+            lines,
+            context=context,
+            tag_prefix=tag_prefix,
+            include_link_class=include_link_class,
+        )
+        for lines in paragraphs
+        if lines
+    )
+
+
+def render_markdown_paragraph_lines(
+    lines: list[str],
+    *,
+    context: BodyContext,
+    tag_prefix: str,
+    include_link_class: bool,
+) -> InlineRender:
+    pieces: list[str] = []
+    visible: list[str] = []
+    links: list[BodyLink] = []
+    prior_hard_break = False
+    break_tag = f"<{tag_prefix}br/>" if tag_prefix else "<br>"
+
+    for index, line in enumerate(lines):
+        text, hard_break = strip_markdown_hard_break(line)
+        if index > 0:
+            if prior_hard_break:
+                pieces.append(f"{break_tag}\n")
+                visible.append("\n")
+            else:
+                pieces.append(" ")
+                visible.append(" ")
+
+        inline = render_inline(
+            text.strip(),
+            context=context,
+            tag_prefix=tag_prefix,
+            include_link_class=include_link_class,
+        )
+        pieces.append(inline.html)
+        visible.append(inline.visible_text)
+        links.extend(inline.links)
+        prior_hard_break = hard_break
+
+    return InlineRender(
+        html="".join(pieces),
+        visible_text="".join(visible),
+        links=tuple(links),
+    )
+
+
+def strip_markdown_hard_break(line: str) -> tuple[str, bool]:
+    if line.endswith("  "):
+        return line[:-2], True
+    stripped = line.rstrip()
+    if stripped.endswith("\\"):
+        return stripped[:-1], True
+    return line, False
+
+
 class HTMLFragmentRewriter(HTMLParser):
-    def __init__(self, current_public_path: str, work_paths: set[str]) -> None:
+    def __init__(self, context: BodyContext) -> None:
         super().__init__(convert_charrefs=False)
-        self.current_public_path = current_public_path
-        self.work_paths = work_paths
+        self.context = context
         self.output: list[str] = []
         self.headings: list[Heading] = []
         self.anchor_ids: set[str] = set()
@@ -147,8 +262,7 @@ class HTMLFragmentRewriter(HTMLParser):
         rendered_attrs, link = rewrite_link_attributes(
             tag,
             attrs,
-            current_public_path=self.current_public_path,
-            work_paths=self.work_paths,
+            context=self.context,
         )
         if link is not None:
             self.links.append(link)
@@ -171,8 +285,7 @@ class HTMLFragmentRewriter(HTMLParser):
         rendered_attrs, link = rewrite_link_attributes(
             tag,
             attrs,
-            current_public_path=self.current_public_path,
-            work_paths=self.work_paths,
+            context=self.context,
         )
         if link is not None:
             self.links.append(link)
@@ -247,19 +360,18 @@ class HTMLFragmentRewriter(HTMLParser):
     def render(self) -> BodyRender:
         return BodyRender(
             html="".join(self.output),
-            headings=self.headings,
-            anchor_ids=self.anchor_ids,
-            links=self.links,
+            headings=tuple(self.headings),
+            anchor_ids=frozenset(self.anchor_ids),
+            links=tuple(self.links),
         )
 
 
 def render_html_body(
     body_text: str,
     *,
-    current_public_path: str,
-    work_paths: set[str],
+    context: BodyContext,
 ) -> BodyRender:
-    parser = HTMLFragmentRewriter(current_public_path, work_paths)
+    parser = HTMLFragmentRewriter(context)
     parser.feed(body_text)
     parser.close()
     return parser.render()
@@ -268,9 +380,9 @@ def render_html_body(
 def render_inline(
     text: str,
     *,
-    current_public_path: str,
-    work_lookup: dict[str, ResolvedWorkLink],
-    work_paths: set[str],
+    context: BodyContext,
+    tag_prefix: str = "",
+    include_link_class: bool = True,
 ) -> InlineRender:
     pieces: list[str] = []
     visible: list[str] = []
@@ -284,22 +396,24 @@ def render_inline(
                 raw = text[index + 2 : end]
                 target, label = split_wikilink(raw)
                 visible_label = label or target
-                resolved = resolve_wikilink_target(target, work_lookup)
+                resolved = context.resolve_wikilink(target)
                 if resolved is None:
                     pieces.append(escape(visible_label))
                 else:
+                    link = BodyLink(
+                        href=resolved.public_path,
+                        resolved_path=resolved.public_path,
+                        fragment=None,
+                        kind="work",
+                    )
+                    class_attr = (
+                        f' class="{escape(link_class_name(link))}"' if include_link_class else ""
+                    )
                     pieces.append(
-                        f'<a class="internal-link work-link" href="{escape(relative_public_href(current_public_path, resolved.public_path))}">'
-                        f"{escape(visible_label)}</a>"
+                        f'<{tag_prefix}a{class_attr} href="{escape(context.render_href(link))}">'
+                        f"{escape(visible_label)}</{tag_prefix}a>"
                     )
-                    links.append(
-                        BodyLink(
-                            href=resolved.public_path,
-                            resolved_path=resolved.public_path,
-                            fragment=None,
-                            kind="work",
-                        )
-                    )
+                    links.append(link)
                 visible.append(visible_label)
                 index = end + 2
                 continue
@@ -309,14 +423,37 @@ def render_inline(
             if link_match:
                 label = link_match.group("label")
                 href = link_match.group("href")
-                link = analyze_body_link(href, current_public_path=current_public_path, work_paths=work_paths)
-                rendered_href = render_body_href(link, current_public_path=current_public_path)
-                pieces.append(
-                    f'<a class="{escape(link_class_name(link))}" href="{escape(rendered_href)}">{escape(label)}</a>'
+                link = context.analyze_link(href)
+                rendered_href = context.render_href(link)
+                rendered_label = render_inline(
+                    label,
+                    context=context,
+                    tag_prefix=tag_prefix,
+                    include_link_class=include_link_class,
                 )
-                visible.append(label)
+                class_attr = f' class="{escape(link_class_name(link))}"' if include_link_class else ""
+                pieces.append(
+                    f'<{tag_prefix}a{class_attr} href="{escape(rendered_href)}">{rendered_label.html}</{tag_prefix}a>'
+                )
+                visible.append(rendered_label.visible_text)
+                links.extend(rendered_label.links)
                 links.append(link)
                 index = link_match.end()
+                continue
+
+        if text[index] == "_":
+            end = text.find("_", index + 1)
+            if end > index + 1:
+                emphasized = render_inline(
+                    text[index + 1 : end],
+                    context=context,
+                    tag_prefix=tag_prefix,
+                    include_link_class=include_link_class,
+                )
+                pieces.append(f"<{tag_prefix}em>{emphasized.html}</{tag_prefix}em>")
+                visible.append(emphasized.visible_text)
+                links.extend(emphasized.links)
+                index = end + 1
                 continue
 
         char = text[index]
@@ -327,7 +464,7 @@ def render_inline(
     return InlineRender(
         html="".join(pieces),
         visible_text="".join(visible),
-        links=links,
+        links=tuple(links),
     )
 
 
@@ -336,13 +473,6 @@ def split_wikilink(raw: str) -> tuple[str, str | None]:
         return raw.strip(), None
     target, label = raw.split("|", 1)
     return target.strip(), label.strip()
-
-
-def resolve_wikilink_target(
-    raw_target: str,
-    work_lookup: dict[str, ResolvedWorkLink],
-) -> ResolvedWorkLink | None:
-    return work_lookup.get(normalize_wikilink_key(raw_target))
 
 
 def normalize_wikilink_key(text: str) -> str:
@@ -365,15 +495,6 @@ def unique_anchor_id(base: str, used_ids: set[str]) -> str:
         counter += 1
     used_ids.add(candidate)
     return candidate
-
-
-def analyze_body_link(href: str, *, current_public_path: str, work_paths: set[str]) -> BodyLink:
-    resolved = resolve_internal_path(current_public_path, href)
-    if resolved is None:
-        return BodyLink(href=href, resolved_path=None, fragment=None, kind="external")
-    resolved_path, fragment = resolved
-    kind = "work" if resolved_path in work_paths and resolved_path != current_public_path else "internal"
-    return BodyLink(href=href, resolved_path=resolved_path, fragment=fragment, kind=kind)
 
 
 def resolve_internal_path(current_public_path: str, href: str) -> tuple[str, str | None] | None:
@@ -457,8 +578,7 @@ def rewrite_link_attributes(
     tag: str,
     attrs: list[tuple[str, str | None]],
     *,
-    current_public_path: str,
-    work_paths: set[str],
+    context: BodyContext,
 ) -> tuple[list[tuple[str, str | None]], BodyLink | None]:
     if tag != "a":
         return attrs, None
@@ -468,9 +588,9 @@ def rewrite_link_attributes(
     if not href:
         return attrs, None
 
-    link = analyze_body_link(href, current_public_path=current_public_path, work_paths=work_paths)
+    link = context.analyze_link(href)
     class_value = merge_class_values(attr_map.get("class"), link_class_name(link))
-    rendered_href = render_body_href(link, current_public_path=current_public_path)
+    rendered_href = context.render_href(link)
     ordered: list[tuple[str, str | None]] = [("class", class_value)]
     for key, value in attrs:
         if key == "class":
@@ -480,19 +600,6 @@ def rewrite_link_attributes(
             continue
         ordered.append((key, value))
     return ordered, link
-
-
-def render_body_href(link: BodyLink, *, current_public_path: str) -> str:
-    if link.kind == "external" or link.resolved_path is None:
-        return link.href
-    if link.resolved_path == current_public_path:
-        if link.fragment:
-            return f"#{link.fragment}"
-        return relative_public_href(current_public_path, current_public_path)
-    rendered = relative_public_href(current_public_path, link.resolved_path)
-    if link.fragment:
-        return f"{rendered}#{link.fragment}"
-    return rendered
 
 
 def merge_class_values(existing: str | None, additions: str) -> str:

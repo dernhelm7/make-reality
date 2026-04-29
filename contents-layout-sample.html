@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contents Layout Sample - Labyrinth</title>
+  <style>
+    @font-face {
+      font-family: "ET Book";
+      src: url("labyrinth/assets/fonts/et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff") format("woff");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "ET Book";
+      src: url("labyrinth/assets/fonts/et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff") format("woff");
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --page: #ffffff;
+      --ink: #202020;
+      --ink-soft: #3a3a3a;
+      --accent: #0a7c80;
+      --line: color-mix(in srgb, var(--ink) 14%, var(--page));
+      --line-strong: color-mix(in srgb, var(--ink) 24%, var(--page));
+      --muted: color-mix(in srgb, var(--ink) 50%, var(--page));
+      --measure: 70rem;
+      --shelf-label-width: 5.7rem;
+      --shelf-label-gap: 1rem;
+      --serif: "ET Book", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      --sans: "Helvetica Neue", Arial, sans-serif;
+    }
+
+    html {
+      background: var(--page);
+      color: var(--ink);
+      font-family: var(--serif);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--ink);
+      font-size: 1.05rem;
+      line-height: 1.45;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:hover,
+    a:focus-visible {
+      color: var(--accent);
+    }
+
+    :focus-visible {
+      outline: 0.14rem solid var(--accent);
+      outline-offset: 0.18rem;
+    }
+
+    .sample-shell {
+      width: min(100% - clamp(2rem, 7vw, 7rem), var(--measure));
+      margin: 0 auto;
+      padding: clamp(3rem, 7vh, 5.5rem) 0 clamp(5rem, 12vh, 8rem);
+    }
+
+    .contents-head {
+      display: grid;
+      justify-items: center;
+      gap: 0.8rem;
+      text-align: center;
+      margin: 0 auto clamp(3.2rem, 8vh, 5.8rem);
+    }
+
+    .shelf-name {
+      font-family: var(--sans);
+    }
+
+    .contents-title {
+      margin: 0;
+      font-size: 2.7rem;
+      font-weight: 400;
+      line-height: 1.06;
+    }
+
+    .contents-title-link {
+      display: inline-block;
+    }
+
+    .contents-spread {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: clamp(3rem, 8vw, 7rem);
+      align-items: start;
+    }
+
+    .contents-column {
+      display: grid;
+      gap: clamp(2.35rem, 5.6vh, 3.8rem);
+      min-width: 0;
+    }
+
+    .shelf {
+      display: grid;
+      gap: 0.78rem;
+    }
+
+    .shelf-head {
+      display: block;
+    }
+
+    .shelf-line {
+      display: grid;
+      grid-template-columns: var(--shelf-label-width) minmax(0, 1fr);
+      column-gap: var(--shelf-label-gap);
+      align-items: baseline;
+    }
+
+    .shelf-name {
+      margin: 0;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-variant-caps: all-small-caps;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .shelf-description {
+      margin: 0;
+      max-width: none;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      line-height: 1.42;
+    }
+
+    .works-list {
+      list-style: none;
+      margin: 0.2rem 0 0;
+      padding: 0;
+      display: grid;
+      gap: 0.18rem;
+    }
+
+    .works-list:empty {
+      display: none;
+    }
+
+    .work-row {
+      display: grid;
+      grid-template-columns: var(--shelf-label-width) auto minmax(2rem, 1fr) auto;
+      column-gap: var(--shelf-label-gap);
+      align-items: baseline;
+      min-height: 1.55rem;
+      min-width: 0;
+      padding: 0.04rem 0;
+    }
+
+    .work-reference,
+    .work-mark {
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .work-reference {
+      align-self: baseline;
+      font-family: var(--sans);
+      overflow-wrap: anywhere;
+    }
+
+    .work-title {
+      font-size: 1rem;
+      line-height: 1.28;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .work-leader {
+      height: 0.5em;
+      min-width: 0;
+      overflow: hidden;
+      color: color-mix(in srgb, var(--ink) 34%, var(--page));
+      background-image: radial-gradient(currentColor 0.055em, transparent 0.068em);
+      background-position: left 66%;
+      background-repeat: repeat-x;
+      background-size: 0.52em 0.18em;
+    }
+
+    .work-row:hover .work-leader,
+    .work-row:focus-visible .work-leader {
+      color: color-mix(in srgb, var(--accent) 54%, var(--page));
+    }
+
+    @media (max-width: 58rem) {
+      body {
+        font-size: 1rem;
+      }
+
+      .contents-title {
+        font-size: 2.25rem;
+      }
+
+      .contents-spread {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2.35rem;
+      }
+
+      .contents-column {
+        gap: 2.35rem;
+      }
+    }
+
+    @media (max-width: 34rem) {
+      .sample-shell {
+        width: min(100% - 2rem, var(--measure));
+        --shelf-label-width: 4.9rem;
+        --shelf-label-gap: 0.75rem;
+      }
+
+      .work-row {
+        grid-template-columns: var(--shelf-label-width) auto minmax(1.2rem, 1fr);
+        column-gap: var(--shelf-label-gap);
+      }
+
+      .shelf-line {
+        grid-template-columns: var(--shelf-label-width) minmax(0, 1fr);
+        column-gap: var(--shelf-label-gap);
+      }
+
+      .work-mark {
+        display: none;
+      }
+
+      .work-title {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="sample-shell" aria-labelledby="contents">
+    <header class="contents-head">
+      <h1 class="contents-title" id="contents"><a class="contents-title-link" href="#contents">Read</a></h1>
+    </header>
+
+    <div class="contents-spread">
+      <div class="contents-column">
+        <section class="shelf" aria-labelledby="poems-heading">
+          <header class="shelf-head">
+            <div class="shelf-line">
+              <h2 class="shelf-name" id="poems-heading">Poems</h2>
+              <p class="shelf-description">nothing here is real, but it is the stuff of reality</p>
+            </div>
+          </header>
+          <ol class="works-list"></ol>
+        </section>
+
+        <section class="shelf" aria-labelledby="notes-heading">
+          <header class="shelf-head">
+            <div class="shelf-line">
+              <h2 class="shelf-name" id="notes-heading">Notes</h2>
+              <p class="shelf-description">thoughts, journal entries, fragments, philosophy</p>
+            </div>
+          </header>
+          <ol class="works-list">
+            <li>
+              <a class="work-row" href="/starter-note">
+                <span class="work-reference">starter-note</span>
+                <span class="work-title">Starter Note</span>
+                <span class="work-leader" aria-hidden="true"></span>
+                <span class="work-mark" aria-hidden="true">&gt;</span>
+              </a>
+            </li>
+          </ol>
+        </section>
+
+        <section class="shelf" aria-labelledby="studies-heading">
+          <header class="shelf-head">
+            <div class="shelf-line">
+              <h2 class="shelf-name" id="studies-heading">Studies</h2>
+              <p class="shelf-description">records of exploration with references</p>
+            </div>
+          </header>
+          <ol class="works-list">
+            <li>
+              <a class="work-row" href="/margin-study">
+                <span class="work-reference">margin-study</span>
+                <span class="work-title">Margin Study</span>
+                <span class="work-leader" aria-hidden="true"></span>
+                <span class="work-mark" aria-hidden="true">&gt;</span>
+              </a>
+            </li>
+          </ol>
+        </section>
+      </div>
+
+      <div class="contents-column">
+        <section class="shelf" aria-labelledby="guides-heading">
+          <header class="shelf-head">
+            <div class="shelf-line">
+              <h2 class="shelf-name" id="guides-heading">Guides</h2>
+              <p class="shelf-description">how I've solved problems</p>
+            </div>
+          </header>
+          <ol class="works-list"></ol>
+        </section>
+
+        <section class="shelf" aria-labelledby="projects-heading">
+          <header class="shelf-head">
+            <div class="shelf-line">
+              <h2 class="shelf-name" id="projects-heading">Projects</h2>
+              <p class="shelf-description">tools, adaptations, records of things made</p>
+            </div>
+          </header>
+          <ol class="works-list"></ol>
+        </section>
+
+        <section class="shelf" aria-labelledby="cabinet-heading">
+          <header class="shelf-head">
+            <div class="shelf-line">
+              <h2 class="shelf-name" id="cabinet-heading">Cabinet</h2>
+              <p class="shelf-description">influences, recommendations, bibliography, aesthetics</p>
+            </div>
+          </header>
+          <ol class="works-list">
+            <li>
+              <a class="work-row" href="/bibliography">
+                <span class="work-reference">bibliography</span>
+                <span class="work-title">Bibliography</span>
+                <span class="work-leader" aria-hidden="true"></span>
+                <span class="work-mark" aria-hidden="true">&gt;</span>
+              </a>
+            </li>
+            <li>
+              <a class="work-row" href="/style-cabinet">
+                <span class="work-reference">style-cabinet</span>
+                <span class="work-title">Style Cabinet</span>
+                <span class="work-leader" aria-hidden="true"></span>
+                <span class="work-mark" aria-hidden="true">&gt;</span>
+              </a>
+            </li>
+          </ol>
+        </section>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

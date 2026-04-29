@@ -1,0 +1,75 @@
+- main [ref=e6]:
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - heading "Make Reality" [level=1] [ref=e10]
+        - paragraph [ref=e11]:
+          - text: Wanting to know one another
+          - text: they made the Universe.
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: Links
+        - navigation "Global links" [ref=e15]:
+          - link "Write" [ref=e16]:
+            - /url: https://tally.so/r/PLACEHOLDER
+          - link "Gift" [ref=e17]:
+            - /url: https://example.com/gift
+          - link "RSS" [ref=e18]:
+            - /url: feed.xml
+    - region "Read" [ref=e19]:
+      - heading "Read" [level=2] [ref=e21]:
+        - link "Read" [ref=e22]:
+          - /url: "#contents"
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - region "Poems" [ref=e25]:
+            - generic [ref=e27]:
+              - heading "Poems" [level=3] [ref=e28]
+              - paragraph [ref=e29]: nothing here is real, but it is the stuff of reality
+          - region "Notes" [ref=e30]:
+            - generic [ref=e32]:
+              - heading "Notes" [level=3] [ref=e33]
+              - paragraph [ref=e34]: thoughts, journal entries, fragments, philosophy
+            - list [ref=e35]:
+              - listitem [ref=e36]:
+                - link "Starter Note" [ref=e37]:
+                  - /url: starter-note
+                  - generic [ref=e38]: starter-note
+                  - generic [ref=e39]: Starter Note
+                  - generic: · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+          - region "Studies" [ref=e40]:
+            - generic [ref=e42]:
+              - heading "Studies" [level=3] [ref=e43]
+              - paragraph [ref=e44]: records of exploration with references
+            - list [ref=e45]:
+              - listitem [ref=e46]:
+                - link "Margin Study" [ref=e47]:
+                  - /url: margin-study
+                  - generic [ref=e48]: margin-study
+                  - generic [ref=e49]: Margin Study
+                  - generic: · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+        - generic [ref=e50]:
+          - region "Guides" [ref=e51]:
+            - generic [ref=e53]:
+              - heading "Guides" [level=3] [ref=e54]
+              - paragraph [ref=e55]: how I've solved problems
+          - region "Projects" [ref=e56]:
+            - generic [ref=e58]:
+              - heading "Projects" [level=3] [ref=e59]
+              - paragraph [ref=e60]: tools, adaptations, records of things made
+          - region "Cabinet" [ref=e61]:
+            - generic [ref=e63]:
+              - heading "Cabinet" [level=3] [ref=e64]
+              - paragraph [ref=e65]: influences, recommendations, bibliography, aesthetics
+            - list [ref=e66]:
+              - listitem [ref=e67]:
+                - link "Bibliography" [ref=e68]:
+                  - /url: bibliography
+                  - generic [ref=e69]: bibliography
+                  - generic [ref=e70]: Bibliography
+                  - generic: · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+              - listitem [ref=e71]:
+                - link "Style Cabinet" [ref=e72]:
+                  - /url: style-cabinet
+                  - generic [ref=e73]: style-cabinet
+                  - generic [ref=e74]: Style Cabinet
+                  - generic: · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
