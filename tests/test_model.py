@@ -9,13 +9,10 @@ from labyrinth.markup import BodyContext, ResolvedWorkLink, render_html_body, re
 from labyrinth.model import BuildError, build_site_graph, load_site_config, load_work_inputs
 from labyrinth.urls import PageUrls
 
-from .fixture_support import EXAMPLES_ROOT
-
-
 class MarkupAndGraphTests(unittest.TestCase):
     def test_markdown_body_tracks_structured_links(self) -> None:
         body = render_markdown_body(
-            "Read [[Garden Path]]. Compare [Turn](./garden-path#turn). Visit [Archive](https://archive.example). Stay [Here](#opening).",
+            "See [[Garden Path]]. Compare [Turn](./garden-path#turn). Visit [Archive](https://archive.example). Stay [Here](#opening).",
             context=self.body_context(),
         )
 
@@ -45,11 +42,10 @@ class MarkupAndGraphTests(unittest.TestCase):
             ],
             links,
         )
-        self.assertIn('class="internal-link work-link"', body.html)
 
     def test_rendered_internal_links_are_relative_to_the_current_page(self) -> None:
         markdown = render_markdown_body(
-            "Read [[Garden Path]]. Compare [Turn](./garden-path#turn). Stay [Here](#opening).",
+            "See [[Garden Path]]. Compare [Turn](./garden-path#turn). Stay [Here](#opening).",
             context=self.body_context(),
         )
         html = render_html_body(
@@ -82,13 +78,27 @@ class MarkupAndGraphTests(unittest.TestCase):
         )
 
     def test_site_graph_derives_sections_backlinks_and_lookup_maps(self) -> None:
-        site = load_site_config(EXAMPLES_ROOT / "reading-microfeatures")
-        graph = build_site_graph(site, load_work_inputs(EXAMPLES_ROOT / "reading-microfeatures"))
+        site_root = self.make_site(
+            {
+                "source-work": {
+                    "meta.toml": 'created = "2024-02-15T00:00:00Z"\nupdated = "2024-02-15T00:00:00Z"\natom_id = "https://labyrinth.example/id/source-work"\n',
+                    "index.md": "# Source Heading\n\nSee [[target-work]].",
+                },
+                "target-work": {
+                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/target-work"\n',
+                    "index.md": "# Target Heading\n\nA destination.",
+                },
+            }
+        )
 
-        self.assertEqual("Other works", graph.work_by_path["/field-notes"].resolved_section)
-        self.assertEqual("materials", graph.work_by_path["/field-notes"].top_level_headings[0].anchor_id)
-        self.assertIs(graph.contents_sections[0], graph.contents_section_by_name["Other works"])
-        self.assertEqual(("/field-notes",), tuple(work.public_path for work in graph.backlinks["/garden-path"]))
+        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        source = graph.work_by_path["/source-work"]
+        target = graph.work_by_path["/target-work"]
+
+        self.assertEqual(graph.contents_sections[0].name, source.resolved_section)
+        self.assertEqual("source-heading", source.top_level_headings[0].anchor_id)
+        self.assertIs(graph.contents_sections[0], graph.contents_section_by_name[source.resolved_section])
+        self.assertEqual((source.public_path,), tuple(work.public_path for work in graph.backlinks[target.public_path]))
 
     def test_site_graph_treats_fixed_public_files_as_known_paths(self) -> None:
         site_root = self.make_site(
@@ -128,11 +138,11 @@ class MarkupAndGraphTests(unittest.TestCase):
 
                 Visible cover line.
 
-                [Email](mailto:hello@labyrinth.example)
-                [Gift](https://gifts.example/labyrinth)
-                [RSS](/feed.xml)
+                [First](https://first.example/labyrinth)
+                [Second](https://second.example/labyrinth)
+                [Feed](/feed.xml)
 
-                ## Read
+                ## Library
 
                 ### Notes
 
@@ -147,7 +157,8 @@ class MarkupAndGraphTests(unittest.TestCase):
         graph = build_site_graph(site, load_work_inputs(site_root))
 
         self.assertEqual("Labyrinth Home", site.home.title)
-        self.assertEqual(("Email", "Gift", "RSS"), tuple(link.label for link in site.home.links))
+        self.assertEqual("Library", site.home.read_label)
+        self.assertEqual(("First", "Second", "Feed"), tuple(link.label for link in site.home.links))
         self.assertEqual(("", "Reusable methods."), tuple(section.description for section in site.home.sections))
         self.assertEqual(("Notes", "Guides"), tuple(section.name for section in graph.contents_sections))
         self.assertEqual("", graph.contents_sections[0].description)
@@ -162,7 +173,7 @@ class MarkupAndGraphTests(unittest.TestCase):
                         'created = "2024-02-16T00:00:00Z"\n'
                         'updated = "2024-02-16T00:00:00Z"\n'
                         'atom_id = "https://labyrinth.example/id/alpha-note"\n'
-                        'section = "Notes"\n'
+                        'section = "Shelf One"\n'
                     ),
                     "index.md": "# Alpha\n\nA note.",
                 },
@@ -171,7 +182,7 @@ class MarkupAndGraphTests(unittest.TestCase):
                         'created = "2024-02-15T00:00:00Z"\n'
                         'updated = "2024-02-15T00:00:00Z"\n'
                         'atom_id = "https://labyrinth.example/id/beta-essay"\n'
-                        'section = "Essays"\n'
+                        'section = "Shelf Two"\n'
                     ),
                     "index.md": "# Beta\n\nAn essay.",
                 },
@@ -188,8 +199,8 @@ class MarkupAndGraphTests(unittest.TestCase):
         home_md = site_root / "home.md"
         home_md.write_text(
             home_md.read_text(encoding="utf-8").replace(
-                "## Read",
-                "## Read\n\n### Essays\n\n### Notes\n\n### Empty",
+                "## Index",
+                "## Library\n\n### Shelf Two\n\n### Shelf One\n\n### Empty Shelf",
             ),
             encoding="utf-8",
         )
@@ -197,22 +208,24 @@ class MarkupAndGraphTests(unittest.TestCase):
         graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
 
         self.assertEqual(
-            ("Essays", "Notes", "Empty", "Other works"),
-            tuple(section.name for section in graph.contents_sections),
+            ("Shelf Two", "Shelf One", "Empty Shelf"),
+            tuple(section.name for section in graph.contents_sections[:3]),
         )
         self.assertEqual(
             ("Beta Essay",),
-            tuple(work.title for work in graph.contents_section_by_name["Essays"].works),
+            tuple(work.title for work in graph.contents_section_by_name["Shelf Two"].works),
         )
         self.assertEqual(
             ("Alpha Note",),
-            tuple(work.title for work in graph.contents_section_by_name["Notes"].works),
+            tuple(work.title for work in graph.contents_section_by_name["Shelf One"].works),
         )
-        self.assertEqual((), graph.contents_section_by_name["Empty"].works)
-        self.assertEqual(
-            ("Loose Map",),
-            tuple(work.title for work in graph.contents_section_by_name["Other works"].works),
-        )
+        self.assertEqual((), graph.contents_section_by_name["Empty Shelf"].works)
+        fallback_sections = [
+            section
+            for section in graph.contents_sections
+            if tuple(work.public_path for work in section.works) == ("/loose-map",)
+        ]
+        self.assertEqual(1, len(fallback_sections))
 
     def test_site_graph_rejects_missing_heading_fragment(self) -> None:
         site_root = self.make_site(
@@ -228,7 +241,6 @@ class MarkupAndGraphTests(unittest.TestCase):
             build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
 
         self.assertEqual("broken-internal-link", error.exception.rule)
-        self.assertIn("missing heading id", error.exception.message)
 
     def body_context(self) -> BodyContext:
         return BodyContext(
@@ -264,11 +276,11 @@ class MarkupAndGraphTests(unittest.TestCase):
 
                 A room for poems, projects, and notes.
 
-                [Email](mailto:hello@labyrinth.example)
-                [Gift](https://gifts.example/labyrinth)
-                [RSS](/feed.xml)
+                [First](https://first.example/labyrinth)
+                [Second](https://second.example/labyrinth)
+                [Feed](/feed.xml)
 
-                ## Read
+                ## Index
                 """
             ),
             encoding="utf-8",

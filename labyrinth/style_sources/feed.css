@@ -37,7 +37,7 @@ feed {
   --feed-sans: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --feed-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace;
   --feed-content-indent: var(--home-main-indent);
-  --feed-guide-measure: clamp(48ch, 66vw, 86ch);
+  --feed-guide-measure: calc(100vw - (var(--feed-content-indent) * 2) - 4rem);
   --feed-cell-block: 0.35rem;
   --feed-cell-inline: 0.5rem;
   --feed-gutter: calc(var(--feed-content-indent) - var(--feed-cell-inline));
@@ -52,15 +52,15 @@ feed {
   font-family: var(--feed-serif);
   font-size: 1rem;
   line-height: 1.45;
-  overflow-x: auto;
+  overflow-x: visible;
   white-space: nowrap;
 }
 
 xhtml|section[class~="feed-guide"] {
   box-sizing: border-box;
-  width: calc(100% + (var(--feed-gutter) * 2));
-  max-width: none;
-  margin: 0 calc(var(--feed-gutter) * -1) var(--feed-gutter);
+  width: 100vw;
+  max-width: 100vw;
+  margin: 0 0 var(--feed-gutter) calc(var(--feed-gutter) * -1);
   padding: 2.5rem var(--feed-content-indent) 1.75rem;
   background: var(--feed-guide-bg);
   color: var(--feed-guide-ink);
@@ -68,13 +68,20 @@ xhtml|section[class~="feed-guide"] {
 }
 
 xhtml|section[class~="feed-guide"] xhtml|p {
-  max-width: var(--feed-guide-measure);
+  max-width: min(var(--feed-guide-measure), 86ch);
   margin: 0.5rem 0 0;
+  overflow-wrap: break-word;
   text-wrap: balance;
 }
 
 xhtml|section[class~="feed-guide"] xhtml|p:first-child {
   margin-top: 0;
+}
+
+xhtml|p[class~="feed-home-link"] {
+  font-family: var(--feed-sans);
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 xhtml|p[class~="feed-guide-label"] {

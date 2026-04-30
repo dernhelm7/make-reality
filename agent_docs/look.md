@@ -18,11 +18,11 @@ Specify how the site looks.
 5. Use `#ffffff` for the page, `#202020` for the stronger text, `#3a3a3a` for softer text, and `#0a7c80` as the accent.
 6. Use ET Book, self-hosted, as the main face. A secondary face may label dates and navigation.
 7. Use one fluid `7/6` ladder for text, leading, and major spacing. Express it with `rem`, `em`, `ch`, `%`, `vh`, or `vw`. Do not set the root font size or use `px`.
-8. Use a title-page cover on the home page: left-aligned title, a separate cover line beneath it, generous top spacing, global links beneath the cover header, one home-column measure for the cover header, a centered home content field, and a wider measure for the `Read` index.
-9. Keep only the `Read` heading above the fold on narrow and wide layouts. Place the fold inside the gap below that heading so readers must click `Read` or scroll to see the index rows.
+8. Use a title-page cover on the home page: left-aligned title, a separate cover line beneath it, generous top spacing, global links beneath the cover header, one home-column measure for the cover header, a centered home content field, and a wider measure for the contents index.
+9. Keep only the home contents heading above the fold on narrow and wide layouts. Place the fold inside the gap below that heading so readers must click the heading or scroll to see the index rows.
 10. Set each home-page section description as a short running-text subhead to the right of its shelf title. Align work titles to that same vertical axis.
-11. Place home-page link previews in the blank right side of the cover, aligned with the title x-height rather than the link row. Derive the preview width from the available right-side track and the cover measure. Use one fixed preview size for form and feed previews at each viewport so changing the shown panel does not move the cover or the `Read` index.
-12. Use open dotted leaders in the home-page `Read` rows. Space the dots far enough apart that each dot reads as a mark.
+11. Place home-page link previews in the blank right side of the cover, aligned with the title x-height rather than the link row. Derive the preview width from the available right-side track and the cover measure. Use one fixed preview size for form and feed previews at each viewport so changing the shown panel does not move the cover or the contents index. Clip overlong feed preview copy inside the panel and keep `Follow` visible at the end.
+12. Use open dotted leaders in the home-page contents rows. Space the dots far enough apart that each dot reads as a mark.
 13. Use a Tufte-style reading layout on work pages: narrow body column, semantic width bounds for the rail and body, a date-width margin-note track, title-only page head, publish date in the top of the margin-note track aligned with the rail header row, current section label in the left rail, current-work index nested under the current work entry, and gutters that widen before the body column widens.
 14. Use interval-derived running-text leading and generous section spacing.
 15. Anchor the work-page rail to the page gutter. Match its top inset to that gutter.
@@ -36,8 +36,8 @@ Specify how the site looks.
 23. Use semantic-only labels for link groups when spacing and typography already define their role.
 24. On narrow screens, restack the work-page rail before the reading layout. When the reading layout restacks, keep the current-work index nested with the current work entry, move sidenotes inline or beneath their paragraph, and fit images and audio controls to the available width.
 25. Let images flow unframed with the page.
-26. Put a short practical subscription guide in a full-width color band at the top of the browser-rendered feed. Set the guide copy with a text-based measure that keeps most guide paragraphs near two full lines.
-27. Present the rest of the feed as compact machine-readable rows on a dark code-like surface. Keep the feed metadata and each entry on one scannable line with format-sized entry columns. Use compact fields, linked entry URLs, background contrast, and consistent cell padding instead of fake XML punctuation, arbitrary rem columns, or horizontal rules.
+26. Put a short practical subscription guide with a home link in a full-width color band at the top of the browser-rendered feed. Let the guide copy wrap to the viewport on narrow screens.
+27. Present the rest of the feed as compact machine-readable rows on a dark code-like surface. Keep the feed metadata and each entry on one scannable line with format-sized entry columns. Let code-like rows hang horizontally past narrow viewports rather than compressing or wrapping them.
 28. Keep motion light and use CSS or inline SVG only. Use a semi-transparent outlined circle for link cursors.
 
 ## Acceptance Checks

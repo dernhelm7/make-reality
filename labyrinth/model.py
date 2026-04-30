@@ -268,14 +268,14 @@ def parse_home_markdown(path: Path) -> HomeDocument:
         if stripped.startswith("## "):
             flush_section()
             if read_label is not None:
-                raise BuildError(path, "missing-required-field", "home.md must contain one ## read heading")
+                raise BuildError(path, "missing-required-field", "home.md heading structure is invalid")
             read_label = stripped[3:].strip()
             if not read_label:
-                raise BuildError(path, "missing-required-field", "home.md read heading must not be empty")
+                raise BuildError(path, "missing-required-field", "home.md heading structure is invalid")
             continue
         if stripped.startswith("### "):
             if read_label is None:
-                raise BuildError(path, "missing-required-field", "home.md sections must follow the ## read heading")
+                raise BuildError(path, "missing-required-field", "home.md heading structure is invalid")
             flush_section()
             section_name = stripped[4:].strip()
             if not section_name:
@@ -302,7 +302,7 @@ def parse_home_markdown(path: Path) -> HomeDocument:
         if section_name is not None:
             section_lines.append(line)
         elif stripped:
-            raise BuildError(path, "missing-required-field", "home.md read content must be in ### sections")
+            raise BuildError(path, "missing-required-field", "home.md heading structure is invalid")
 
     flush_section()
     cover_text = trim_blank_lines(cover_lines)
@@ -311,7 +311,7 @@ def parse_home_markdown(path: Path) -> HomeDocument:
     if not links:
         raise BuildError(path, "missing-required-field", "home.md must define at least one homepage link")
     if read_label is None:
-        raise BuildError(path, "missing-required-field", "home.md must define a ## read heading")
+        raise BuildError(path, "missing-required-field", "home.md heading structure is invalid")
     return HomeDocument(
         title=title,
         cover_text=cover_text,

@@ -1,9 +1,6 @@
 # Expected Outcome
 
-- The home-page `Read` index renders `Essays` before `Projects`.
-- The home-page `Read` index also renders an empty `Cabinet` shelf after `Projects`.
-- `Essay Fragment` appears in `Essays`.
-- `Folded Map` appears in `Projects`.
-- Each named shelf shows its description to the right of the shelf title on the home page only.
-- The home-page `Read` rows use slashless path reference labels and dotted leaders without publish dates.
-- On the `folded-map` work page, the left rail shows only the static `Projects` section label and its local works.
+- The home-page contents index preserves the section order from `home.md`.
+- Works appear under the sections named in their metadata.
+- Empty authored sections remain visible on the home page.
+- A work page rail shows the current work inside its resolved section.

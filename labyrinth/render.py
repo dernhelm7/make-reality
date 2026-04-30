@@ -439,8 +439,16 @@ def render_feed_link_preview(graph: SiteGraph, *, urls: PageUrls) -> str:
         f'<p class="site-link-preview-action"><a class="internal-link" href="{escape(feed_href)}">'
         'Follow <span class="site-link-preview-arrow" aria-hidden="true">&rarr;</span></a></p>'
     )
+    copy_html = join_html_lines(
+        '<div class="site-link-preview-copy-block">',
+        indent_html(
+            join_html_lines(*(f'<p class="site-link-preview-copy">{paragraph.html}</p>' for paragraph in paragraphs)),
+            2,
+        ),
+        "</div>",
+    )
     return join_html_lines(
-        *(f'<p class="site-link-preview-copy">{paragraph.html}</p>' for paragraph in paragraphs),
+        copy_html,
         action,
     )
 
@@ -576,6 +584,7 @@ def render_feed(graph: SiteGraph) -> str:
 
 def render_feed_guide(graph: SiteGraph, *, feed_url: str) -> str:
     guide_text = graph.site.feed_guide_text.replace("{feed_url}", feed_url)
+    home_url = page_urls(graph, HOME_PUBLIC_PATH).output_url
     paragraphs = render_markdown_paragraphs(
         guide_text,
         context=body_context(graph, FEED_PUBLIC_PATH),
@@ -592,6 +601,7 @@ def render_feed_guide(graph: SiteGraph, *, feed_url: str) -> str:
         paragraph_html.append(f"  <xhtml:p{class_name}>{paragraph.html}</xhtml:p>")
     return join_html_lines(
         '<xhtml:section xmlns:xhtml="http://www.w3.org/1999/xhtml" class="feed-guide" aria-label="How to use this feed">',
+        f'  <xhtml:p class="feed-home-link"><xhtml:a href="{xml_escape(home_url)}">&#8592; Home</xhtml:a></xhtml:p>',
         *paragraph_html,
         "</xhtml:section>",
     )

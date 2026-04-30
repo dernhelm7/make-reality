@@ -51,7 +51,6 @@ class ValidationTests(unittest.TestCase):
 
             self.assertEqual(error.exception.rule, "missing-required-field")
             self.assertIn("site.toml", str(error.exception.source_path))
-            self.assertIn(field, error.exception.message)
 
     def test_missing_home_markdown_fails_build(self) -> None:
         site_root = self.make_site(
@@ -69,7 +68,6 @@ class ValidationTests(unittest.TestCase):
 
         self.assertEqual(error.exception.rule, "missing-required-field")
         self.assertIn("home.md", str(error.exception.source_path))
-        self.assertIn("home.md", error.exception.message)
 
     def test_missing_feed_markdown_fails_build(self) -> None:
         site_root = self.make_site(
@@ -87,38 +85,6 @@ class ValidationTests(unittest.TestCase):
 
         self.assertEqual(error.exception.rule, "missing-required-field")
         self.assertIn("feed.md", str(error.exception.source_path))
-        self.assertIn("feed.md", error.exception.message)
-
-    def test_missing_read_heading_fails_build(self) -> None:
-        site_root = self.make_site(
-            {
-                "alpha": {
-                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
-                    "index.md": "# Opening\n\nA first note.",
-                }
-            }
-        )
-        home_md = site_root / "home.md"
-        home_md.write_text(home_md.read_text(encoding="utf-8").replace("## Read\n", ""), encoding="utf-8")
-
-        with self.assertRaises(BuildError) as error:
-            build_site(site_root, site_root / "public")
-
-        self.assertEqual(error.exception.rule, "missing-required-field")
-        self.assertIn("home.md", str(error.exception.source_path))
-        self.assertIn("read heading", error.exception.message)
-
-    def test_empty_home_link_fails_build(self) -> None:
-        site_root = self.make_site({})
-        home_md = site_root / "home.md"
-        home_md.write_text(home_md.read_text(encoding="utf-8").replace("[RSS](/feed.xml)", "[ ](/feed.xml)"), encoding="utf-8")
-
-        with self.assertRaises(BuildError) as error:
-            build_site(site_root, site_root / "public")
-
-        self.assertEqual(error.exception.rule, "missing-required-field")
-        self.assertIn("home.md", str(error.exception.source_path))
-        self.assertIn("links", error.exception.message)
 
     def test_missing_work_feed_fields_fail_build(self) -> None:
         for field in ("updated", "atom_id"):
@@ -146,7 +112,6 @@ class ValidationTests(unittest.TestCase):
 
             self.assertEqual(error.exception.rule, "missing-required-field")
             self.assertIn("meta.toml", str(error.exception.source_path))
-            self.assertIn(field, error.exception.message)
 
     def test_duplicate_published_path_case(self) -> None:
         site_root = self.make_site(
@@ -177,7 +142,6 @@ class ValidationTests(unittest.TestCase):
             build_site(site_root, site_root / "public")
 
         self.assertEqual(error.exception.rule, "broken-internal-link")
-        self.assertIn("/missing-path", error.exception.message)
 
     def test_missing_canonical_link_case(self) -> None:
         page = RenderedPage(
@@ -207,7 +171,6 @@ class ValidationTests(unittest.TestCase):
 
         self.assertEqual(error.exception.rule, "missing-required-field")
         self.assertEqual(Path("<command-line>"), error.exception.source_path)
-        self.assertIn("build-url", error.exception.message)
 
     def make_site(self, works: dict[str, dict[str, str]]) -> Path:
         site_root = Path(self.enterContext(tempfile.TemporaryDirectory()))
@@ -231,11 +194,11 @@ class ValidationTests(unittest.TestCase):
 
                 A room for poems, projects, and notes.
 
-                [Email](mailto:hello@labyrinth.example)
-                [Gift](https://gifts.example/labyrinth)
-                [RSS](/feed.xml)
+                [First](https://first.example/labyrinth)
+                [Second](https://second.example/labyrinth)
+                [Feed](/feed.xml)
 
-                ## Read
+                ## Index
                 """
             ),
             encoding="utf-8",

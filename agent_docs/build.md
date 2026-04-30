@@ -17,12 +17,12 @@ Specify how to generate the static site from source files.
 - The repo may define a GitHub Pages workflow. That workflow builds `site/` to `public/` with `./build-site`.
 - The site root contains `site.toml`, `home.md`, `feed.md`, and may contain `works/`.
 - `site.toml` defines `url`, `lang`, `title`, `statement`, `author_name`, and `updated`.
-- `home.md` defines the homepage title, cover text, homepage links, `Read` heading, and `Read` section labels and descriptions.
+- `home.md` defines the homepage title, cover text, homepage links, contents heading, and contents section labels and descriptions.
 - `feed.md` defines the browser-facing feed guide. The build replaces `{feed_url}` with the current feed URL.
 - `site.toml` `url` is the canonical site URL.
 - `home.md` section headings define the section names that work `section` values may target.
 - A `home.md` link to `https://tally.so/r/<id>` is the source for the matching Tally form panel.
-- A `home.md` link to `/feed.xml` is the source for a feed preview panel built from the body paragraphs in `feed.md`, followed by a `Follow` link to `/feed.xml`.
+- A `home.md` link to `/feed.xml` is the source for a feed preview panel built from the body paragraphs in `feed.md`, clipped inside the fixed panel and followed by a visible `Follow` link to `/feed.xml`.
 - The home page may include the inline event handler that switches those preview panels. It attaches only to the home-page global links.
 - `--build-url` sets the output base URL for one build.
 - The public HTML uses relative links for pages and assets.
@@ -30,7 +30,7 @@ Specify how to generate the static site from source files.
 - The public HTML uses line breaks and indentation.
 - The build uses `site.toml` `url` for canonical URLs and Atom feed IDs.
 - The build uses the current build URL for feed self links, feed alternate links, and absolute URLs inside feed entry content.
-- The Atom feed includes XHTML extension markup for browser-facing subscription guidance and visible linked entry URLs.
+- The Atom feed includes XHTML extension markup for a browser-facing subscription guide, a home link, and visible linked entry URLs.
 - Each work folder contains `meta.toml` and exactly one body file: `index.md` or `body.html`.
 - `meta.toml` requires `created`, `updated`, and `atom_id`. It may also define `section` and `aliases`.
 
@@ -50,6 +50,6 @@ Specify how to generate the static site from source files.
 13. The host serves `/feed.xml` as XML, not `application/atom+xml`. Prefer `application/xml; charset=utf-8`.
 
 ## Acceptance Checks
-1. Run `./build-site <site-root> <publish-root>` against the full-output examples and inspect the publish root against each `expected.md`.
+1. Run `./build-site <site-root> <publish-root>` against the full-output examples and inspect the publish root against the behavior named in each `expected.md`.
 2. Build one unchanged example twice and compare the publish roots.
 3. Run the named validation cases for build failures in `agent_docs/examples/validation-severity.md`.

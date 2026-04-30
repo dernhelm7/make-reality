@@ -105,10 +105,18 @@
   background: transparent;
 }
 
-.site-link-preview-panel--text {
-  overflow-y: auto;
+.home-cover-meta .site-link-preview-panel--text {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--prose-flow-space);
   line-height: var(--leading-running);
+  font-size: var(--text-xs);
   color: var(--ink-soft);
+}
+
+.site-link-preview-copy-block {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .site-link-preview-copy {
@@ -120,7 +128,7 @@
 }
 
 .site-link-preview-action {
-  margin: var(--prose-flow-space) 0 0;
+  margin: 0;
   font-family: var(--sans);
   font-size: var(--text-xs);
 }
