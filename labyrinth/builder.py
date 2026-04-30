@@ -6,7 +6,7 @@ import shutil
 
 from .model import BuildError, build_site_graph, load_site_config, load_work_inputs
 from .publish import prepare_temp_publish_root, replace_publish_root, write_public_files
-from .render import RenderedPage, render_feed, render_pages, validate_rendered_pages
+from .render import RenderedPage, render_feed, render_feed_transform, render_pages, validate_rendered_pages
 from .theme import render_feed_stylesheet, render_stylesheet
 
 
@@ -26,11 +26,12 @@ def build_site(site_root: Path, publish_root: Path, *, build_url: str | None = N
     rendered_pages = render_pages(graph)
     stylesheet = render_stylesheet()
     feed_stylesheet = render_feed_stylesheet()
+    feed_transform = render_feed_transform(graph)
     feed = render_feed(graph)
 
     temp_root = prepare_temp_publish_root(publish_root)
     try:
-        write_public_files(temp_root, rendered_pages, stylesheet, feed_stylesheet, feed)
+        write_public_files(temp_root, rendered_pages, stylesheet, feed_stylesheet, feed_transform, feed)
         validate_rendered_pages(rendered_pages)
         replace_publish_root(temp_root, publish_root)
     except Exception:

@@ -36,7 +36,7 @@ Specify how the site looks.
 23. Use semantic-only labels for link groups when spacing and typography already define their role.
 24. On narrow screens, restack the work-page rail before the reading layout. When the reading layout restacks, keep the current-work index nested with the current work entry, move sidenotes inline or beneath their paragraph, and fit images and audio controls to the available width.
 25. Let images flow unframed with the page.
-26. Put a short practical subscription guide with a home link in a full-width color band at the top of the browser-rendered feed. Let the guide copy wrap to the viewport on narrow screens.
+26. Put a short practical subscription guide with a home link in a full-width color band at the top of the browser-rendered feed. Set guide prose at the same running-text size and viewport scale as work pages. Let the guide block own its full-width background and let the copy wrap to the viewport on narrow screens.
 27. Present the rest of the feed as compact machine-readable rows on a dark code-like surface. Keep the feed metadata and each entry on one scannable line with format-sized entry columns. Let code-like rows hang horizontally past narrow viewports rather than compressing or wrapping them.
 28. Keep motion light and use CSS or inline SVG only. Use a semi-transparent outlined circle for link cursors.
 

@@ -9,6 +9,13 @@ from labyrinth.builder import BuildError, RenderedPage, build_site, validate_ren
 
 
 class ValidationTests(unittest.TestCase):
+    def assert_build_error(self, site_root: Path, *, rule: str, source_name: str) -> None:
+        with self.assertRaises(BuildError) as error:
+            build_site(site_root, site_root / "public")
+
+        self.assertEqual(rule, error.exception.rule)
+        self.assertIn(source_name, str(error.exception.source_path))
+
     def test_missing_required_field_case(self) -> None:
         site_root = self.make_site(
             {
@@ -19,11 +26,7 @@ class ValidationTests(unittest.TestCase):
             }
         )
 
-        with self.assertRaises(BuildError) as error:
-            build_site(site_root, site_root / "public")
-
-        self.assertEqual(error.exception.rule, "missing-required-field")
-        self.assertIn("meta.toml", str(error.exception.source_path))
+        self.assert_build_error(site_root, rule="missing-required-field", source_name="meta.toml")
 
     def test_missing_site_feed_fields_fail_build(self) -> None:
         for field in ("author_name", "updated"):
@@ -46,45 +49,21 @@ class ValidationTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            with self.assertRaises(BuildError) as error:
-                build_site(site_root, site_root / "public")
+            self.assert_build_error(site_root, rule="missing-required-field", source_name="site.toml")
 
-            self.assertEqual(error.exception.rule, "missing-required-field")
-            self.assertIn("site.toml", str(error.exception.source_path))
-
-    def test_missing_home_markdown_fails_build(self) -> None:
-        site_root = self.make_site(
-            {
-                "alpha": {
-                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
-                    "index.md": "# Opening\n\nA first note.",
+    def test_missing_required_source_files_fail_build(self) -> None:
+        for filename in ("home.md", "feed.md"):
+            site_root = self.make_site(
+                {
+                    "alpha": {
+                        "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
+                        "index.md": "# Opening\n\nA first note.",
+                    }
                 }
-            }
-        )
-        (site_root / "home.md").unlink()
+            )
+            (site_root / filename).unlink()
 
-        with self.assertRaises(BuildError) as error:
-            build_site(site_root, site_root / "public")
-
-        self.assertEqual(error.exception.rule, "missing-required-field")
-        self.assertIn("home.md", str(error.exception.source_path))
-
-    def test_missing_feed_markdown_fails_build(self) -> None:
-        site_root = self.make_site(
-            {
-                "alpha": {
-                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
-                    "index.md": "# Opening\n\nA first note.",
-                }
-            }
-        )
-        (site_root / "feed.md").unlink()
-
-        with self.assertRaises(BuildError) as error:
-            build_site(site_root, site_root / "public")
-
-        self.assertEqual(error.exception.rule, "missing-required-field")
-        self.assertIn("feed.md", str(error.exception.source_path))
+            self.assert_build_error(site_root, rule="missing-required-field", source_name=filename)
 
     def test_missing_work_feed_fields_fail_build(self) -> None:
         for field in ("updated", "atom_id"):
@@ -107,11 +86,7 @@ class ValidationTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            with self.assertRaises(BuildError) as error:
-                build_site(site_root, site_root / "public")
-
-            self.assertEqual(error.exception.rule, "missing-required-field")
-            self.assertIn("meta.toml", str(error.exception.source_path))
+            self.assert_build_error(site_root, rule="missing-required-field", source_name="meta.toml")
 
     def test_duplicate_published_path_case(self) -> None:
         site_root = self.make_site(
@@ -123,10 +98,7 @@ class ValidationTests(unittest.TestCase):
             }
         )
 
-        with self.assertRaises(BuildError) as error:
-            build_site(site_root, site_root / "public")
-
-        self.assertEqual(error.exception.rule, "duplicate-published-path")
+        self.assert_build_error(site_root, rule="duplicate-published-path", source_name="meta.toml")
 
     def test_broken_internal_link_case(self) -> None:
         site_root = self.make_site(
@@ -138,10 +110,7 @@ class ValidationTests(unittest.TestCase):
             }
         )
 
-        with self.assertRaises(BuildError) as error:
-            build_site(site_root, site_root / "public")
-
-        self.assertEqual(error.exception.rule, "broken-internal-link")
+        self.assert_build_error(site_root, rule="broken-internal-link", source_name="index.md")
 
     def test_missing_canonical_link_case(self) -> None:
         page = RenderedPage(

@@ -31,6 +31,7 @@ Specify how to generate the static site from source files.
 - The build uses `site.toml` `url` for canonical URLs and Atom feed IDs.
 - The build uses the current build URL for feed self links, feed alternate links, and absolute URLs inside feed entry content.
 - The Atom feed includes XHTML extension markup for a browser-facing subscription guide, a home link, and visible linked entry URLs.
+- The browser-facing feed view is produced by an XSL stylesheet so mobile browsers receive an HTML viewport.
 - Each work folder contains `meta.toml` and exactly one body file: `index.md` or `body.html`.
 - `meta.toml` requires `created`, `updated`, and `atom_id`. It may also define `section` and `aliases`.
 
@@ -38,14 +39,14 @@ Specify how to generate the static site from source files.
 1. The project defines one local build command at `./build-site`.
 2. That command reads one site root from `site.toml`, `home.md`, `feed.md`, and `works/`.
 3. That command writes one publish root and removes stale published files from it.
-4. The publish root contains public pages, `/feed.xml`, `/feed.css`, `/site.css`, shared public assets such as self-hosted fonts, and no generated JavaScript assets or dependencies.
+4. The publish root contains public pages, `/feed.xml`, `/feed.xsl`, `/feed.css`, `/site.css`, shared public assets such as self-hosted fonts, and no generated JavaScript assets or dependencies.
 5. The publish root leaves out source-only files and build-only files.
 6. The build validates the required source fields, duplicate published paths, and broken explicit internal links written by the author. Unmatched wikilinks do not fail the build.
 7. The same site root and build URL produce the same publish root and public paths.
 8. On failure, the build stops and reports the file and rule that caused the failure.
 9. If the repo defines a GitHub Pages workflow, that workflow publishes the built `public/` root from the same build logic as the local command.
 10. The build writes Atom 1.0 at `/feed.xml`.
-11. The build styles that feed and its subscription guide with `feed.css` through `<?xml-stylesheet ...?>`.
+11. The build links `/feed.xml` to `/feed.xsl` through `<?xml-stylesheet ...?>`; the transform renders the browser-facing feed as HTML and loads `/feed.css`.
 12. The build writes line-broken, indented XML for `/feed.xml`.
 13. The host serves `/feed.xml` as XML, not `application/atom+xml`. Prefer `application/xml; charset=utf-8`.
 

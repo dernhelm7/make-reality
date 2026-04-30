@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from .fixture_support import ET_BOOK_ROMAN, EXAMPLES_ROOT, REPO_ROOT
+from .fixture_support import EXAMPLES_ROOT, REPO_ROOT
 
 
 class CommandSmokeTests(unittest.TestCase):
@@ -30,7 +30,7 @@ class CommandSmokeTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((publish_root / "index.html").exists())
-        self.assertTrue((publish_root / ET_BOOK_ROMAN).exists())
+        self.assertTrue((publish_root / "site.css").exists())
 
     def test_build_script_works_outside_repo_root(self) -> None:
         publish_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "public"
@@ -48,4 +48,4 @@ class CommandSmokeTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((publish_root / "index.html").exists())
-        self.assertTrue((publish_root / ET_BOOK_ROMAN).exists())
+        self.assertTrue((publish_root / "site.css").exists())

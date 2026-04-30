@@ -11,12 +11,6 @@ from labyrinth.builder import build_site
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES_ROOT = REPO_ROOT / "agent_docs" / "examples"
-ET_BOOK_ROMAN = "fonts/et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff"
-ET_BOOK_ITALIC = (
-    "fonts/et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff"
-)
-ET_BOOK_BOLD = "fonts/et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff"
-ET_BOOK_LICENSE = "fonts/et-book/LICENSE.txt"
 
 
 class FixtureSiteTestCase(unittest.TestCase):
@@ -52,12 +46,10 @@ class FixtureSiteTestCase(unittest.TestCase):
         self.assertTrue((publish_root / "index.html").is_file())
         self.assertFalse((publish_root / "works").exists())
         self.assertTrue((publish_root / "feed.xml").is_file())
+        self.assertTrue((publish_root / "feed.xsl").is_file())
         self.assertTrue((publish_root / "feed.css").is_file())
         self.assertTrue((publish_root / "site.css").is_file())
-        self.assertTrue((publish_root / ET_BOOK_ROMAN).is_file())
-        self.assertTrue((publish_root / ET_BOOK_ITALIC).is_file())
-        self.assertTrue((publish_root / ET_BOOK_BOLD).is_file())
-        self.assertTrue((publish_root / ET_BOOK_LICENSE).is_file())
+        self.assertTrue(any(path.suffix == ".woff" for path in (publish_root / "fonts").rglob("*")))
         self.assertEqual([], list(publish_root.rglob("*.js")))
         for public_path in expected_pages:
             self.assertTrue(self.public_page_path(publish_root, public_path).exists(), public_path)

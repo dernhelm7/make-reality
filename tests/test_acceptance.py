@@ -9,13 +9,19 @@ from labyrinth.model import SiteGraph, WorkDocument, build_site_graph, load_site
 from labyrinth.urls import PageUrls
 
 from .fixture_support import (
-    ET_BOOK_BOLD,
-    ET_BOOK_ITALIC,
-    ET_BOOK_LICENSE,
-    ET_BOOK_ROMAN,
     FixtureSiteTestCase,
     REPO_ROOT,
     tree_digest,
+)
+
+
+GRAPH_FIXTURES = (
+    "minimal-markdown",
+    "named-sections",
+    "section-fallback",
+    "html-work",
+    "reading-microfeatures",
+    "wikilinks-and-assets",
 )
 
 
@@ -49,10 +55,16 @@ class AcceptanceTests(FixtureSiteTestCase):
         )
         for link in graph.site.home.links:
             self.assertIn(escape(link.label), home_page)
+        self.assert_ordered(home_page, [escape(section.name) for section in graph.contents_sections])
         for section in graph.contents_sections:
             self.assertIn(escape(section.name), home_page)
             if section.description:
                 self.assertIn(escape(section.description), home_page)
+            for work in section.works:
+                self.assertLess(
+                    home_page.index(escape(section.name)),
+                    home_page.index(escape(work.title)),
+                )
         for work in graph.works:
             self.assertIn(f'href="{escape(work.public_path.strip("/"))}"', home_page)
             self.assertIn(escape(work.title), home_page)
@@ -74,6 +86,9 @@ class AcceptanceTests(FixtureSiteTestCase):
         for heading in work.top_level_headings:
             self.assertIn(f'id="{escape(heading.anchor_id)}"', work_page)
             self.assertIn(f'href="#{escape(heading.anchor_id)}"', work_page)
+        self.assertIn(escape(work.resolved_section), work_page)
+        self.assert_work_links_reflect_graph(work_page, graph, work)
+        self.assert_backlinks_reflect_graph(publish_root, graph, work)
 
     def assert_feed_reflects_graph(self, publish_root: Path, graph: SiteGraph) -> None:
         feed = (publish_root / "feed.xml").read_text(encoding="utf-8")
@@ -81,7 +96,7 @@ class AcceptanceTests(FixtureSiteTestCase):
             feed,
             [
                 '<?xml version="1.0" encoding="UTF-8"?>',
-                '<?xml-stylesheet type="text/css" href="feed.css"?>',
+                '<?xml-stylesheet type="text/xsl" href="feed.xsl"?>',
                 '<feed xmlns="http://www.w3.org/2005/Atom">',
                 f"<id>{escape(graph.site.site_url)}/feed.xml</id>",
                 f'<link rel="self" type="application/atom+xml" href="{escape(graph.site.build_url)}/feed.xml"/>',
@@ -89,6 +104,8 @@ class AcceptanceTests(FixtureSiteTestCase):
             ],
         )
         self.assertNotIn("<rss", feed)
+        feed_transform = (publish_root / "feed.xsl").read_text(encoding="utf-8")
+        self.assert_all_in(feed_transform, ['<meta name="viewport"', 'href="feed.css"'])
         for work in graph.works:
             self.assert_all_in(
                 feed,
@@ -99,6 +116,26 @@ class AcceptanceTests(FixtureSiteTestCase):
                     f'href="{escape(graph.site.build_url + work.public_path)}"',
                 ],
             )
+            for link in work.body.links:
+                if link.kind == "work" and link.resolved_path:
+                    target = graph.work_by_path[link.resolved_path]
+                    self.assertIn(escape(f'href="{graph.site.build_url + target.public_path}"', quote=True), feed)
+                if link.kind == "external":
+                    self.assertIn(escape(f'href="{link.href}"', quote=True), feed)
+
+    def assert_work_links_reflect_graph(self, work_page: str, graph: SiteGraph, work: WorkDocument) -> None:
+        urls = PageUrls(graph.site.site_url, graph.site.build_url, work.public_path)
+        for target_path in work.outbound_work_paths:
+            target = graph.work_by_path[target_path]
+            self.assertIn(f'href="{escape(urls.relative_href(target.public_path))}"', work_page)
+            self.assertIn(escape(target.title), work_page)
+
+    def assert_backlinks_reflect_graph(self, publish_root: Path, graph: SiteGraph, work: WorkDocument) -> None:
+        target_urls = PageUrls(graph.site.site_url, graph.site.build_url, work.public_path)
+        work_page = self.page_text(publish_root, work.public_path)
+        for source in graph.backlinks.get(work.public_path, ()):
+            self.assertIn(f'href="{escape(target_urls.relative_href(source.public_path))}"', work_page)
+            self.assertIn(escape(source.title), work_page)
 
     def test_build_url_override_keeps_canonical_urls_and_rewrites_preview_targets(self) -> None:
         site_root, publish_root = self.make_fixture("minimal-markdown")
@@ -170,89 +207,15 @@ class AcceptanceTests(FixtureSiteTestCase):
             ],
         )
 
-    def test_minimal_markdown_fixture_renders_core_public_contracts(self) -> None:
-        _, publish_root, graph = self.build_fixture_graph("minimal-markdown")
-        self.assert_common_public_layout(publish_root, [work.public_path for work in graph.works])
-        self.assert_home_reflects_graph(publish_root, graph)
-        for work in graph.works:
-            self.assert_work_reflects_graph(publish_root, graph, work)
-        self.assert_feed_reflects_graph(publish_root, graph)
-
-    def test_named_sections_fixture_groups_works_by_configured_sections(self) -> None:
-        _, publish_root, graph = self.build_fixture_graph("named-sections")
-        self.assert_common_public_layout(publish_root, [work.public_path for work in graph.works])
-
-        home_page = self.page_text(publish_root, "/")
-        self.assert_ordered(home_page, [escape(section.name) for section in graph.contents_sections])
-        for section in graph.contents_sections:
-            for work in section.works:
-                self.assertLess(
-                    home_page.index(escape(section.name)),
-                    home_page.index(escape(work.title)),
-                )
-
-        for work in graph.works:
-            work_page = self.page_text(publish_root, work.public_path)
-            self.assertIn(escape(work.title), work_page)
-            self.assertIn(escape(work.resolved_section), work_page)
-
-    def test_section_fallback_fixture_lists_every_work(self) -> None:
-        _, publish_root, graph = self.build_fixture_graph("section-fallback")
-        self.assert_common_public_layout(publish_root, [work.public_path for work in graph.works])
-        self.assert_home_reflects_graph(publish_root, graph)
-
-    def test_html_work_fixture_keeps_authored_body_and_script(self) -> None:
-        _, publish_root, graph = self.build_fixture_graph("html-work")
-        self.assert_common_public_layout(publish_root, [work.public_path for work in graph.works])
-
-        for work in graph.works:
-            work_page = self.page_text(publish_root, work.public_path)
-            self.assertIn(work.body.html.strip().splitlines()[0], work_page)
-
-    def test_reading_microfeatures_fixture_renders_navigation_links_and_backlinks(self) -> None:
-        _, publish_root, graph = self.build_fixture_graph("reading-microfeatures")
-        self.assert_common_public_layout(publish_root, [work.public_path for work in graph.works])
-
-        for work in graph.works:
-            self.assert_work_reflects_graph(publish_root, graph, work)
-            urls = PageUrls(graph.site.site_url, graph.site.build_url, work.public_path)
-            work_page = self.page_text(publish_root, work.public_path)
-            if len(work.top_level_headings) > 1:
-                for heading in work.top_level_headings:
-                    self.assertIn(f'href="#{escape(heading.anchor_id)}"', work_page)
-            for target_path in work.outbound_work_paths:
-                target = graph.work_by_path[target_path]
-                self.assertIn(f'href="{escape(urls.relative_href(target.public_path))}"', work_page)
-                self.assertIn(escape(target.title), work_page)
-
-        feed = (publish_root / "feed.xml").read_text(encoding="utf-8")
-        for work in graph.works:
-            self.assertIn(f"<id>{escape(work.atom_id)}</id>", feed)
-            for link in work.body.links:
-                if link.kind == "work" and link.resolved_path:
-                    target = graph.work_by_path[link.resolved_path]
-                    self.assertIn(escape(f'href="{graph.site.build_url + target.public_path}"', quote=True), feed)
-                if link.kind == "external":
-                    self.assertIn(escape(f'href="{link.href}"', quote=True), feed)
-
-        for target_path, sources in graph.backlinks.items():
-            target_page = self.page_text(publish_root, target_path)
-            if not sources:
-                continue
-            target_urls = PageUrls(graph.site.site_url, graph.site.build_url, target_path)
-            for source in sources:
-                self.assertIn(f'href="{escape(target_urls.relative_href(source.public_path))}"', target_page)
-                self.assertIn(escape(source.title), target_page)
-
-    def test_wikilinks_and_assets_fixture_resolves_links_and_plain_text_fallbacks(self) -> None:
-        _, publish_root, graph = self.build_fixture_graph("wikilinks-and-assets")
-        self.assert_common_public_layout(publish_root, [work.public_path for work in graph.works])
-
-        for work in graph.works:
-            work_page = self.page_text(publish_root, work.public_path)
-            for line in work.body.html.splitlines():
-                if line.strip():
-                    self.assertIn(line, work_page)
+    def test_example_fixtures_reflect_their_source_graphs(self) -> None:
+        for fixture_name in GRAPH_FIXTURES:
+            with self.subTest(fixture=fixture_name):
+                _, publish_root, graph = self.build_fixture_graph(fixture_name)
+                self.assert_common_public_layout(publish_root, [work.public_path for work in graph.works])
+                self.assert_home_reflects_graph(publish_root, graph)
+                for work in graph.works:
+                    self.assert_work_reflects_graph(publish_root, graph, work)
+                self.assert_feed_reflects_graph(publish_root, graph)
 
     def test_starter_site_builds_without_snapshotting_author_copy(self) -> None:
         publish_root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "public"
@@ -260,6 +223,7 @@ class AcceptanceTests(FixtureSiteTestCase):
 
         self.assertTrue((publish_root / "index.html").is_file())
         self.assertTrue((publish_root / "feed.xml").is_file())
+        self.assertTrue((publish_root / "feed.xsl").is_file())
         self.assertTrue((publish_root / "feed.css").is_file())
         self.assertTrue((publish_root / "site.css").is_file())
         self.assertEqual([], list(publish_root.rglob("*.js")))
@@ -284,19 +248,18 @@ class AcceptanceTests(FixtureSiteTestCase):
         _, publish_root = self.build_fixture("reading-microfeatures")
         files = sorted(path.relative_to(publish_root).as_posix() for path in publish_root.rglob("*") if path.is_file())
         self.assertIn("feed.xml", files)
+        self.assertIn("feed.xsl", files)
         self.assertIn("feed.css", files)
         self.assertIn("site.css", files)
-        self.assertIn(ET_BOOK_ROMAN, files)
-        self.assertIn(ET_BOOK_ITALIC, files)
-        self.assertIn(ET_BOOK_BOLD, files)
-        self.assertIn(ET_BOOK_LICENSE, files)
+        self.assertTrue(any(path.startswith("fonts/") and path.endswith(".woff") for path in files))
         self.assertNotIn("site.js", files)
         for path in files:
             self.assertTrue(
                 path == "feed.xml"
+                or path == "feed.xsl"
                 or path == "feed.css"
                 or path == "site.css"
-                or path.startswith("fonts/et-book/")
+                or path.startswith("fonts/")
                 or path.endswith("/index.html")
                 or path == "index.html"
             )

@@ -9,6 +9,7 @@ from labyrinth.markup import BodyContext, ResolvedWorkLink, render_html_body, re
 from labyrinth.model import BuildError, build_site_graph, load_site_config, load_work_inputs
 from labyrinth.urls import PageUrls
 
+
 class MarkupAndGraphTests(unittest.TestCase):
     def test_markdown_body_tracks_structured_links(self) -> None:
         body = render_markdown_body(
@@ -105,7 +106,7 @@ class MarkupAndGraphTests(unittest.TestCase):
             {
                 "alpha": {
                     "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
-                    "index.md": "# Opening\n\n[Styles](/site.css) and [Feed styles](/feed.css).",
+                    "index.md": "# Opening\n\n[Styles](/site.css), [Feed styles](/feed.css), and [Feed transform](/feed.xsl).",
                 }
             }
         )
@@ -114,8 +115,10 @@ class MarkupAndGraphTests(unittest.TestCase):
 
         self.assertIn("/site.css", graph.known_paths)
         self.assertIn("/feed.css", graph.known_paths)
+        self.assertIn("/feed.xsl", graph.known_paths)
         self.assertIn('href="../site.css"', graph.work_by_path["/alpha"].body.html)
         self.assertIn('href="../feed.css"', graph.work_by_path["/alpha"].body.html)
+        self.assertIn('href="../feed.xsl"', graph.work_by_path["/alpha"].body.html)
 
     def test_home_markdown_defines_links_and_sections(self) -> None:
         site_root = self.make_site(

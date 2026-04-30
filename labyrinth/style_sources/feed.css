@@ -1,29 +1,4 @@
-feed,
-entry,
-author,
-title,
-subtitle,
-updated,
-published,
-content,
-name,
-xhtml|section,
-xhtml|p {
-  display: block;
-}
-
-xhtml|a,
-xhtml|em {
-  display: inline;
-}
-
-id,
-feed > link,
-entry > link[rel="alternate"] {
-  display: none;
-}
-
-feed {
+.feed-document {
   --feed-bg: #073638;
   --feed-row-bg: color-mix(in srgb, #ffffff 4%, var(--feed-bg));
   --feed-guide-bg: #dcefed;
@@ -37,71 +12,69 @@ feed {
   --feed-sans: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --feed-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace;
   --feed-content-indent: var(--home-main-indent);
-  --feed-guide-measure: calc(100vw - (var(--feed-content-indent) * 2) - 4rem);
+  --feed-guide-measure: var(--measure);
   --feed-cell-block: 0.35rem;
   --feed-cell-inline: 0.5rem;
-  --feed-gutter: calc(var(--feed-content-indent) - var(--feed-cell-inline));
   --feed-cell-padding: var(--feed-cell-block) var(--feed-cell-inline);
 
-  display: block;
   margin: 0;
-  min-height: 100vh;
-  padding: 0 var(--feed-gutter) 4rem;
   background: var(--feed-bg);
   color: var(--feed-ink);
   font-family: var(--feed-serif);
-  font-size: 1rem;
-  line-height: 1.45;
-  overflow-x: visible;
-  white-space: nowrap;
+  font-size: var(--text-base);
+  line-height: var(--leading-running);
 }
 
-xhtml|section[class~="feed-guide"] {
+.feed-page {
+  min-height: 100vh;
+  padding: 0 0 4rem;
+  overflow-x: visible;
+}
+
+.feed-guide {
   box-sizing: border-box;
-  width: 100vw;
-  max-width: 100vw;
-  margin: 0 0 var(--feed-gutter) calc(var(--feed-gutter) * -1);
-  padding: 2.5rem var(--feed-content-indent) 1.75rem;
+  width: 100%;
+  margin: 0 0 var(--step-p3);
+  padding: var(--step-p4) var(--feed-content-indent) var(--step-p3);
   background: var(--feed-guide-bg);
   color: var(--feed-guide-ink);
-  white-space: normal;
 }
 
-xhtml|section[class~="feed-guide"] xhtml|p {
-  max-width: min(var(--feed-guide-measure), 86ch);
-  margin: 0.5rem 0 0;
+.feed-guide p {
+  max-width: min(var(--feed-guide-measure), 100%);
+  margin: var(--prose-flow-space) 0 0;
+  hyphens: auto;
   overflow-wrap: break-word;
-  text-wrap: balance;
 }
 
-xhtml|section[class~="feed-guide"] xhtml|p:first-child {
+.feed-guide p:first-child {
   margin-top: 0;
 }
 
-xhtml|p[class~="feed-home-link"] {
+.feed-home-link {
   font-family: var(--feed-sans);
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: var(--text-xs);
+  line-height: var(--leading-running);
 }
 
-xhtml|p[class~="feed-guide-label"] {
+.feed-guide-label {
   color: var(--feed-guide-muted);
   font-family: var(--feed-sans);
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-xhtml|p[class~="feed-guide-url"] {
+.feed-guide-url {
   color: var(--feed-guide-muted);
   font-family: var(--feed-sans);
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: var(--text-xs);
+  line-height: var(--leading-running);
   overflow-wrap: anywhere;
 }
 
-xhtml|section[class~="feed-guide"] xhtml|a {
+.feed-guide a {
   color: var(--feed-link);
   font-family: var(--feed-sans);
   font-weight: 600;
@@ -109,50 +82,12 @@ xhtml|section[class~="feed-guide"] xhtml|a {
   text-underline-offset: 0.18em;
 }
 
-feed > title,
-feed > subtitle,
-feed > updated,
-feed > author {
-  display: inline;
-  margin: 0;
-  font-family: var(--feed-mono);
-  font-size: 0.75rem;
-  line-height: 1.35;
+.feed-code {
+  overflow-x: visible;
   white-space: nowrap;
 }
 
-feed > title {
-  color: var(--feed-ink);
-  font-weight: 600;
-  padding-left: var(--feed-cell-inline);
-}
-
-feed > subtitle {
-  color: var(--feed-muted);
-}
-
-feed > updated {
-  color: var(--feed-muted);
-}
-
-feed > author {
-  color: var(--feed-muted);
-  font-size: 0;
-}
-
-feed > title::after,
-feed > subtitle::after,
-feed > updated::after {
-  content: "  ";
-  white-space: pre;
-}
-
-name {
-  display: inline;
-  font-size: 0.75rem;
-}
-
-entry {
+.feed-code-row {
   display: grid;
   grid-template-columns: minmax(16ch, 18ch) 20ch 20ch max-content;
   column-gap: 2ch;
@@ -164,48 +99,44 @@ entry {
   font-family: var(--feed-mono);
   font-size: 0.75rem;
   line-height: 1.35;
-  white-space: nowrap;
 }
 
-entry > title {
+.feed-code-row--meta {
+  grid-template-columns: minmax(16ch, 18ch) max-content max-content;
+  margin-top: 0;
+  background: transparent;
+}
+
+.feed-code-cell {
   display: block;
+  padding: var(--feed-cell-padding);
+}
+
+.feed-code-title,
+.feed-entry-title {
   color: var(--feed-ink);
-  font-family: var(--feed-mono);
-  font-size: inherit;
   font-weight: 600;
-  line-height: inherit;
-  padding: var(--feed-cell-padding);
 }
 
-entry > published,
-entry > updated {
-  display: block;
-  margin-top: 0;
+.feed-code-subtitle,
+.feed-code-updated,
+.feed-entry-published,
+.feed-entry-updated {
   color: var(--feed-muted);
-  font-family: var(--feed-mono);
-  font-size: inherit;
-  line-height: inherit;
-  padding: var(--feed-cell-padding);
 }
 
-entry > link[rel="alternate"] {
-  display: none;
-}
-
-content {
-  display: none;
-}
-
-entry > xhtml|a[class~="feed-entry-url"] {
-  display: block;
-  margin-top: 0;
-  color: var(--feed-code-link);
-  font-family: var(--feed-mono);
-  font-size: inherit;
-  font-weight: 600;
-  line-height: inherit;
-  padding: var(--feed-cell-padding);
+.feed-entry-title,
+.feed-entry-url {
   text-decoration: underline;
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.18em;
+}
+
+.feed-entry-title {
+  color: var(--feed-ink);
+}
+
+.feed-entry-url {
+  color: var(--feed-code-link);
+  font-weight: 600;
 }
