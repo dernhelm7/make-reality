@@ -60,13 +60,15 @@
 }
 
 .site-page--home .page--cover {
+  position: relative;
+  --read-fold-cue-space: calc((var(--page-title-section-size) * var(--leading-tight)) + var(--home-stack-gap) - var(--site-bottom-space) + (var(--page-stack-gap) / 2));
   grid-column: 1;
   grid-template-columns: minmax(0, var(--home-column-measure));
   grid-template-rows: auto auto 1fr;
   row-gap: var(--page-head-gap);
   padding-top: 0;
-  min-height: calc(100vh - var(--site-top-space) - var(--site-bottom-space));
-  min-height: calc(100svh - var(--site-top-space) - var(--site-bottom-space));
+  min-height: calc(100vh - var(--site-top-space) - var(--site-bottom-space) - var(--read-fold-cue-space));
+  min-height: calc(100svh - var(--site-top-space) - var(--site-bottom-space) - var(--read-fold-cue-space));
   align-content: stretch;
 }
 

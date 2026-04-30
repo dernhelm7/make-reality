@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+import re
 import tomllib
 from urllib.parse import urlsplit
 
@@ -16,6 +17,8 @@ from .markup import (
     render_markdown_body,
 )
 from .urls import FIXED_PUBLIC_PATHS
+
+HOME_LINK_RE = re.compile(r"^\[(?P<label>[^\]]+)\]\((?P<href>[^)]+)\)$")
 
 
 @dataclass(frozen=True)
@@ -42,6 +45,15 @@ class SectionDefinition:
 
 
 @dataclass(frozen=True)
+class HomeDocument:
+    title: str
+    cover_text: str
+    links: tuple[LinkItem, ...]
+    read_label: str
+    sections: tuple[SectionDefinition, ...]
+
+
+@dataclass(frozen=True)
 class SiteConfig:
     source_path: Path
     home_path: Path
@@ -50,14 +62,11 @@ class SiteConfig:
     build_url: str
     lang: str
     title: str
-    home_text: str
+    home: HomeDocument
     feed_guide_text: str
     statement: str
     author_name: str
     updated: datetime
-    contact_links: tuple[LinkItem, ...]
-    gift_links: tuple[LinkItem, ...]
-    sections: tuple[SectionDefinition, ...]
 
 
 @dataclass(frozen=True)
@@ -123,14 +132,11 @@ def load_site_config(site_root: Path, build_url: str | None = None) -> SiteConfi
     site_url = require_absolute_url(data, "url", site_path).rstrip("/")
     lang = require_string(data, "lang", site_path)
     title = require_string(data, "title", site_path)
-    home_text = read_required_markdown(home_path)
+    home = parse_home_markdown(home_path)
     feed_guide_text = read_required_markdown(feed_guide_path)
     statement = require_string(data, "statement", site_path)
     author_name = require_string(data, "author_name", site_path)
     updated = parse_timestamp(require_string(data, "updated", site_path), site_path, "updated")
-    contact_links = load_link_list(data, "contact_links", site_path)
-    gift_links = load_link_list(data, "gift_links", site_path)
-    sections = load_sections(data.get("sections"), site_path)
 
     return SiteConfig(
         source_path=site_path,
@@ -140,14 +146,11 @@ def load_site_config(site_root: Path, build_url: str | None = None) -> SiteConfi
         build_url=normalize_absolute_url(build_url or site_url, Path("<command-line>"), "build-url").rstrip("/"),
         lang=lang,
         title=title,
-        home_text=home_text,
+        home=home,
         feed_guide_text=feed_guide_text,
         statement=statement,
         author_name=author_name,
         updated=updated,
-        contact_links=contact_links,
-        gift_links=gift_links,
-        sections=sections,
     )
 
 
@@ -203,8 +206,9 @@ def build_site_graph(site: SiteConfig, work_inputs: list[WorkInput]) -> SiteGrap
     known_paths = frozenset({*FIXED_PUBLIC_PATHS, *work_paths})
     works = tuple(sorted(render_work_documents(site, work_inputs, work_lookup, work_paths), key=sort_key))
     work_by_path = {work.public_path: work for work in works}
+    validate_link_items(site.home.links, site.home_path, known_paths)
     validate_work_links(works, known_paths, work_by_path)
-    contents_sections = build_contents_sections(site.sections, works)
+    contents_sections = build_contents_sections(site.home.sections, works)
     contents_section_by_name = {section.name: section for section in contents_sections}
     backlinks = build_backlinks(works)
     return SiteGraph(
@@ -219,27 +223,6 @@ def build_site_graph(site: SiteConfig, work_inputs: list[WorkInput]) -> SiteGrap
     )
 
 
-def load_link_list(data: dict[str, object], field: str, source_path: Path) -> tuple[LinkItem, ...]:
-    items = data.get(field)
-    if not isinstance(items, list) or not items:
-        raise BuildError(source_path, "missing-required-field", f"{field} must contain at least one link")
-
-    loaded: list[LinkItem] = []
-    for index, item in enumerate(items, start=1):
-        if not isinstance(item, dict):
-            raise BuildError(source_path, "missing-required-field", f"{field}[{index}] must be a table")
-        label = item.get("label")
-        href = item.get("href")
-        if not isinstance(label, str) or not isinstance(href, str):
-            raise BuildError(
-                source_path,
-                "missing-required-field",
-                f"{field}[{index}] must define string label and href fields",
-            )
-        loaded.append(LinkItem(label=label, href=href))
-    return tuple(loaded)
-
-
 def read_required_markdown(path: Path) -> str:
     if not path.is_file():
         raise BuildError(path, "missing-required-field", f"{path.name} is required")
@@ -247,6 +230,109 @@ def read_required_markdown(path: Path) -> str:
     if not text.strip():
         raise BuildError(path, "missing-required-field", f"{path.name} must not be empty")
     return text
+
+
+def parse_home_markdown(path: Path) -> HomeDocument:
+    lines = read_required_markdown(path).splitlines()
+    if not lines or not lines[0].startswith("# "):
+        raise BuildError(path, "missing-required-field", "home.md must start with a # title")
+
+    title = lines[0][2:].strip()
+    if not title:
+        raise BuildError(path, "missing-required-field", "home.md title must not be empty")
+
+    cover_lines: list[str] = []
+    links: list[LinkItem] = []
+    read_label: str | None = None
+    section_name: str | None = None
+    section_lines: list[str] = []
+    sections: list[SectionDefinition] = []
+
+    def flush_section() -> None:
+        nonlocal section_name, section_lines
+        if section_name is None:
+            return
+        sections.append(
+            SectionDefinition(
+                name=section_name,
+                description=collapse_plain_text(section_lines),
+            )
+        )
+        section_name = None
+        section_lines = []
+
+    for line in lines[1:]:
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            raise BuildError(path, "missing-required-field", "home.md must contain one # title")
+        if stripped.startswith("## "):
+            flush_section()
+            if read_label is not None:
+                raise BuildError(path, "missing-required-field", "home.md must contain one ## read heading")
+            read_label = stripped[3:].strip()
+            if not read_label:
+                raise BuildError(path, "missing-required-field", "home.md read heading must not be empty")
+            continue
+        if stripped.startswith("### "):
+            if read_label is None:
+                raise BuildError(path, "missing-required-field", "home.md sections must follow the ## read heading")
+            flush_section()
+            section_name = stripped[4:].strip()
+            if not section_name:
+                raise BuildError(path, "missing-required-field", "home.md section headings must not be empty")
+            continue
+
+        if read_label is None:
+            link_match = HOME_LINK_RE.match(stripped)
+            if link_match:
+                label = link_match.group("label").strip()
+                href = link_match.group("href").strip()
+                if not label or not href:
+                    raise BuildError(path, "missing-required-field", "home.md links must define label and href")
+                links.append(
+                    LinkItem(
+                        label=label,
+                        href=href,
+                    )
+                )
+                continue
+            cover_lines.append(line)
+            continue
+
+        if section_name is not None:
+            section_lines.append(line)
+        elif stripped:
+            raise BuildError(path, "missing-required-field", "home.md read content must be in ### sections")
+
+    flush_section()
+    cover_text = trim_blank_lines(cover_lines)
+    if not cover_text.strip():
+        raise BuildError(path, "missing-required-field", "home.md cover text must not be empty")
+    if not links:
+        raise BuildError(path, "missing-required-field", "home.md must define at least one homepage link")
+    if read_label is None:
+        raise BuildError(path, "missing-required-field", "home.md must define a ## read heading")
+    return HomeDocument(
+        title=title,
+        cover_text=cover_text,
+        links=tuple(links),
+        read_label=read_label,
+        sections=tuple(sections),
+    )
+
+
+def trim_blank_lines(lines: list[str]) -> str:
+    start = 0
+    end = len(lines)
+    while start < end and not lines[start].strip():
+        start += 1
+    while end > start and not lines[end - 1].strip():
+        end -= 1
+    return "\n".join(lines[start:end])
+
+
+def collapse_plain_text(lines: list[str]) -> str:
+    return " ".join(line.strip() for line in lines if line.strip())
 
 
 def parse_timestamp(value: str, source_path: Path, field: str) -> datetime:
@@ -307,7 +393,7 @@ def render_work_documents(
     work_paths: frozenset[str],
 ) -> list[WorkDocument]:
     documents: list[WorkDocument] = []
-    section_names = frozenset(section.name for section in site.sections)
+    section_names = frozenset(section.name for section in site.home.sections)
     for work in work_inputs:
         body = render_work_body(work, work_lookup, work_paths)
         documents.append(
@@ -398,6 +484,19 @@ def validate_work_links(
                 )
 
 
+def validate_link_items(items: tuple[LinkItem, ...], source_path: Path, known_paths: frozenset[str]) -> None:
+    for item in items:
+        parts = urlsplit(item.href)
+        if parts.scheme or parts.netloc or not parts.path.startswith("/"):
+            continue
+        if parts.path not in known_paths:
+            raise BuildError(
+                source_path,
+                "broken-internal-link",
+                f"{item.href} does not resolve to a published path",
+            )
+
+
 def build_contents_sections(
     site_sections: tuple[SectionDefinition, ...],
     works: tuple[WorkDocument, ...],
@@ -480,33 +579,6 @@ def normalize_absolute_url(value: str, source_path: Path, field: str) -> str:
     if not parts.scheme or not parts.netloc:
         raise BuildError(source_path, "missing-required-field", f"{field} must be an absolute URL")
     return value
-
-
-def load_sections(sections: object | None, source_path: Path) -> tuple[SectionDefinition, ...]:
-    if not isinstance(sections, list):
-        raise BuildError(
-            source_path,
-            "missing-required-field",
-            "sections must be a list of strings or {name, description} tables",
-        )
-
-    loaded: list[SectionDefinition] = []
-    for index, item in enumerate(sections, start=1):
-        if isinstance(item, str) and item.strip():
-            loaded.append(SectionDefinition(name=item, description=""))
-            continue
-        if isinstance(item, dict):
-            name = item.get("name")
-            description = item.get("description", "")
-            if isinstance(name, str) and name.strip() and isinstance(description, str):
-                loaded.append(SectionDefinition(name=name, description=description))
-                continue
-        raise BuildError(
-            source_path,
-            "missing-required-field",
-            f"sections[{index}] must be a non-empty string or a table with string name and description fields",
-        )
-    return tuple(loaded)
 
 
 def work_public_path(folder_name: str) -> str:

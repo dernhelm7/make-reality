@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from html import escape
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import quote, urlsplit
 
 from .markup import BodyContext, Heading, render_markdown_paragraphs
 from .model import BuildError, ContentsSection, LinkItem, SiteGraph, WorkDocument
@@ -16,6 +17,7 @@ from .urls import (
 )
 
 TOC_LEADER_DOTS = "&middot;&nbsp;" * 48
+TALLY_EMBED_QUERY = "alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1&formEventsForwarding=1"
 
 
 @dataclass(frozen=True)
@@ -24,6 +26,14 @@ class RenderedPage:
     output_path: Path
     html: str
     source_path: Path
+
+
+@dataclass(frozen=True)
+class LinkPreview:
+    key: str
+    panel_class: str
+    label: str
+    html: str
 
 
 def join_html_lines(*parts: str) -> str:
@@ -70,18 +80,18 @@ def render_home_page(graph: SiteGraph) -> str:
         '<div class="page page--home">',
         '  <section class="page page--cover cover">',
         '    <header class="page-head page-head--cover">',
-        f'      <h1 class="page-title page-title--display cover-title">{escape(graph.site.title)}</h1>',
+        f'      <h1 class="page-title page-title--display cover-title">{escape(graph.site.home.title)}</h1>',
         indent_html(render_home_cover_text(graph), 6),
         "    </header>",
         '    <div class="home-cover-meta">',
-        indent_html(render_global_links_section(graph, urls=urls), 6),
+        indent_html(render_global_links_section(graph, urls=urls, enable_previews=True), 6),
         "    </div>",
         "  </section>",
         '  <section class="page home-contents" id="contents" aria-labelledby="contents-heading">',
         '    <header class="page-head">',
-        '      <h2 class="page-title page-title--section" id="contents-heading"><a class="home-contents-heading-link" href="#contents">Read</a></h2>',
+        f'      <h2 class="page-title page-title--section" id="contents-heading"><a class="home-contents-heading-link" href="#read-index"><span>{escape(graph.site.home.read_label)}</span><span class="home-contents-heading-arrow" aria-hidden="true">&rarr;</span></a></h2>',
         "    </header>",
-        '    <div class="page-body works-body">',
+        '    <div class="page-body works-body" id="read-index">',
         indent_html(render_contents_sections(graph, urls=urls), 6),
         "    </div>",
         "  </section>",
@@ -305,22 +315,156 @@ def render_sidebar_primary(graph: SiteGraph, current_work: WorkDocument | None, 
     )
 
 
-def render_global_links_section(graph: SiteGraph, *, urls: PageUrls) -> str:
-    items = (*graph.site.contact_links, *graph.site.gift_links, LinkItem(label="RSS", href=FEED_PUBLIC_PATH))
+def render_global_links_section(graph: SiteGraph, *, urls: PageUrls, enable_previews: bool = False) -> str:
+    items = graph.site.home.links
+    previews = tuple(link_preview_for_item(item, graph=graph, urls=urls) for item in items)
     links_html = join_html_lines(
         *(
-            f'<a class="site-link{" feed-link" if item.href == FEED_PUBLIC_PATH else ""}" href="{escape(urls.root_relative_href(item.href))}">{escape(item.label)}</a>'
-            for item in items
+            render_global_link(
+                item,
+                preview=preview if enable_previews else None,
+                urls=urls,
+            )
+            for item, preview in zip(items, previews, strict=True)
         )
     )
+    preview_html = render_global_link_previews(tuple(preview for preview in previews if preview), urls=urls) if enable_previews else ""
     return join_html_lines(
         '<div class="site-bar-section site-bar-section--global">',
         '  <p class="site-global-label visually-hidden">Links</p>',
         '  <nav class="site-nav site-nav--global" aria-label="Global links">',
         indent_html(links_html, 4),
         "  </nav>",
+        indent_html(preview_html, 2),
         "</div>",
     )
+
+
+def render_global_link(item: LinkItem, *, preview: LinkPreview | None, urls: PageUrls) -> str:
+    classes = ["site-link"]
+    if item.href == FEED_PUBLIC_PATH:
+        classes.append("feed-link")
+    if preview:
+        classes.append("site-link--preview")
+
+    href = escape(urls.root_relative_href(item.href))
+    label = escape(item.label)
+    if preview:
+        return (
+            f'<a class="{" ".join(classes)}" href="{href}" '
+            f'data-site-preview-trigger="{escape(preview.key)}" '
+            f'aria-controls="site-link-preview-{escape(preview.key)}">{label}</a>'
+        )
+    return f'<a class="{" ".join(classes)}" href="{href}" data-site-preview-clear>{label}</a>'
+
+
+def link_preview_for_item(item: LinkItem, *, graph: SiteGraph, urls: PageUrls) -> LinkPreview | None:
+    form_src = tally_embed_src(item.href)
+    if form_src:
+        return LinkPreview(
+            key="write",
+            panel_class="site-link-preview-panel--embed",
+            label=f"{item.label} form",
+            html=(
+                f'<iframe class="site-link-preview-frame" src="{escape(form_src)}" '
+                'loading="lazy" title="Send me a message"></iframe>'
+            ),
+        )
+
+    if item.href == FEED_PUBLIC_PATH:
+        return LinkPreview(
+            key="follow",
+            panel_class="site-link-preview-panel--text",
+            label=f"{item.label} preview",
+            html=render_feed_link_preview(graph, urls=urls),
+        )
+
+    return None
+
+
+def render_global_link_previews(previews: tuple[LinkPreview, ...], *, urls: PageUrls) -> str:
+    if not previews:
+        return ""
+    panels = join_html_lines(
+        *(
+            join_html_lines(
+                f'<div class="site-link-preview-panel {preview.panel_class}" id="site-link-preview-{escape(preview.key)}" aria-label="{escape(preview.label)}" hidden>',
+                indent_html(preview.html, 2),
+                "</div>",
+            )
+            for preview in previews
+        )
+    )
+    return join_html_lines(
+        '<div class="site-link-preview-region" data-site-preview-region>',
+        indent_html(panels, 2),
+        "  </div>",
+        render_global_link_preview_script(),
+    )
+
+
+def render_global_link_preview_script() -> str:
+    return join_html_lines(
+        '<script>',
+        "(() => {",
+        "  const root = document.currentScript.closest('.site-bar-section--global');",
+        "  const panels = new Map([...root.querySelectorAll('.site-link-preview-panel')].map((panel) => [panel.id.replace('site-link-preview-', ''), panel]));",
+        "  const show = (key) => panels.forEach((panel, panelKey) => { panel.hidden = panelKey !== key; });",
+        "  const clear = () => panels.forEach((panel) => { panel.hidden = true; });",
+        "  root.querySelectorAll('[data-site-preview-trigger]').forEach((link) => {",
+        "    const key = link.dataset.sitePreviewTrigger;",
+        "    link.addEventListener('pointerenter', () => show(key));",
+        "    link.addEventListener('focus', () => show(key));",
+        "  });",
+        "  root.querySelectorAll('[data-site-preview-clear]').forEach((link) => {",
+        "    link.addEventListener('pointerenter', clear);",
+        "    link.addEventListener('focus', clear);",
+        "  });",
+        "})();",
+        "</script>",
+    )
+
+
+def render_feed_link_preview(graph: SiteGraph, *, urls: PageUrls) -> str:
+    feed_href = urls.relative_href(FEED_PUBLIC_PATH)
+    preview_text = feed_link_preview_text(graph.site.feed_guide_text).replace(
+        "{feed_url}",
+        feed_href,
+    )
+    paragraphs = render_markdown_paragraphs(
+        preview_text,
+        context=body_context(graph, HOME_PUBLIC_PATH),
+    )
+    action = (
+        f'<p class="site-link-preview-action"><a class="internal-link" href="{escape(feed_href)}">'
+        'Follow <span class="site-link-preview-arrow" aria-hidden="true">&rarr;</span></a></p>'
+    )
+    return join_html_lines(
+        *(f'<p class="site-link-preview-copy">{paragraph.html}</p>' for paragraph in paragraphs),
+        action,
+    )
+
+
+def feed_link_preview_text(feed_guide_text: str) -> str:
+    paragraphs = tuple(part.strip() for part in feed_guide_text.split("\n\n") if part.strip())
+    if not paragraphs:
+        return ""
+    body_paragraphs = paragraphs[1:] if len(paragraphs) > 1 else paragraphs
+    return "\n\n".join(body_paragraphs)
+
+
+def tally_embed_src(href: str) -> str | None:
+    parsed = urlsplit(href)
+    host = parsed.netloc.lower()
+    if parsed.scheme != "https" or host not in {"tally.so", "www.tally.so"}:
+        return None
+
+    path_parts = tuple(part for part in parsed.path.split("/") if part)
+    if len(path_parts) != 2 or path_parts[0] not in {"r", "embed"}:
+        return None
+
+    form_id = quote(path_parts[1], safe="")
+    return f"https://tally.so/embed/{form_id}?{TALLY_EMBED_QUERY}"
 
 
 def render_sidebar_contents_groups(graph: SiteGraph, current_work: WorkDocument, urls: PageUrls) -> str:
@@ -455,7 +599,7 @@ def render_feed_guide(graph: SiteGraph, *, feed_url: str) -> str:
 
 def render_home_cover_text(graph: SiteGraph) -> str:
     paragraphs = render_markdown_paragraphs(
-        graph.site.home_text,
+        graph.site.home.cover_text,
         context=body_context(graph, HOME_PUBLIC_PATH),
     )
     return join_html_lines(

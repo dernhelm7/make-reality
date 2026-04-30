@@ -89,7 +89,7 @@ class ValidationTests(unittest.TestCase):
         self.assertIn("feed.md", str(error.exception.source_path))
         self.assertIn("feed.md", error.exception.message)
 
-    def test_missing_sections_fails_build(self) -> None:
+    def test_missing_read_heading_fails_build(self) -> None:
         site_root = self.make_site(
             {
                 "alpha": {
@@ -98,23 +98,27 @@ class ValidationTests(unittest.TestCase):
                 }
             }
         )
-        site_toml = site_root / "site.toml"
-        site_toml.write_text(
-            "\n".join(
-                line
-                for line in site_toml.read_text(encoding="utf-8").splitlines()
-                if not line.startswith("sections = ")
-            )
-            + "\n",
-            encoding="utf-8",
-        )
+        home_md = site_root / "home.md"
+        home_md.write_text(home_md.read_text(encoding="utf-8").replace("## Read\n", ""), encoding="utf-8")
 
         with self.assertRaises(BuildError) as error:
             build_site(site_root, site_root / "public")
 
         self.assertEqual(error.exception.rule, "missing-required-field")
-        self.assertIn("site.toml", str(error.exception.source_path))
-        self.assertIn("sections", error.exception.message)
+        self.assertIn("home.md", str(error.exception.source_path))
+        self.assertIn("read heading", error.exception.message)
+
+    def test_empty_home_link_fails_build(self) -> None:
+        site_root = self.make_site({})
+        home_md = site_root / "home.md"
+        home_md.write_text(home_md.read_text(encoding="utf-8").replace("[RSS](/feed.xml)", "[ ](/feed.xml)"), encoding="utf-8")
+
+        with self.assertRaises(BuildError) as error:
+            build_site(site_root, site_root / "public")
+
+        self.assertEqual(error.exception.rule, "missing-required-field")
+        self.assertIn("home.md", str(error.exception.source_path))
+        self.assertIn("links", error.exception.message)
 
     def test_missing_work_feed_fields_fail_build(self) -> None:
         for field in ("updated", "atom_id"):
@@ -216,20 +220,26 @@ class ValidationTests(unittest.TestCase):
                 statement = "A room for poems, projects, and notes."
                 author_name = "Labyrinth Author"
                 updated = "2024-02-14T00:00:00Z"
-                sections = []
-
-                [[contact_links]]
-                label = "Email"
-                href = "mailto:hello@labyrinth.example"
-
-                [[gift_links]]
-                label = "Gift"
-                href = "https://gifts.example/labyrinth"
                 """
             ),
             encoding="utf-8",
         )
-        (site_root / "home.md").write_text("A room for poems, projects, and notes.", encoding="utf-8")
+        (site_root / "home.md").write_text(
+            textwrap.dedent(
+                """\
+                # Labyrinth
+
+                A room for poems, projects, and notes.
+
+                [Email](mailto:hello@labyrinth.example)
+                [Gift](https://gifts.example/labyrinth)
+                [RSS](/feed.xml)
+
+                ## Read
+                """
+            ),
+            encoding="utf-8",
+        )
         (site_root / "feed.md").write_text(
             "Web feed\n\nCopy [the feed URL]({feed_url}) into a feed reader.",
             encoding="utf-8",

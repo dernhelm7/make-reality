@@ -1,0 +1,5 @@
+[    1008ms] [ERROR] Not signed in with the identity provider. @ https://x.com/tobyshorin:0
+[    1010ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with AbortError: signal is aborted without reason @ https://accounts.google.com/gsi/client:85
+[    1010ms] [ERROR] Not signed in with the identity provider. @ https://x.com/tobyshorin:0
+[    1041ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.x.com/1.1/onboarding/referrer.json:0
+[    5172ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://accounts.google.com/gsi/client:85

@@ -4,19 +4,3 @@ title = "Make Reality"
 statement = "Poems, notes, studies, guides, projects, and cabinet notes for an unfinished world."
 author_name = "Dern Helm"
 updated = "2026-04-16T00:00:00Z"
-sections = [
-  { name = "Poems", description = "nothing here is real, but it is the stuff of reality" },
-  { name = "Notes", description = "thoughts, journal entries, fragments, philosophy" },
-  { name = "Studies", description = "records of exploration with references" },
-  { name = "Guides", description = "how I've solved problems" },
-  { name = "Projects", description = "tools, adaptations, records of things made" },
-  { name = "Cabinet", description = "influences, recommendations, bibliography, aesthetics" },
-]
-
-[[contact_links]]
-label = "Write"
-href = "https://tally.so/r/PLACEHOLDER"
-
-[[gift_links]]
-label = "Gift"
-href = "https://example.com/gift"

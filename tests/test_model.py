@@ -107,7 +107,7 @@ class MarkupAndGraphTests(unittest.TestCase):
         self.assertIn('href="../site.css"', graph.work_by_path["/alpha"].body.html)
         self.assertIn('href="../feed.css"', graph.work_by_path["/alpha"].body.html)
 
-    def test_site_config_accepts_mixed_string_and_table_sections(self) -> None:
+    def test_home_markdown_defines_links_and_sections(self) -> None:
         site_root = self.make_site(
             {
                 "alpha": {
@@ -121,27 +121,23 @@ class MarkupAndGraphTests(unittest.TestCase):
                 }
             }
         )
-        (site_root / "site.toml").write_text(
+        (site_root / "home.md").write_text(
             textwrap.dedent(
                 """\
-                url = "https://labyrinth.example"
-                lang = "en"
-                title = "Labyrinth"
-                statement = "Metadata summary."
-                author_name = "Labyrinth Author"
-                updated = "2024-02-14T00:00:00Z"
-                sections = [
-                  "Notes",
-                  { name = "Guides", description = "Reusable methods." },
-                ]
+                # Labyrinth Home
 
-                [[contact_links]]
-                label = "Email"
-                href = "mailto:hello@labyrinth.example"
+                Visible cover line.
 
-                [[gift_links]]
-                label = "Gift"
-                href = "https://gifts.example/labyrinth"
+                [Email](mailto:hello@labyrinth.example)
+                [Gift](https://gifts.example/labyrinth)
+                [RSS](/feed.xml)
+
+                ## Read
+
+                ### Notes
+
+                ### Guides
+                Reusable methods.
                 """
             ),
             encoding="utf-8",
@@ -150,8 +146,9 @@ class MarkupAndGraphTests(unittest.TestCase):
         site = load_site_config(site_root)
         graph = build_site_graph(site, load_work_inputs(site_root))
 
-        self.assertEqual(("Notes", "Guides"), tuple(section.name for section in site.sections))
-        self.assertEqual(("", "Reusable methods."), tuple(section.description for section in site.sections))
+        self.assertEqual("Labyrinth Home", site.home.title)
+        self.assertEqual(("Email", "Gift", "RSS"), tuple(link.label for link in site.home.links))
+        self.assertEqual(("", "Reusable methods."), tuple(section.description for section in site.home.sections))
         self.assertEqual(("Notes", "Guides"), tuple(section.name for section in graph.contents_sections))
         self.assertEqual("", graph.contents_sections[0].description)
         self.assertEqual("Reusable methods.", graph.contents_sections[1].description)
@@ -188,11 +185,11 @@ class MarkupAndGraphTests(unittest.TestCase):
                 },
             }
         )
-        site_toml = site_root / "site.toml"
-        site_toml.write_text(
-            site_toml.read_text(encoding="utf-8").replace(
-                "sections = []",
-                'sections = ["Essays", "Notes", "Empty"]',
+        home_md = site_root / "home.md"
+        home_md.write_text(
+            home_md.read_text(encoding="utf-8").replace(
+                "## Read",
+                "## Read\n\n### Essays\n\n### Notes\n\n### Empty",
             ),
             encoding="utf-8",
         )
@@ -256,20 +253,26 @@ class MarkupAndGraphTests(unittest.TestCase):
                 statement = "A room for poems, projects, and notes."
                 author_name = "Labyrinth Author"
                 updated = "2024-02-14T00:00:00Z"
-                sections = []
-
-                [[contact_links]]
-                label = "Email"
-                href = "mailto:hello@labyrinth.example"
-
-                [[gift_links]]
-                label = "Gift"
-                href = "https://gifts.example/labyrinth"
                 """
             ),
             encoding="utf-8",
         )
-        (site_root / "home.md").write_text("A room for poems, projects, and notes.", encoding="utf-8")
+        (site_root / "home.md").write_text(
+            textwrap.dedent(
+                """\
+                # Labyrinth
+
+                A room for poems, projects, and notes.
+
+                [Email](mailto:hello@labyrinth.example)
+                [Gift](https://gifts.example/labyrinth)
+                [RSS](/feed.xml)
+
+                ## Read
+                """
+            ),
+            encoding="utf-8",
+        )
         (site_root / "feed.md").write_text(
             "Web feed\n\nCopy [the feed URL]({feed_url}) into a feed reader.",
             encoding="utf-8",

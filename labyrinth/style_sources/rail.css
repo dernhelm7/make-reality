@@ -46,6 +46,96 @@
   gap: var(--mobile-nav-gap) var(--mobile-nav-column-gap);
 }
 
+.home-cover-meta {
+  position: static;
+  --link-preview-side-space: var(--site-side-space);
+  --link-preview-max-width: var(--home-column-measure);
+  --link-preview-max-height: var(--home-column-measure);
+  --link-preview-track-width: calc(var(--home-contents-measure) - var(--home-column-measure) - var(--page-column-gap));
+  --link-preview-viewport-width: calc(100vw - (var(--link-preview-side-space) * 2) - var(--home-column-measure) - var(--page-column-gap));
+  --link-preview-width: min(var(--link-preview-max-width), var(--link-preview-track-width), var(--link-preview-viewport-width));
+  --link-preview-height: min(52vh, var(--link-preview-max-height));
+  --link-preview-title-x-height-offset: calc(var(--page-title-display-size) * 0.22);
+  --link-preview-top: calc(var(--cover-top-space) + var(--link-preview-title-x-height-offset));
+}
+
+.home-cover-meta .site-nav--global a {
+  position: relative;
+  z-index: 5;
+}
+
+.site-link-preview-region {
+  display: none;
+}
+
+.home-cover-meta .site-link-preview-region {
+  position: absolute;
+  inset-block-start: var(--link-preview-top);
+  inset-inline-start: calc(var(--home-column-measure) + var(--page-column-gap));
+  z-index: 4;
+  display: block;
+  width: var(--link-preview-width);
+  height: var(--link-preview-height);
+}
+
+.home-cover-meta .site-link-preview-panel {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: var(--step-n1);
+  overflow: hidden;
+  border: 0.06rem solid var(--line);
+  background: var(--page);
+  box-shadow: 0 var(--step-n1) var(--step-p4) color-mix(in srgb, var(--ink) 16%, transparent);
+  font-family: var(--serif);
+  font-size: var(--text-base);
+  pointer-events: auto;
+}
+
+.home-cover-meta .site-link-preview-panel[hidden] {
+  display: none;
+}
+
+.site-link-preview-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.site-link-preview-panel--text {
+  overflow-y: auto;
+  line-height: var(--leading-running);
+  color: var(--ink-soft);
+}
+
+.site-link-preview-copy {
+  margin: var(--prose-flow-space) 0 0;
+}
+
+.site-link-preview-copy:first-child {
+  margin-top: 0;
+}
+
+.site-link-preview-action {
+  margin: var(--prose-flow-space) 0 0;
+  font-family: var(--sans);
+  font-size: var(--text-xs);
+}
+
+.site-link-preview-copy a,
+.site-link-preview-action a {
+  color: var(--accent);
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.18em;
+}
+
+.site-link-preview-arrow {
+  font-size: 0.86em;
+}
+
 .site-back-link {
   display: inline-block;
   font-family: var(--sans);

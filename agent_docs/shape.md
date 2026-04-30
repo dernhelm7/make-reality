@@ -16,7 +16,7 @@ Specify relationships and flow of use by author and reader.
 ## Requirements
 1. The author adds works to a folder.
 2. Adding a work there is enough to make it part of the site.
-3. The author lists sections in `site.toml` in the order they should appear in the home-page `Read` index. A section may also define a description for the home-page shelf.
+3. The author lists sections as `###` headings under `## Read` in `home.md`, in the order they should appear in the home-page `Read` index. Text beneath a section heading defines the home-page shelf description.
 4. A work may set `section` to one of those section names. Unnamed or unmatched works go to `Other works`.
 5. Each work derives its title and published path from its folder name. The home-page `Read` index uses the title as the entry label and the slashless path as the reference label.
 6. Publish each work at `/<folder-name>`.
@@ -32,6 +32,8 @@ Specify relationships and flow of use by author and reader.
 16. Show every named section on the home page even when no works resolve there. Show `Other works` only when at least one work falls back there.
 17. Use row entries in the home-page `Read` index. Pair each work title with an open dotted leader. Do not show publish dates there.
 18. Keep the work body and backlinks in one page body.
+19. Home-page global links may reveal a preview panel. A Tally link reveals the same form. The feed link reveals an excerpt from `feed.md`. Entering or focusing a preview link changes the shown panel. Entering or focusing a normal global link clears it. Pointer exit does not change the panel.
+20. The home-page `Read` heading links to the works index, not to itself.
 
 ## Micro-Features
 - `Heading self-links`: Give each body heading an id from its visible text. Link the heading text to that id.

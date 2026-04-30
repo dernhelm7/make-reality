@@ -57,11 +57,26 @@
   .page--cover {
     padding-top: var(--step-p2);
   }
+
+  .home-cover-meta {
+    --link-preview-side-space: var(--site-side-space-narrow);
+  }
 }
 
 @media (max-width: 50rem) {
   .work-page {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-cover-meta {
+    position: relative;
+    --link-preview-width: min(82vw, var(--link-preview-max-width));
+    --link-preview-height: min(50vh, var(--link-preview-max-height));
+    --link-preview-top: calc(100% + var(--step-n2));
+  }
+
+  .home-cover-meta .site-link-preview-region {
+    inset-inline-start: 0;
   }
 
   .home-contents {

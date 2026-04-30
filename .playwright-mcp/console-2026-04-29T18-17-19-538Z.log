@@ -1,0 +1,2 @@
+[     292ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/users/me?timezone=Europe%2FAmsterdam:0
+[   57192ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/users/me?timezone=Europe%2FAmsterdam:0

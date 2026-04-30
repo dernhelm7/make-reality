@@ -16,11 +16,14 @@ Specify how to generate the static site from source files.
 - That command resolves the local `labyrinth` package from the repo itself. Calling it by path does not require the current shell directory to be the repo root.
 - The repo may define a GitHub Pages workflow. That workflow builds `site/` to `public/` with `./build-site`.
 - The site root contains `site.toml`, `home.md`, `feed.md`, and may contain `works/`.
-- `site.toml` defines `url`, `lang`, `title`, `statement`, `author_name`, `updated`, `contact_links`, `gift_links`, and `sections`.
-- `home.md` defines the visible homepage cover text.
+- `site.toml` defines `url`, `lang`, `title`, `statement`, `author_name`, and `updated`.
+- `home.md` defines the homepage title, cover text, homepage links, `Read` heading, and `Read` section labels and descriptions.
 - `feed.md` defines the browser-facing feed guide. The build replaces `{feed_url}` with the current feed URL.
 - `site.toml` `url` is the canonical site URL.
-- `site.toml` `sections` is a root field that accepts a list of section names or a list of `{ name, description }` tables.
+- `home.md` section headings define the section names that work `section` values may target.
+- A `home.md` link to `https://tally.so/r/<id>` is the source for the matching Tally form panel.
+- A `home.md` link to `/feed.xml` is the source for a feed preview panel built from the body paragraphs in `feed.md`, followed by a `Follow` link to `/feed.xml`.
+- The home page may include the inline event handler that switches those preview panels. It attaches only to the home-page global links.
 - `--build-url` sets the output base URL for one build.
 - The public HTML uses relative links for pages and assets.
 - The public HTML sets a page base URL from the current build URL and the current public path.
@@ -35,7 +38,7 @@ Specify how to generate the static site from source files.
 1. The project defines one local build command at `./build-site`.
 2. That command reads one site root from `site.toml`, `home.md`, `feed.md`, and `works/`.
 3. That command writes one publish root and removes stale published files from it.
-4. The publish root contains public pages, `/feed.xml`, `/feed.css`, `/site.css`, shared public assets such as self-hosted fonts, and no build-generated JavaScript.
+4. The publish root contains public pages, `/feed.xml`, `/feed.css`, `/site.css`, shared public assets such as self-hosted fonts, and no generated JavaScript assets or dependencies.
 5. The publish root leaves out source-only files and build-only files.
 6. The build validates the required source fields, duplicate published paths, and broken explicit internal links written by the author. Unmatched wikilinks do not fail the build.
 7. The same site root and build URL produce the same publish root and public paths.

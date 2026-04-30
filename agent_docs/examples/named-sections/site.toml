@@ -4,16 +4,3 @@ title = "Labyrinth"
 statement = "A room for poems, projects, and notes."
 author_name = "Labyrinth Author"
 updated = "2024-05-01T09:30:00Z"
-sections = [
-  { name = "Essays", description = "Reflective prose and finished arguments." },
-  { name = "Projects", description = "Built things and working artifacts." },
-  { name = "Cabinet", description = "References and adjacent material." },
-]
-
-[[contact_links]]
-label = "Email"
-href = "mailto:hello@labyrinth.example"
-
-[[gift_links]]
-label = "Gift"
-href = "https://gifts.example/labyrinth"

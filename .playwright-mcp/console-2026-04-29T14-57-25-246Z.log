@@ -1,0 +1,52 @@
+[11970979ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://tally.so/r/PLACEHOLDER:0
+[11971480ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/users/me?timezone=Europe%2FAmsterdam:0
+[11976948ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[11982043ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[12007168ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[12057337ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[12157705ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[12257968ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[12498328ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[13198878ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[13964234ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14411667ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14416779ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14417508ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14422601ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14436875ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14437655ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14466982ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14475681ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14482770ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14485751ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14495897ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14516013ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14547081ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14587874ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14626115ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14712211ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14756205ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14757924ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[14865220ms] [ERROR] Framing 'https://www.google.com/' violates the following report-only Content Security Policy directive: "frame-ancestors 'self'". The violation has been logged, but no further action has been taken.
+ @ :0
+[14877345ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[15073028ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[15182478ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/users/me/domains/email:0
+[15192585ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/users/me/domains/email:0
+[15209580ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/users/me/domains/email:0
+[15212337ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/forms:0
+[15212345ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/users/me/invites:0
+[15212544ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/domains:0
+[15212551ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/workspaces:0
+[15212630ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/users/me/domains/email:0
+[15216312ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[15322568ms] [INFO] Loading the script 'https://www.gstatic.com/recaptcha/releases/gTpTIWhbKpxADzTzkcabhXN4/recaptcha__en.js' violates the following Content Security Policy directive: "script-src 'unsafe-inline'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The policy is report-only, so the violation has been logged but no further action has been taken. @ https://www.google.com/recaptcha/api2/bframe?hl=en&v=gTpTIWhbKpxADzTzkcabhXN4&k=6LdB13EeAAAAAEQ7MiLZmdG4pa28AD7K4V7x-tgG&bft=0dAFcWeA63loSEtxsJnIIe27BsK8mp74A_mxiIDKjS_fT1xRReIuM35vbc4a3B4Q5JSKw8YQRZjgdHXaksG7eO3KZqLXRY1jXVZA:0
+[15322568ms] [INFO] Loading the script 'https://www.gstatic.com/recaptcha/releases/gTpTIWhbKpxADzTzkcabhXN4/recaptcha__en.js' violates the following Content Security Policy directive: "script-src 'unsafe-inline'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The policy is report-only, so the violation has been logged but no further action has been taken. @ https://www.google.com/recaptcha/api2/bframe?hl=en&v=gTpTIWhbKpxADzTzkcabhXN4&k=6LdB13EeAAAAAEQ7MiLZmdG4pa28AD7K4V7x-tgG&bft=0dAFcWeA63loSEtxsJnIIe27BsK8mp74A_mxiIDKjS_fT1xRReIuM35vbc4a3B4Q5JSKw8YQRZjgdHXaksG7eO3KZqLXRY1jXVZA:0
+[15322568ms] [INFO] Loading the script 'https://www.gstatic.com/recaptcha/releases/gTpTIWhbKpxADzTzkcabhXN4/recaptcha__en.js' violates the following Content Security Policy directive: "script-src 'unsafe-inline'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The policy is report-only, so the violation has been logged but no further action has been taken. @ https://www.google.com/recaptcha/api2/bframe?hl=en&v=gTpTIWhbKpxADzTzkcabhXN4&k=6LdB13EeAAAAAEQ7MiLZmdG4pa28AD7K4V7x-tgG&bft=0dAFcWeA63loSEtxsJnIIe27BsK8mp74A_mxiIDKjS_fT1xRReIuM35vbc4a3B4Q5JSKw8YQRZjgdHXaksG7eO3KZqLXRY1jXVZA:0
+[15322568ms] [INFO] Loading the script 'https://www.gstatic.com/recaptcha/releases/gTpTIWhbKpxADzTzkcabhXN4/recaptcha__en.js' violates the following Content Security Policy directive: "script-src 'unsafe-inline'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The policy is report-only, so the violation has been logged but no further action has been taken. @ https://www.google.com/recaptcha/api2/bframe?hl=en&v=gTpTIWhbKpxADzTzkcabhXN4&k=6LdB13EeAAAAAEQ7MiLZmdG4pa28AD7K4V7x-tgG&bft=0dAFcWeA63loSEtxsJnIIe27BsK8mp74A_mxiIDKjS_fT1xRReIuM35vbc4a3B4Q5JSKw8YQRZjgdHXaksG7eO3KZqLXRY1jXVZA:0
+[15322568ms] [INFO] Loading the script 'https://www.gstatic.com/recaptcha/releases/gTpTIWhbKpxADzTzkcabhXN4/recaptcha__en.js' violates the following Content Security Policy directive: "script-src 'unsafe-inline'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The policy is report-only, so the violation has been logged but no further action has been taken. @ https://www.google.com/recaptcha/api2/bframe?hl=en&v=gTpTIWhbKpxADzTzkcabhXN4&k=6LdB13EeAAAAAEQ7MiLZmdG4pa28AD7K4V7x-tgG&bft=0dAFcWeA63loSEtxsJnIIe27BsK8mp74A_mxiIDKjS_fT1xRReIuM35vbc4a3B4Q5JSKw8YQRZjgdHXaksG7eO3KZqLXRY1jXVZA:0
+[15322568ms] [INFO] Loading the script 'https://www.gstatic.com/recaptcha/releases/gTpTIWhbKpxADzTzkcabhXN4/recaptcha__en.js' violates the following Content Security Policy directive: "script-src 'unsafe-inline'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The policy is report-only, so the violation has been logged but no further action has been taken. @ https://www.google.com/recaptcha/api2/bframe?hl=en&v=gTpTIWhbKpxADzTzkcabhXN4&k=6LdB13EeAAAAAEQ7MiLZmdG4pa28AD7K4V7x-tgG&bft=0dAFcWeA63loSEtxsJnIIe27BsK8mp74A_mxiIDKjS_fT1xRReIuM35vbc4a3B4Q5JSKw8YQRZjgdHXaksG7eO3KZqLXRY1jXVZA:0
+[15487505ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[15514383ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.tally.so/feature-flags:0
+[15645471ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://tally.so/create:0
+[15800121ms] [INFO] %ciframe-resizer v5.4.7 (business) font-weight: normal; @ https://tally.so/_next/static/chunks/main-f09780571d431d1c.js:4

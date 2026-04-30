@@ -124,13 +124,20 @@
 }
 
 .home-contents > .page-head {
-  justify-items: center;
-  text-align: center;
+  justify-items: start;
+  text-align: left;
 }
 
 .home-contents-heading-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--step-n3);
   text-decoration: none;
+}
+
+.home-contents-heading-arrow {
+  font-size: 0.56em;
+  line-height: 1;
 }
 
 .works-column {

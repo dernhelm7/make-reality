@@ -1,0 +1,91 @@
+- main [ref=e6]:
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - heading "Make Reality" [level=1] [ref=e10]
+        - paragraph [ref=e11]:
+          - text: Wanting to know one another
+          - text: they made the Universe.
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: Links
+        - navigation "Global links" [ref=e15]:
+          - link "Write" [ref=e17]:
+            - /url: https://tally.so/r/7RJ6Z2
+          - link "Gift" [ref=e18]:
+            - /url: https://example.com/gift
+          - generic [ref=e19]:
+            - link "Follow" [ref=e20]:
+              - /url: feed.xml
+            - generic "Follow preview" [ref=e21]:
+              - paragraph [ref=e22]:
+                - text: This is my feed; you can use it to follow my site. Feeds work in any reader; you don't need a Facebook™ or Twitter (𝕏) to access them. Copy
+                - link "my feed URL" [ref=e23]:
+                  - /url: feed.xml
+                - text: into a feed reader to follow me.
+                - link "About Feeds. ↗" [ref=e24]:
+                  - /url: https://aboutfeeds.com/
+                  - emphasis [ref=e25]: About Feeds.
+                  - text: ↗
+              - paragraph [ref=e26]: Better readers would make this easy and survive any platform's death -- you keep your 'timeline' by copying your feed list to a new reader. I don't have to be on it for this to work.
+    - region "Read" [ref=e27]:
+      - heading "Read" [level=2] [ref=e29]:
+        - link "Read" [ref=e30]:
+          - /url: "#contents"
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - region "Poems" [ref=e33]:
+            - generic [ref=e35]:
+              - heading "Poems" [level=3] [ref=e36]
+              - paragraph [ref=e37]: the stuff of reality
+          - region "Notes" [ref=e38]:
+            - generic [ref=e40]:
+              - heading "Notes" [level=3] [ref=e41]
+              - paragraph [ref=e42]: thoughts, fragments, philosophy
+            - list [ref=e43]:
+              - listitem [ref=e44]:
+                - link "Starter Note" [ref=e45]:
+                  - /url: starter-note
+                  - generic [ref=e46]: starter-note
+                  - generic [ref=e47]: Starter Note
+                  - generic: · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+                  - generic [ref=e48]: ">"
+          - region "Studies" [ref=e49]:
+            - generic [ref=e51]:
+              - heading "Studies" [level=3] [ref=e52]
+              - paragraph [ref=e53]: exploration with references
+            - list [ref=e54]:
+              - listitem [ref=e55]:
+                - link "Margin Study" [ref=e56]:
+                  - /url: margin-study
+                  - generic [ref=e57]: margin-study
+                  - generic [ref=e58]: Margin Study
+                  - generic: · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+                  - generic [ref=e59]: ">"
+        - generic [ref=e60]:
+          - region "Guides" [ref=e61]:
+            - generic [ref=e63]:
+              - heading "Guides" [level=3] [ref=e64]
+              - paragraph [ref=e65]: how I've solved problems
+          - region "Projects" [ref=e66]:
+            - generic [ref=e68]:
+              - heading "Projects" [level=3] [ref=e69]
+              - paragraph [ref=e70]: tools, adaptations, records of things made
+          - region "Cabinet" [ref=e71]:
+            - generic [ref=e73]:
+              - heading "Cabinet" [level=3] [ref=e74]
+              - paragraph [ref=e75]: influences, recommendations, bibliography, aesthetics
+            - list [ref=e76]:
+              - listitem [ref=e77]:
+                - link "Bibliography" [ref=e78]:
+                  - /url: bibliography
+                  - generic [ref=e79]: bibliography
+                  - generic [ref=e80]: Bibliography
+                  - generic: · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+                  - generic [ref=e81]: ">"
+              - listitem [ref=e82]:
+                - link "Style Cabinet" [ref=e83]:
+                  - /url: style-cabinet
+                  - generic [ref=e84]: style-cabinet
+                  - generic [ref=e85]: Style Cabinet
+                  - generic: · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+                  - generic [ref=e86]: ">"
