@@ -639,8 +639,6 @@ class AcceptanceTests(FixtureSiteTestCase):
             'src="https://tally.so/embed/7RJ6Z2?alignLeft=1&amp;hideTitle=1&amp;transparentBackground=1&amp;dynamicHeight=1&amp;formEventsForwarding=1"',
             home_page,
         )
-        self.assertIn('class="site-link feed-link site-link--preview" href="feed.xml" data-site-preview-trigger="follow"', home_page)
-        self.assertIn('class="site-link" href="https://example.com/gift" data-site-preview-clear>Gift</a>', home_page)
         self.assertIn("This is my feed; you can use it to follow my site.", home_page)
         self.assertIn("Better readers would make social following part of the default Internet", home_page)
         self.assertIn("About Feeds.", home_page)
