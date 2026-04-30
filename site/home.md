@@ -4,7 +4,6 @@ Wanting to know one another\
 they made the Universe.
 
 [Write](https://tally.so/r/7RJ6Z2)
-[Gift](https://example.com/gift)
 [Follow](/feed.xml)
 
 ## Read
