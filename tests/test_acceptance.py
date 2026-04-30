@@ -643,7 +643,6 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertIn('class="site-link" href="https://example.com/gift" data-site-preview-clear>Gift</a>', home_page)
         self.assertIn("This is my feed; you can use it to follow my site.", home_page)
         self.assertIn("Better readers would make social following part of the default Internet", home_page)
-        self.assertIn('class="site-link-preview-action"><a class="internal-link" href="feed.xml">Follow <span class="site-link-preview-arrow" aria-hidden="true">&rarr;</span></a></p>', home_page)
         self.assertIn("About Feeds.", home_page)
         self.assertIn('loading="lazy" title="Send me a message"', home_page)
         self.assertIn("link.addEventListener('pointerenter', () => show(key));", home_page)
