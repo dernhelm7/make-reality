@@ -1,11 +1,15 @@
 .reading-layout,
 .reading-column {
+  width: 100%;
+  min-width: 0;
   max-width: var(--reading-span);
 }
 
 .work-body,
 .reading-prose,
 .backlinks {
+  width: 100%;
+  min-width: 0;
   max-width: var(--measure);
 }
 
@@ -112,6 +116,15 @@
 
 .reading-prose figure {
   margin: var(--prose-block-space) 0 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.reading-prose svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
 }
 
 .reading-prose figcaption {
@@ -139,6 +152,9 @@
 }
 
 .reading-prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
   border-collapse: collapse;
   width: 100%;
   margin: var(--prose-block-space) 0 0;

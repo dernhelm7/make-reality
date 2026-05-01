@@ -132,6 +132,7 @@
   display: inline-flex;
   align-items: baseline;
   gap: var(--step-n3);
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -165,7 +166,7 @@
 }
 
 .section-heading {
-  color: var(--accent);
+  color: var(--label-muted);
   font-size: var(--text-xs);
   line-height: var(--leading-tight);
 }

@@ -1,0 +1,126 @@
+- generic [ref=e5]:
+  - complementary [ref=e6]:
+    - generic [ref=e7]:
+      - link "Back to contents" [ref=e9]:
+        - /url: ../#contents
+      - region "Site contents" [ref=e10]:
+        - heading "Site contents" [level=2] [ref=e11]
+        - generic [ref=e13]:
+          - paragraph [ref=e14]: Cabinet
+          - list [ref=e15]:
+            - listitem [ref=e16]:
+              - link "Bibliography" [ref=e17]:
+                - /url: ../bibliography
+            - listitem [ref=e18]:
+              - generic [ref=e19]: Style Cabinet
+              - list [ref=e20]:
+                - listitem [ref=e21]:
+                  - link "Inventory" [ref=e22]:
+                    - /url: "#inventory"
+                - listitem [ref=e23]:
+                  - link "Sequence" [ref=e24]:
+                    - /url: "#sequence"
+                - listitem [ref=e25]:
+                  - link "Specimen" [ref=e26]:
+                    - /url: "#specimen"
+      - generic [ref=e27]:
+        - paragraph [ref=e28]: Links
+        - navigation "Global links" [ref=e29]:
+          - link "Write" [ref=e30]:
+            - /url: https://tally.so/r/7RJ6Z2
+          - link "Follow" [ref=e31]:
+            - /url: ../feed.xml
+  - main [ref=e32]:
+    - article [ref=e33]:
+      - generic [ref=e34]:
+        - heading "Style Cabinet" [level=1] [ref=e35]
+        - link "Permalink" [ref=e36]:
+          - /url: https://dernhelm7.github.io/make-reality/style-cabinet
+      - complementary "Published" [ref=e37]:
+        - time [ref=e38]: 22 January 2024
+      - generic [ref=e41]:
+        - generic [ref=e43]:
+          - paragraph [ref=e44]: This room gathers the elements that already have reading styles, so the default preview shows more than plain paragraphs.
+          - complementary [ref=e45]:
+            - text: Use
+            - code [ref=e46]: body.html
+            - text: when the structure matters. Lists, tables, figures, and notes all pass through untouched.
+          - heading "Inventory" [level=2] [ref=e47]:
+            - link "Inventory" [ref=e48]:
+              - /url: "#inventory"
+          - paragraph [ref=e49]:
+            - text: Start in
+            - link "Starter Note" [ref=e50]:
+              - /url: ../starter-note
+            - text: ", pass through"
+            - link "Margin Study" [ref=e51]:
+              - /url: ../margin-study
+            - text: ", and keep this cabinet nearby when you want a quick visual check."
+          - list [ref=e52]:
+            - listitem [ref=e53]: A plain unordered list item.
+            - listitem [ref=e54]:
+              - text: A nested list item.
+              - list [ref=e55]:
+                - listitem [ref=e56]: One smaller branch.
+                - listitem [ref=e57]:
+                  - text: One branch with
+                  - code [ref=e58]: inline code
+                  - text: .
+            - listitem [ref=e59]:
+              - text: A final item with an external link to
+              - link "Archive Atlas ↗" [ref=e60]:
+                - /url: https://archive.example/atlas
+              - text: .
+          - heading "Sequence" [level=2] [ref=e61]:
+            - link "Sequence" [ref=e62]:
+              - /url: "#sequence"
+          - list [ref=e63]:
+            - listitem [ref=e64]: Light the lamp.
+            - listitem [ref=e65]: Open the ledger.
+            - listitem [ref=e66]:
+              - text: Mark the wall.
+              - list [ref=e67]:
+                - listitem [ref=e68]: Count the first turn.
+                - listitem [ref=e69]: Count the second turn.
+            - listitem [ref=e70]: Leave a note for the next reader.
+          - blockquote [ref=e71]:
+            - paragraph [ref=e72]: A restrained page can still hold a varied reading surface.
+            - paragraph [ref=e73]: The point is not more features. The point is one clear example of each useful one.
+          - separator [ref=e74]
+          - heading "Specimen" [level=2] [ref=e75]:
+            - link "Specimen" [ref=e76]:
+              - /url: "#specimen"
+          - code [ref=e78]: north -> lamp west -> graphite south -> string east -> folded map
+          - figure "The figure style also covers inline diagrams and captions." [ref=e79]:
+            - img "A simple four-point diagram" [ref=e80]
+            - generic [ref=e83]: The figure style also covers inline diagrams and captions.
+          - table [ref=e84]:
+            - rowgroup [ref=e85]:
+              - row "Mark Measure Note" [ref=e86]:
+                - columnheader "Mark" [ref=e87]
+                - columnheader "Measure" [ref=e88]
+                - columnheader "Note" [ref=e89]
+            - rowgroup [ref=e90]:
+              - row "H2O 2 Subscript keeps the line intact." [ref=e91]:
+                - cell "H2O" [ref=e92]:
+                  - text: H
+                  - subscript [ref=e93]: "2"
+                  - text: O
+                - cell "2" [ref=e94]
+                - cell "Subscript keeps the line intact." [ref=e95]
+              - row "x2 4 Superscript stays compact." [ref=e96]:
+                - cell "x2" [ref=e97]:
+                  - text: x
+                  - superscript [ref=e98]: "2"
+                - cell "4" [ref=e99]
+                - cell "Superscript stays compact." [ref=e100]
+              - row "Margin 1 A marginnote uses the same reading rail style." [ref=e101]:
+                - cell "Margin" [ref=e102]
+                - cell "1" [ref=e103]
+                - cell "A marginnote uses the same reading rail style." [ref=e104]
+        - region "Backlinks" [ref=e105]:
+          - heading "Backlinks" [level=2] [ref=e106]
+          - list [ref=e107]:
+            - listitem [ref=e108]:
+              - link "Starter Note" [ref=e109]:
+                - /url: ../starter-note
