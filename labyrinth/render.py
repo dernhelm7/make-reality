@@ -527,14 +527,17 @@ def render_mobile_work_end_matter(graph: SiteGraph, work: WorkDocument, *, urls:
     return join_html_lines(
         '<footer class="mobile-work-end" aria-label="Work links">',
         '  <div class="mobile-work-actions">',
-        f"    {date_html}",
         '    <nav class="site-nav site-nav--global mobile-work-global-links" aria-label="Global links">',
         indent_html(render_mobile_global_links(graph, urls=urls), 6),
         "    </nav>",
+        '    <a class="site-link mobile-work-top-link" href="#work-top">Top of page <span aria-hidden="true">&rarr;</span></a>',
+        f"    {date_html}",
         "  </div>",
         indent_html(render_mobile_work_section_links(graph, work, urls=urls), 2),
-        f'  <a class="site-back-link mobile-work-index-link" href="{escape(urls.relative_href(HOME_PUBLIC_PATH, fragment="contents"))}">'
-        "Back to contents</a>",
+        f'  <a class="home-contents-heading-link mobile-work-index-link" href="{escape(urls.relative_href(HOME_PUBLIC_PATH, fragment="contents"))}">',
+        "    <span>Back to Contents</span>",
+        '    <span class="home-contents-heading-arrow" aria-hidden="true">&rarr;</span>',
+        "  </a>",
         "</footer>",
     )
 
@@ -551,33 +554,33 @@ def render_mobile_work_section_links(graph: SiteGraph, work: WorkDocument, *, ur
         return ""
 
     items = join_html_lines(
-        *(render_mobile_work_section_item(section_work, work, urls=urls) for section_work in current_section.works)
+        *(
+            render_mobile_work_section_item(section_work, urls=urls)
+            for section_work in current_section.works
+            if section_work.public_path != work.public_path
+        )
     )
+    if not items:
+        return ""
+
     title_id = "mobile-work-section-title"
     return join_html_lines(
-        f'<section class="mobile-work-section" aria-labelledby="{title_id}">',
-        f'  <h2 class="site-contents-summary mobile-work-section-title" id="{title_id}">'
+        f'<section class="works-section mobile-work-section" aria-labelledby="{title_id}">',
+        '  <header class="works-section-head mobile-work-section-head">',
+        '    <div class="works-section-line mobile-work-section-line">',
+        f'      <h2 class="section-heading mobile-work-section-title" id="{title_id}">'
         f"More in {escape(current_section.name)}</h2>",
-        '  <ol class="site-contents-list mobile-work-section-list">',
+        "    </div>",
+        "  </header>",
+        '  <ol class="works-list mobile-work-section-list">',
         indent_html(items, 4),
         "  </ol>",
         "</section>",
     )
 
 
-def render_mobile_work_section_item(work: WorkDocument, current_work: WorkDocument, *, urls: PageUrls) -> str:
-    if work.public_path == current_work.public_path:
-        return join_html_lines(
-            '<li class="site-contents-item">',
-            '  <a class="site-link site-contents-link" href="#work-top">Top of page</a>',
-            "</li>",
-        )
-
-    return join_html_lines(
-        '<li class="site-contents-item">',
-        f'  <a class="site-link site-contents-link" href="{escape(urls.relative_href(work.public_path))}">{escape(work.title)}</a>',
-        "</li>",
-    )
+def render_mobile_work_section_item(work: WorkDocument, *, urls: PageUrls) -> str:
+    return render_works_entry(work, urls=urls)
 
 
 def render_mobile_work_contents(work: WorkDocument) -> str:

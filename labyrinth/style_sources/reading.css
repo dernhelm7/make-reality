@@ -54,7 +54,7 @@
 .reading-prose blockquote {
   margin: var(--prose-block-space) 0 0;
   padding: var(--blockquote-pad-block) 0 var(--blockquote-pad-block) var(--blockquote-pad-inline);
-  border-left: 0.18rem solid color-mix(in srgb, var(--accent) 45%, var(--page));
+  border-left: 0.18rem solid var(--line-strong);
   font-style: italic;
   color: color-mix(in srgb, var(--ink) 80%, var(--page));
 }
@@ -211,7 +211,7 @@
 .reading-prose .marginnote,
 .reading-prose aside.sidenote {
   padding-left: var(--sidenote-pad-inline);
-  border-left: 0.06rem solid color-mix(in srgb, var(--accent) 42%, var(--page));
+  border-left: 0.06rem solid var(--line);
   font-size: var(--text-xs);
   line-height: var(--leading-running);
   color: var(--ink-soft);
@@ -249,7 +249,7 @@
 
 .backlinks-title {
   margin-bottom: var(--backlinks-title-gap);
-  color: var(--accent);
+  color: var(--label-muted);
 }
 
 .backlinks-list {

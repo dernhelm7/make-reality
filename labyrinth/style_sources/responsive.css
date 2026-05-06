@@ -70,9 +70,15 @@
     grid-column: 1;
     display: grid;
     gap: var(--step-0);
+    width: 100%;
     max-width: var(--measure);
     padding-top: var(--text-sm);
     border-top: 0.06rem solid var(--line);
+  }
+
+  .mobile-work-actions {
+    width: 100%;
+    max-width: 100%;
   }
 
   .works-body {
@@ -141,7 +147,7 @@
   .reading-prose aside.sidenote {
     padding: var(--text-sm) 0 0;
     border-left: 0;
-    border-top: 0.06rem solid color-mix(in srgb, var(--accent) 25%, var(--page));
+    border-top: 0.06rem solid var(--line);
   }
 
   .work-date-note {
