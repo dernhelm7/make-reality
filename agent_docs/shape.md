@@ -28,13 +28,13 @@ Specify relationships and flow of use by author and reader.
 12. Put the home-page global links block beneath the cover header in the main reading column.
 13. Build the home-page contents index and the work-page site contents groups from one section-and-work list.
 14. On wide work pages, put a back link, the current section label, and that section's works in the left rail. Nest the current-work heading index under the current work entry.
-15. On narrow work pages, put the current-work heading index in a collapsed `Contents` block after the title. Put global links, a centered top-of-page link, and the right-aligned publish date directly after the work body and backlinks. Then show the other current-section works as home contents rows and the back link to the home contents index.
+15. On narrow work pages, put the current-work heading index in a collapsed `Contents` block after the title. Put global links, a centered up-arrow link to the work top, and the right-aligned publish date directly after the work body and backlinks. Then show the other current-section works as home contents rows and the back link to the home contents index.
 16. Show only the current section in work-page navigation.
 17. Show every named section on the home page even when no works resolve there. Show `Other works` only when at least one work falls back there.
-18. Use row entries in the home-page contents index. Pair each work title with an open dotted leader. Do not show publish dates there.
+18. Use row entries in the home-page contents index. Pair each work title with a baseline dotted leader and the slashless path reference aligned at the right. Do not show publish dates there.
 19. Keep the work body and backlinks in one page body.
 20. Home-page global links may reveal a preview panel. A Tally link reveals the same form. The feed link reveals an excerpt from `feed.md`. Entering or focusing a preview link changes the shown panel. Entering or focusing a normal global link clears it. Pointer exit does not change the panel.
-21. The home-page contents heading links to the works index, not to itself.
+21. The home-page contents heading links to the top of the contents section.
 
 ## Micro-Features
 - `Heading self-links`: Give each body heading an id from its visible text. Link the heading text to that id.

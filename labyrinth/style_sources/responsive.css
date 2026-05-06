@@ -115,16 +115,8 @@
     --home-contents-label-gap: var(--step-n1);
   }
 
-  .works-entry-link {
-    grid-template-columns: var(--home-contents-label-width) minmax(0, auto) minmax(var(--step-p1), 1fr);
-  }
-
   .works-entry-title {
     white-space: normal;
-  }
-
-  .works-entry-mark {
-    display: none;
   }
 
   .reading-column,

@@ -153,6 +153,9 @@
 .home-contents {
   grid-column: 1;
   max-width: var(--home-contents-measure);
+  min-height: calc(100vh - var(--site-top-space) - var(--site-bottom-space));
+  min-height: calc(100svh - var(--site-top-space) - var(--site-bottom-space));
+  align-content: start;
   scroll-margin-top: var(--site-top-space);
 }
 

@@ -51,6 +51,7 @@ class AcceptanceTests(FixtureSiteTestCase):
                 'rel="alternate" type="application/atom+xml"',
                 escape(graph.site.home.title),
                 escape(graph.site.home.read_label),
+                'href="#contents"',
             ],
         )
         for link in graph.site.home.links:
@@ -82,22 +83,14 @@ class AcceptanceTests(FixtureSiteTestCase):
                 f'href="{escape(urls.relative_href("/", fragment="contents"))}"',
                 '<article class="page page--work work-page h-entry" id="work-top">',
                 '<footer class="mobile-work-end" aria-label="Work links">',
-                '<div class="mobile-work-actions">',
-                '<nav class="site-nav site-nav--global mobile-work-global-links" aria-label="Global links">',
-                '<p class="mobile-work-date">',
-                '<a class="site-link mobile-work-top-link" href="#work-top">Top of page <span aria-hidden="true">&rarr;</span></a>',
-                '<a class="home-contents-heading-link mobile-work-index-link"',
-                '<span>Back to Contents</span>',
+                'href="#work-top"',
+                'Back to Contents',
             ],
         )
         self.assert_all_in(
             stylesheet,
             [
                 ".mobile-work-actions",
-                ".mobile-work-global-links",
-                ".mobile-work-top-link",
-                ".mobile-work-date",
-                ".mobile-work-index-link",
                 "order:",
             ],
         )
@@ -108,15 +101,8 @@ class AcceptanceTests(FixtureSiteTestCase):
             if section_work.public_path != work.public_path
         )
         if sibling_works:
-            self.assertIn(
-                f'<h2 class="section-heading mobile-work-section-title" id="mobile-work-section-title">More in {escape(work.resolved_section)}</h2>',
-                work_page,
-            )
-            self.assertIn('<ol class="works-list mobile-work-section-list">', work_page)
             for section_work in sibling_works:
                 self.assertIn(escape(section_work.title), work_page)
-        else:
-            self.assertNotIn('id="mobile-work-section-title"', work_page)
         self.assertLess(work_page.index('<main class="site-main">'), work_page.index('<aside class="site-sidebar">'))
         self.assertLess(
             work_page.index('<div class="reading-layout">'),

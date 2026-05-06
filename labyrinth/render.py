@@ -17,7 +17,7 @@ from .urls import (
     SITE_STYLESHEET_PUBLIC_PATH,
 )
 
-TOC_LEADER_DOTS = "&middot;&nbsp;" * 48
+TOC_LEADER_DOTS = ".&nbsp;" * 64
 TALLY_EMBED_QUERY = "alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1&formEventsForwarding=1"
 
 
@@ -90,7 +90,7 @@ def render_home_page(graph: SiteGraph) -> str:
         "  </section>",
         '  <section class="page home-contents" id="contents" aria-labelledby="contents-heading">',
         '    <header class="page-head">',
-        f'      <h2 class="page-title page-title--section" id="contents-heading"><a class="home-contents-heading-link" href="#read-index"><span>{escape(graph.site.home.read_label)}</span><span class="home-contents-heading-arrow" aria-hidden="true">&rarr;</span></a></h2>',
+        f'      <h2 class="page-title page-title--section" id="contents-heading"><a class="home-contents-heading-link" href="#contents"><span>{escape(graph.site.home.read_label)}</span><span class="home-contents-heading-arrow" aria-hidden="true">&rarr;</span></a></h2>',
         "    </header>",
         '    <div class="page-body works-body" id="read-index">',
         indent_html(render_contents_sections(graph, urls=urls), 6),
@@ -233,10 +233,9 @@ def render_works_entry(work: WorkDocument, *, urls: PageUrls) -> str:
     return join_html_lines(
         '<li class="works-entry">',
         f'  <a class="works-entry-link" href="{work_href}" aria-label="{title}">',
-        f'    <span class="works-entry-reference">{reference}</span>',
         f'    <span class="works-entry-title">{title}</span>',
         f'    <span class="works-entry-leader toc-leader" aria-hidden="true">{TOC_LEADER_DOTS}</span>',
-        '    <span class="works-entry-mark" aria-hidden="true">&gt;</span>',
+        f'    <span class="works-entry-reference">{reference}</span>',
         "  </a>",
         "</li>",
     )
@@ -530,13 +529,14 @@ def render_mobile_work_end_matter(graph: SiteGraph, work: WorkDocument, *, urls:
         '    <nav class="site-nav site-nav--global mobile-work-global-links" aria-label="Global links">',
         indent_html(render_mobile_global_links(graph, urls=urls), 6),
         "    </nav>",
-        '    <a class="site-link mobile-work-top-link" href="#work-top">Top of page <span aria-hidden="true">&rarr;</span></a>',
+        '    <a class="site-link mobile-work-top-link" href="#work-top" aria-label="Top of page">'
+        '<span class="mobile-work-top-icon" aria-hidden="true">&uarr;</span></a>',
         f"    {date_html}",
         "  </div>",
         indent_html(render_mobile_work_section_links(graph, work, urls=urls), 2),
         f'  <a class="home-contents-heading-link mobile-work-index-link" href="{escape(urls.relative_href(HOME_PUBLIC_PATH, fragment="contents"))}">',
+        '    <span class="home-contents-heading-arrow" aria-hidden="true">&larr;</span>',
         "    <span>Back to Contents</span>",
-        '    <span class="home-contents-heading-arrow" aria-hidden="true">&rarr;</span>',
         "  </a>",
         "</footer>",
     )
