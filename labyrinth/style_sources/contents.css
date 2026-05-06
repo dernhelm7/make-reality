@@ -21,10 +21,6 @@
   color: var(--accent);
 }
 
-.site-contents-summary-mobile {
-  display: none;
-}
-
 .site-contents-list,
 .works-list {
   list-style: none;
@@ -177,6 +173,37 @@
 
 .mobile-work-headings-list {
   margin-top: var(--step-n2);
+}
+
+.mobile-work-end {
+  display: none;
+}
+
+.mobile-work-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--mobile-nav-gap) var(--mobile-nav-column-gap);
+}
+
+.mobile-work-date {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: var(--rail-link-size);
+  line-height: var(--leading-running);
+  color: var(--meta-muted);
+}
+
+.mobile-work-date time {
+  font: inherit;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+
+.mobile-work-section {
+  display: grid;
+  gap: var(--mobile-contents-gap);
 }
 
 .works-column {

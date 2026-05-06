@@ -30,6 +30,11 @@
     position: static;
   }
 
+  .site-page--work .site-sidebar,
+  .site-page--work .work-date-note {
+    display: none;
+  }
+
   .site-bar {
     position: static;
     gap: var(--step-0);
@@ -56,17 +61,18 @@
     gap: var(--mobile-contents-gap);
   }
 
-  .site-contents-summary-mobile {
-    display: inline;
-  }
-
-  .site-contents-summary-name {
-    display: none;
-  }
-
   .mobile-work-contents {
     display: grid;
     max-width: var(--measure);
+  }
+
+  .mobile-work-end {
+    grid-column: 1;
+    display: grid;
+    gap: var(--step-0);
+    max-width: var(--measure);
+    padding-top: var(--text-sm);
+    border-top: 0.06rem solid var(--line);
   }
 
   .works-body {

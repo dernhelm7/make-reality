@@ -118,7 +118,7 @@ def render_work_page(graph: SiteGraph, work: WorkDocument) -> str:
         "</aside>"
     )
     content = join_html_lines(
-        '<article class="page page--work work-page h-entry">',
+        '<article class="page page--work work-page h-entry" id="work-top">',
         '  <header class="page-head work-header">',
         f'    <h1 class="page-title work-title p-name">{escape(work.title)}</h1>',
         f'    <a class="visually-hidden u-url" href="{escape(urls.canonical_url)}">Permalink</a>',
@@ -137,6 +137,7 @@ def render_work_page(graph: SiteGraph, work: WorkDocument) -> str:
         "      </div>",
         "    </div>",
         "  </div>",
+        indent_html(render_mobile_work_end_matter(graph, work, urls=urls), 2),
         "</article>",
     )
     return render_page(
@@ -487,7 +488,7 @@ def render_sidebar_contents_groups(graph: SiteGraph, current_work: WorkDocument,
     )
     return join_html_lines(
         '<section class="site-contents-group site-contents-group--current">',
-        f'  <p class="site-contents-summary"><span class="site-contents-summary-mobile">More in {escape(current_section.name)}</span><span class="site-contents-summary-name">{escape(current_section.name)}</span></p>',
+        f'  <p class="site-contents-summary">{escape(current_section.name)}</p>',
         '  <ol class="site-contents-list">',
         indent_html(items, 4),
         "  </ol>",
@@ -508,6 +509,67 @@ def render_sidebar_contents_item(work: WorkDocument, current_work: WorkDocument,
             '<li class="site-contents-item is-current">',
             f'  <span class="site-contents-current" aria-current="page">{escape(work.title)}</span>',
             indent_html(inline_headings_html, 2),
+            "</li>",
+        )
+
+    return join_html_lines(
+        '<li class="site-contents-item">',
+        f'  <a class="site-link site-contents-link" href="{escape(urls.relative_href(work.public_path))}">{escape(work.title)}</a>',
+        "</li>",
+    )
+
+
+def render_mobile_work_end_matter(graph: SiteGraph, work: WorkDocument, *, urls: PageUrls) -> str:
+    date_html = (
+        '<p class="mobile-work-date"><span class="visually-hidden">Published </span>'
+        f'<time datetime="{escape(work.created.isoformat())}">{escape(format_long_date(work.created))}</time></p>'
+    )
+    return join_html_lines(
+        '<footer class="mobile-work-end" aria-label="Work links">',
+        '  <div class="mobile-work-actions">',
+        f"    {date_html}",
+        '    <nav class="site-nav site-nav--global mobile-work-global-links" aria-label="Global links">',
+        indent_html(render_mobile_global_links(graph, urls=urls), 6),
+        "    </nav>",
+        "  </div>",
+        indent_html(render_mobile_work_section_links(graph, work, urls=urls), 2),
+        f'  <a class="site-back-link mobile-work-index-link" href="{escape(urls.relative_href(HOME_PUBLIC_PATH, fragment="contents"))}">'
+        "Back to contents</a>",
+        "</footer>",
+    )
+
+
+def render_mobile_global_links(graph: SiteGraph, *, urls: PageUrls) -> str:
+    return join_html_lines(
+        *(render_global_link(item, preview=None, urls=urls) for item in graph.site.home.links)
+    )
+
+
+def render_mobile_work_section_links(graph: SiteGraph, work: WorkDocument, *, urls: PageUrls) -> str:
+    current_section = graph.contents_section_by_name.get(work.resolved_section)
+    if current_section is None:
+        return ""
+
+    items = join_html_lines(
+        *(render_mobile_work_section_item(section_work, work, urls=urls) for section_work in current_section.works)
+    )
+    title_id = "mobile-work-section-title"
+    return join_html_lines(
+        f'<section class="mobile-work-section" aria-labelledby="{title_id}">',
+        f'  <h2 class="site-contents-summary mobile-work-section-title" id="{title_id}">'
+        f"More in {escape(current_section.name)}</h2>",
+        '  <ol class="site-contents-list mobile-work-section-list">',
+        indent_html(items, 4),
+        "  </ol>",
+        "</section>",
+    )
+
+
+def render_mobile_work_section_item(work: WorkDocument, current_work: WorkDocument, *, urls: PageUrls) -> str:
+    if work.public_path == current_work.public_path:
+        return join_html_lines(
+            '<li class="site-contents-item">',
+            '  <a class="site-link site-contents-link" href="#work-top">Top of page</a>',
             "</li>",
         )
 

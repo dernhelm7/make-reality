@@ -79,10 +79,26 @@ class AcceptanceTests(FixtureSiteTestCase):
                 escape(work.title),
                 escape(work.created.isoformat()),
                 f'href="{escape(urls.relative_href("/", fragment="contents"))}"',
-                f'<span class="site-contents-summary-mobile">More in {escape(work.resolved_section)}</span>',
+                '<article class="page page--work work-page h-entry" id="work-top">',
+                '<footer class="mobile-work-end" aria-label="Work links">',
+                '<p class="mobile-work-date">',
+                f'<h2 class="site-contents-summary mobile-work-section-title" id="mobile-work-section-title">More in {escape(work.resolved_section)}</h2>',
+                'href="#work-top">Top of page</a>',
             ],
         )
         self.assertLess(work_page.index('<main class="site-main">'), work_page.index('<aside class="site-sidebar">'))
+        self.assertLess(
+            work_page.index('<div class="reading-layout">'),
+            work_page.index('<footer class="mobile-work-end" aria-label="Work links">'),
+        )
+        self.assertLess(
+            work_page.index('<div class="mobile-work-actions">'),
+            work_page.index('<section class="mobile-work-section"'),
+        )
+        self.assertLess(
+            work_page.index('<section class="mobile-work-section"'),
+            work_page.index('<a class="site-back-link mobile-work-index-link"'),
+        )
         if len(work.top_level_headings) >= 2:
             self.assert_all_in(
                 work_page,

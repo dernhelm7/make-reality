@@ -28,7 +28,7 @@ Specify relationships and flow of use by author and reader.
 12. Put the home-page global links block beneath the cover header in the main reading column.
 13. Build the home-page contents index and the work-page site contents groups from one section-and-work list.
 14. On wide work pages, put a back link, the current section label, and that section's works in the left rail. Nest the current-work heading index under the current work entry.
-15. On narrow work pages, put the current-work heading index in a collapsed `Contents` block after the work metadata. Put the back link, current section works, and global links after the work body and backlinks.
+15. On narrow work pages, put the current-work heading index in a collapsed `Contents` block after the title. Put the publish date and global links directly after the work body and backlinks. Then show the current section's work links, a top-of-page link for the current work, and the back link to the home contents index.
 16. Show only the current section in work-page navigation.
 17. Show every named section on the home page even when no works resolve there. Show `Other works` only when at least one work falls back there.
 18. Use row entries in the home-page contents index. Pair each work title with an open dotted leader. Do not show publish dates there.
