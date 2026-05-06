@@ -79,8 +79,25 @@ class AcceptanceTests(FixtureSiteTestCase):
                 escape(work.title),
                 escape(work.created.isoformat()),
                 f'href="{escape(urls.relative_href("/", fragment="contents"))}"',
+                f'<span class="site-contents-summary-mobile">More in {escape(work.resolved_section)}</span>',
             ],
         )
+        self.assertLess(work_page.index('<main class="site-main">'), work_page.index('<aside class="site-sidebar">'))
+        if len(work.top_level_headings) >= 2:
+            self.assert_all_in(
+                work_page,
+                [
+                    '<details class="mobile-work-contents">',
+                    '<summary class="mobile-work-contents-summary">',
+                    '<span>Contents</span>',
+                ],
+            )
+            self.assertLess(
+                work_page.index('<details class="mobile-work-contents">'),
+                work_page.index('<div class="reading-layout">'),
+            )
+        else:
+            self.assertNotIn('<details class="mobile-work-contents">', work_page)
         if work.body.html:
             self.assertIn(work.body.html.splitlines()[0], work_page)
         for heading in work.top_level_headings:

@@ -24,20 +24,21 @@ Specify relationships and flow of use by author and reader.
 8. People using the site get a cover page at `/`, one work page for each work, and `/feed.xml`.
 9. The home page places the site contents index beneath the cover.
 10. Every page except the Atom feed uses the shared site frame.
-11. Put work-page navigation in a left-side rail.
+11. Put work-page navigation in a left-side rail on wide screens and after the work on narrow screens.
 12. Put the home-page global links block beneath the cover header in the main reading column.
 13. Build the home-page contents index and the work-page site contents groups from one section-and-work list.
-14. On work pages, put a back link, the current section label, and that section's works in the left rail. Nest the current-work heading index under the current work entry.
-15. Show only the current section in that rail.
-16. Show every named section on the home page even when no works resolve there. Show `Other works` only when at least one work falls back there.
-17. Use row entries in the home-page contents index. Pair each work title with an open dotted leader. Do not show publish dates there.
-18. Keep the work body and backlinks in one page body.
-19. Home-page global links may reveal a preview panel. A Tally link reveals the same form. The feed link reveals an excerpt from `feed.md`. Entering or focusing a preview link changes the shown panel. Entering or focusing a normal global link clears it. Pointer exit does not change the panel.
-20. The home-page contents heading links to the works index, not to itself.
+14. On wide work pages, put a back link, the current section label, and that section's works in the left rail. Nest the current-work heading index under the current work entry.
+15. On narrow work pages, put the current-work heading index in a collapsed `Contents` block after the work metadata. Put the back link, current section works, and global links after the work body and backlinks.
+16. Show only the current section in work-page navigation.
+17. Show every named section on the home page even when no works resolve there. Show `Other works` only when at least one work falls back there.
+18. Use row entries in the home-page contents index. Pair each work title with an open dotted leader. Do not show publish dates there.
+19. Keep the work body and backlinks in one page body.
+20. Home-page global links may reveal a preview panel. A Tally link reveals the same form. The feed link reveals an excerpt from `feed.md`. Entering or focusing a preview link changes the shown panel. Entering or focusing a normal global link clears it. Pointer exit does not change the panel.
+21. The home-page contents heading links to the works index, not to itself.
 
 ## Micro-Features
 - `Heading self-links`: Give each body heading an id from its visible text. Link the heading text to that id.
-- `Content nav sidebar`: Two or more top-level body headings add current-work links under the current work entry in the left rail. The current target marks the matching entry there. Without a target, the first entry is current.
+- `Content nav sidebar`: Two or more top-level body headings add current-work links under the current work entry in the wide-screen left rail and in the narrow-screen collapsed `Contents` block. The current target marks the matching entry there. Without a target, the first entry is current.
 - `wikilinks`: A `[[...]]` link is a soft reference to a work. Match against the work title, folder name, and any aliases in `meta.toml`. Ignore case and treat spaces, underscores, and hyphens as the same. Link matches to the work's published path. Use the label as the visible text when present. Render plain text for misses.
 - `Backlinks`: A work-to-work link adds the source work title to a backlinks section on the destination work page. The backlinks section appears after the body content.
 

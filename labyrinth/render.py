@@ -125,6 +125,7 @@ def render_work_page(graph: SiteGraph, work: WorkDocument) -> str:
         "  </header>",
         f"  {date_note_html}",
         '  <div class="page-body">',
+        indent_html(render_mobile_work_contents(work), 4),
         '    <div class="reading-layout">',
         '      <div class="reading-column">',
         '        <div class="work-body e-content">',
@@ -274,10 +275,10 @@ def render_page(
         '    <div class="page-surface">',
         '      <div class="site-frame">',
         '        <div class="site-layout">',
-        indent_html(sidebar_html, 10),
         '          <main class="site-main">',
         indent_html(main_content, 12),
         "          </main>",
+        indent_html(sidebar_html, 10),
         "        </div>",
         "      </div>",
         "    </div>",
@@ -486,7 +487,7 @@ def render_sidebar_contents_groups(graph: SiteGraph, current_work: WorkDocument,
     )
     return join_html_lines(
         '<section class="site-contents-group site-contents-group--current">',
-        f'  <p class="site-contents-summary">{escape(current_section.name)}</p>',
+        f'  <p class="site-contents-summary"><span class="site-contents-summary-mobile">More in {escape(current_section.name)}</span><span class="site-contents-summary-name">{escape(current_section.name)}</span></p>',
         '  <ol class="site-contents-list">',
         indent_html(items, 4),
         "  </ol>",
@@ -498,19 +499,9 @@ def render_sidebar_contents_item(work: WorkDocument, current_work: WorkDocument,
     if work.public_path == current_work.public_path:
         inline_headings_html = ""
         if len(current_work.top_level_headings) >= 2:
-            heading_links = join_html_lines(
-                *(
-                    join_html_lines(
-                        f'<li class="site-work-headings-item" data-anchor-id="{escape(heading.anchor_id)}">',
-                        f'  <a class="site-link site-link--work-index" href="#{escape(heading.anchor_id)}">{escape(heading.text)}</a>',
-                        "</li>",
-                    )
-                    for heading in current_work.top_level_headings
-                )
-            )
             inline_headings_html = join_html_lines(
                 '<ol class="site-work-headings-list">',
-                indent_html(heading_links, 2),
+                indent_html(render_work_heading_links(current_work.top_level_headings), 2),
                 "</ol>",
             )
         return join_html_lines(
@@ -524,6 +515,36 @@ def render_sidebar_contents_item(work: WorkDocument, current_work: WorkDocument,
         '<li class="site-contents-item">',
         f'  <a class="site-link site-contents-link" href="{escape(urls.relative_href(work.public_path))}">{escape(work.title)}</a>',
         "</li>",
+    )
+
+
+def render_mobile_work_contents(work: WorkDocument) -> str:
+    if len(work.top_level_headings) < 2:
+        return ""
+
+    return join_html_lines(
+        '<details class="mobile-work-contents">',
+        '  <summary class="mobile-work-contents-summary">',
+        '    <span>Contents</span>',
+        '    <span class="mobile-work-contents-arrow" aria-hidden="true">&rarr;</span>',
+        "  </summary>",
+        '  <ol class="site-work-headings-list mobile-work-headings-list">',
+        indent_html(render_work_heading_links(work.top_level_headings), 4),
+        "  </ol>",
+        "</details>",
+    )
+
+
+def render_work_heading_links(headings: tuple[Heading, ...]) -> str:
+    return join_html_lines(
+        *(
+            join_html_lines(
+                f'<li class="site-work-headings-item" data-anchor-id="{escape(heading.anchor_id)}">',
+                f'  <a class="site-link site-link--work-index" href="#{escape(heading.anchor_id)}">{escape(heading.text)}</a>',
+                "</li>",
+            )
+            for heading in headings
+        )
     )
 
 

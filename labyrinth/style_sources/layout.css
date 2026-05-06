@@ -18,6 +18,16 @@
   align-items: start;
 }
 
+.site-page--work .site-sidebar {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.site-page--work .site-main {
+  grid-column: 2;
+  grid-row: 1;
+}
+
 .site-page--home .site-layout {
   grid-template-columns: minmax(0, 1fr);
 }
