@@ -270,6 +270,15 @@
   line-height: var(--leading-tight);
 }
 
+.home-contents .section-heading {
+  font-family: var(--serif);
+  font-size: var(--text-base);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+
 .section-description {
   margin: 0;
   max-width: none;
@@ -314,7 +323,7 @@
   font-size: var(--text-2xs);
   line-height: var(--leading-tight);
   font-variant-numeric: tabular-nums;
-  color: var(--meta-muted);
+  color: var(--accent);
   overflow-wrap: anywhere;
   text-align: right;
 }

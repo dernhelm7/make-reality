@@ -94,7 +94,7 @@
   --rail-marker-center: calc(0.5lh + var(--rail-guide-center-adjust));
   --rail-marker-track-inset: calc(var(--rail-marker-center) - (var(--rail-guide-dot-size) / 2));
   --rail-link-size: var(--text-2xs);
-  --works-section-stack-gap: clamp(var(--step-p3), 5vh, var(--step-p6));
+  --works-section-stack-gap: clamp(var(--step-p5), 7vh, var(--step-p8));
   --works-section-gap: calc(var(--step-0) - var(--rail-item-gap));
   --works-list-gap: calc(var(--step-n4) / 2);
   --works-entry-min-height: var(--step-p2);

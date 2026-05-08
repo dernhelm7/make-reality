@@ -14,6 +14,7 @@ Specify how to generate the static site from source files.
 ## Source Model
 - The local build command is `./build-site [--build-url <url>] <site-root> <publish-root>`.
 - That command resolves the local `labyrinth` package from the repo itself. Calling it by path does not require the current shell directory to be the repo root.
+- The local shell launchers select Python 3.11 or newer before importing the `labyrinth` package.
 - The repo may define a GitHub Pages workflow. That workflow builds `site/` to `public/` with `./build-site`.
 - The site root contains `site.toml`, `home.md`, `feed.md`, and may contain `works/`.
 - `site.toml` defines `url`, `lang`, `title`, `statement`, `author_name`, and `updated`.
@@ -21,7 +22,7 @@ Specify how to generate the static site from source files.
 - `feed.md` defines the browser-facing feed guide. The build replaces `{feed_url}` with the current feed URL.
 - `site.toml` `url` is the canonical site URL.
 - `home.md` section headings define the section names that work `section` values may target.
-- A `home.md` link to `https://tally.so/r/<id>` is the source for the matching Tally form panel.
+- A `home.md` link to `https://tally.so/r/<id>` is the source for the matching Tally form panel. The iframe is present in the home page output before the link preview is shown.
 - A `home.md` link to `/feed.xml` is the source for a feed preview panel built from the body paragraphs in `feed.md`, clipped inside the fixed panel and followed by a visible `Follow` link to `/feed.xml`.
 - The home page may include the inline event handler that switches those preview panels. It attaches only to the home-page global links.
 - `--build-url` sets the output base URL for one build.

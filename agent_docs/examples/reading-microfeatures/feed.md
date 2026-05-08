@@ -1,5 +1,3 @@
-Web feed
-
 This is my feed; you can use it to follow my site. Feeds work in any reader; you don't need a Facebook™ or Twitter (𝕏) to access them. Copy [the feed URL]({feed_url}) into a feed reader to follow new work.
 
 Better readers could make this as good as any social network, and it would survive any specific platform death -- as easily as you copy your contacts to a new phone.

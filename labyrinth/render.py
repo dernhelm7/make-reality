@@ -369,7 +369,7 @@ def link_preview_for_item(item: LinkItem, *, graph: SiteGraph, urls: PageUrls) -
             label=f"{item.label} form",
             html=(
                 f'<iframe class="site-link-preview-frame" src="{escape(form_src)}" '
-                'loading="lazy" title="Send me a message"></iframe>'
+                'title="Send me a message"></iframe>'
             ),
         )
 
@@ -390,7 +390,7 @@ def render_global_link_previews(previews: tuple[LinkPreview, ...], *, urls: Page
     panels = join_html_lines(
         *(
             join_html_lines(
-                f'<div class="site-link-preview-panel {preview.panel_class}" id="site-link-preview-{escape(preview.key)}" aria-label="{escape(preview.label)}" hidden>',
+                f'<div class="site-link-preview-panel {preview.panel_class}" id="site-link-preview-{escape(preview.key)}" aria-label="{escape(preview.label)}" aria-hidden="true">',
                 indent_html(preview.html, 2),
                 "</div>",
             )
@@ -411,8 +411,8 @@ def render_global_link_preview_script() -> str:
         "(() => {",
         "  const root = document.currentScript.closest('.site-bar-section--global');",
         "  const panels = new Map([...root.querySelectorAll('.site-link-preview-panel')].map((panel) => [panel.id.replace('site-link-preview-', ''), panel]));",
-        "  const show = (key) => panels.forEach((panel, panelKey) => { panel.hidden = panelKey !== key; });",
-        "  const clear = () => panels.forEach((panel) => { panel.hidden = true; });",
+        "  const show = (key) => panels.forEach((panel, panelKey) => { panel.setAttribute('aria-hidden', panelKey !== key ? 'true' : 'false'); });",
+        "  const clear = () => panels.forEach((panel) => { panel.setAttribute('aria-hidden', 'true'); });",
         "  root.querySelectorAll('[data-site-preview-trigger]').forEach((link) => {",
         "    const key = link.dataset.sitePreviewTrigger;",
         "    link.addEventListener('pointerenter', () => show(key));",
@@ -429,7 +429,7 @@ def render_global_link_preview_script() -> str:
 
 def render_feed_link_preview(graph: SiteGraph, *, urls: PageUrls) -> str:
     feed_href = urls.relative_href(FEED_PUBLIC_PATH)
-    preview_text = feed_link_preview_text(graph.site.feed_guide_text).replace(
+    preview_text = graph.site.feed_guide_text.replace(
         "{feed_url}",
         feed_href,
     )
@@ -453,14 +453,6 @@ def render_feed_link_preview(graph: SiteGraph, *, urls: PageUrls) -> str:
         copy_html,
         action,
     )
-
-
-def feed_link_preview_text(feed_guide_text: str) -> str:
-    paragraphs = tuple(part.strip() for part in feed_guide_text.split("\n\n") if part.strip())
-    if not paragraphs:
-        return ""
-    body_paragraphs = paragraphs[1:] if len(paragraphs) > 1 else paragraphs
-    return "\n\n".join(body_paragraphs)
 
 
 def tally_embed_src(href: str) -> str | None:
@@ -751,9 +743,7 @@ def render_feed_guide(graph: SiteGraph, *, feed_url: str) -> str:
     paragraph_html = []
     for index, paragraph in enumerate(paragraphs):
         class_name = ""
-        if index == 0:
-            class_name = ' class="feed-guide-label"'
-        elif index == len(paragraphs) - 1:
+        if index == len(paragraphs) - 1:
             class_name = ' class="feed-guide-inspiration"'
         paragraph_html.append(f"  <xhtml:p{class_name}>{paragraph.html}</xhtml:p>")
     return join_html_lines(

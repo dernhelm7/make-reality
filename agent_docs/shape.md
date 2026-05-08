@@ -33,7 +33,7 @@ Specify relationships and flow of use by author and reader.
 17. Show every named section on the home page even when no works resolve there. Show `Other works` only when at least one work falls back there.
 18. Use row entries in the home-page contents index. Pair each work title with a baseline dotted leader and the slashless path reference aligned at the right. Do not show publish dates there.
 19. Keep the work body and backlinks in one page body.
-20. Home-page global links may reveal a preview panel. A Tally link reveals the same form. The feed link reveals an excerpt from `feed.md`. Entering or focusing a preview link changes the shown panel. Entering or focusing a normal global link clears it. Pointer exit does not change the panel.
+20. Home-page global links may reveal a preview panel. A Tally link reveals the same form from an already-mounted iframe so the reveal does not wait for hover-time loading. The feed link reveals an excerpt from `feed.md`. Entering or focusing a preview link changes the shown panel. Entering or focusing a normal global link clears it. Pointer exit does not change the panel.
 21. The home-page contents heading links to the top of the contents section.
 
 ## Micro-Features
