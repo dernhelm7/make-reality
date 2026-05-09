@@ -27,6 +27,7 @@ class RenderedPage:
     output_path: Path
     html: str
     source_path: Path
+    assets: tuple[tuple[Path, Path], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -70,6 +71,10 @@ def render_pages(graph: SiteGraph) -> list[RenderedPage]:
                 output_path=Path(work.public_path.lstrip("/")) / "index.html",
                 html=render_work_page(graph, work),
                 source_path=work.body_path,
+                assets=tuple(
+                    (asset.source_path, Path(work.public_path.lstrip("/")) / asset.relative_path)
+                    for asset in work.assets
+                ),
             )
         )
     return rendered
@@ -177,25 +182,8 @@ def render_backlinks(graph: SiteGraph, work: WorkDocument, *, urls: PageUrls) ->
 
 
 def render_contents_sections(graph: SiteGraph, *, urls: PageUrls) -> str:
-    section_columns = split_contents_sections(graph.contents_sections)
     return join_html_lines(
-        *(render_contents_column(column, urls=urls) for column in section_columns if column)
-    )
-
-
-def split_contents_sections(sections: tuple[ContentsSection, ...]) -> tuple[tuple[ContentsSection, ...], ...]:
-    midpoint = (len(sections) + 1) // 2
-    return (sections[:midpoint], sections[midpoint:])
-
-
-def render_contents_column(sections: tuple[ContentsSection, ...], *, urls: PageUrls) -> str:
-    return join_html_lines(
-        '<div class="works-column">',
-        indent_html(
-            join_html_lines(*(render_contents_section(section, urls=urls) for section in sections)),
-            2,
-        ),
-        "</div>",
+        *(render_contents_section(section, urls=urls) for section in graph.contents_sections)
     )
 
 

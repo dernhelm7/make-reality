@@ -21,7 +21,7 @@ Specify how to generate the static site from source files.
 - `home.md` defines the homepage title, cover text, homepage links, contents heading, and contents section labels and descriptions.
 - `feed.md` defines the browser-facing feed guide. The build replaces `{feed_url}` with the current feed URL.
 - `site.toml` `url` is the canonical site URL.
-- `home.md` section headings define the section names that work `section` values may target.
+- `home.md` section headings define the section names that section folders under `works/` may match.
 - A `home.md` link to `https://tally.so/r/<id>` is the source for the matching Tally form panel. The iframe is present in the home page output before the link preview is shown.
 - A `home.md` link to `/feed.xml` is the source for a feed preview panel built from the body paragraphs in `feed.md`, clipped inside the fixed panel and followed by a visible `Follow` link to `/feed.xml`.
 - The home page may include the inline event handler that switches those preview panels. It attaches only to the home-page global links.
@@ -33,16 +33,21 @@ Specify how to generate the static site from source files.
 - The build uses the current build URL for feed self links, feed alternate links, and absolute URLs inside feed entry content.
 - The Atom feed includes XHTML extension markup for a browser-facing subscription guide, a home link, and visible linked entry URLs.
 - The browser-facing feed view is produced by an XSL stylesheet so mobile browsers receive an HTML viewport.
-- Each work folder contains `meta.toml` and exactly one body file: `index.md` or `body.html`.
-- `meta.toml` requires `created`, `updated`, and `atom_id`. It may also define `section` and `aliases`.
+- A work may be a single file under `works/` or under one section folder: `<slug>.md` or `<slug>.html`.
+- A folder work may live directly under `works/` or under one section folder. It contains exactly one body file: `index.md`, `body.html`, or one other `*.md` file.
+- A folder work publishes non-hidden files beside its work page. Markdown image references such as `![](./image.png)` resolve to those local assets.
+- Markdown and HTML work files may start with TOML front matter between `+++` lines. Work metadata may define `created`, `updated`, `atom_id`, and `aliases`.
+- Folder works may keep legacy `meta.toml` with the same metadata fields. A folder work uses either front matter or `meta.toml`, not both.
+- Missing work `created` and `updated` values derive from Git history for the body file, with filesystem modified time as the local fallback. Missing `atom_id` derives from `site.toml` `url` and the work slug.
+- Section folders match `home.md` section names by normalized folder name.
 
 ## Requirements
 1. The project defines one local build command at `./build-site`.
 2. That command reads one site root from `site.toml`, `home.md`, `feed.md`, and `works/`.
 3. That command writes one publish root and removes stale published files from it.
-4. The publish root contains public pages, `/feed.xml`, `/feed.xsl`, `/feed.css`, `/site.css`, shared public assets such as self-hosted fonts, and no generated JavaScript assets or dependencies.
+4. The publish root contains public pages, work assets, `/feed.xml`, `/feed.xsl`, `/feed.css`, `/site.css`, shared public assets such as self-hosted fonts, and no generated JavaScript assets or dependencies.
 5. The publish root leaves out source-only files and build-only files.
-6. The build validates the required source fields, duplicate published paths, and broken explicit internal links written by the author. Unmatched wikilinks do not fail the build.
+6. The build validates the required source fields, unsupported source fields, duplicate published paths, and broken explicit internal links written by the author. Unmatched wikilinks do not fail the build.
 7. The same site root and build URL produce the same publish root and public paths.
 8. On failure, the build stops and reports the file and rule that caused the failure.
 9. If the repo defines a GitHub Pages workflow, that workflow publishes the built `public/` root from the same build logic as the local command.

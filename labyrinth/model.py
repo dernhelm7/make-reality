@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 import re
+import subprocess
 import tomllib
 from urllib.parse import urlsplit
 
@@ -19,6 +20,11 @@ from .markup import (
 from .urls import FIXED_PUBLIC_PATHS
 
 HOME_LINK_RE = re.compile(r"^\[(?P<label>[^\]]+)\]\((?P<href>[^)]+)\)$")
+WORK_METADATA_KEYS = frozenset({"aliases", "atom_id", "created", "updated"})
+WORK_FILE_FORMATS = {
+    ".html": "html",
+    ".md": "markdown",
+}
 
 
 @dataclass(frozen=True)
@@ -71,19 +77,20 @@ class SiteConfig:
 
 @dataclass(frozen=True)
 class WorkInput:
+    section_folder: str | None
     folder_name: str
     title: str
     source_dir: Path
-    meta_path: Path
+    metadata_path: Path
     body_path: Path
     body_format: str
     body_text: str
-    created: datetime
-    updated: datetime
-    atom_id: str
-    requested_section: str | None
+    created: datetime | None
+    updated: datetime | None
+    atom_id: str | None
     aliases: tuple[str, ...]
     public_path: str
+    assets: tuple[WorkAsset, ...]
 
 
 @dataclass(frozen=True)
@@ -91,7 +98,7 @@ class WorkDocument:
     folder_name: str
     title: str
     source_dir: Path
-    meta_path: Path
+    metadata_path: Path
     body_path: Path
     body_format: str
     created: datetime
@@ -102,6 +109,14 @@ class WorkDocument:
     body: BodyRender
     top_level_headings: tuple[Heading, ...]
     outbound_work_paths: frozenset[str]
+    assets: tuple[WorkAsset, ...]
+
+
+@dataclass(frozen=True)
+class WorkAsset:
+    source_path: Path
+    relative_path: Path
+    public_path: str
 
 
 @dataclass(frozen=True)
@@ -162,40 +177,92 @@ def load_work_inputs(site_root: Path) -> list[WorkInput]:
         raise BuildError(works_root, "missing-required-field", "works must be a directory")
 
     work_inputs: list[WorkInput] = []
-    for work_dir in sorted(path for path in works_root.iterdir() if path.is_dir()):
-        meta_path = work_dir / "meta.toml"
-        meta = read_toml(meta_path)
-        created_value = require_string(meta, "created", meta_path)
-        updated_value = require_string(meta, "updated", meta_path)
-        atom_id = require_absolute_url(meta, "atom_id", meta_path)
-        requested_section = meta.get("section")
-        if requested_section is not None and not isinstance(requested_section, str):
-            raise BuildError(meta_path, "missing-required-field", "section must be a string when present")
-        aliases_value = meta.get("aliases", [])
-        if not isinstance(aliases_value, list) or not all(
-            isinstance(item, str) and item.strip() for item in aliases_value
-        ):
-            raise BuildError(meta_path, "missing-required-field", "aliases must be a list of strings when present")
 
-        body_path, body_format = find_body_path(work_dir)
-        folder_name = work_dir.name
+    def append_work(
+        *,
+        source_dir: Path,
+        folder_name: str,
+        body_path: Path,
+        body_format: str,
+        section_folder: str | None,
+        meta_path: Path | None = None,
+        assets: tuple[WorkAsset, ...] = (),
+    ) -> None:
+        body_text = body_path.read_text(encoding="utf-8")
+        front_matter, body_text, has_front_matter = split_toml_front_matter(body_text, body_path)
+        metadata = front_matter
+        metadata_path = body_path
+        if meta_path is not None:
+            if has_front_matter:
+                raise BuildError(
+                    body_path,
+                    "duplicate-metadata",
+                    "work metadata must live in either TOML front matter or meta.toml, not both",
+                )
+            metadata = read_toml(meta_path)
+            metadata_path = meta_path
+        created, updated, atom_id, aliases = parse_work_metadata(metadata, metadata_path)
         work_inputs.append(
             WorkInput(
+                section_folder=section_folder,
                 folder_name=folder_name,
                 title=humanize_folder_name(folder_name),
-                source_dir=work_dir,
-                meta_path=meta_path,
+                source_dir=source_dir,
+                metadata_path=metadata_path,
                 body_path=body_path,
                 body_format=body_format,
-                body_text=body_path.read_text(encoding="utf-8"),
-                created=parse_timestamp(created_value, meta_path, "created"),
-                updated=parse_timestamp(updated_value, meta_path, "updated"),
+                body_text=body_text,
+                created=created,
+                updated=updated,
                 atom_id=atom_id,
-                requested_section=requested_section,
-                aliases=tuple(item.strip() for item in aliases_value),
+                aliases=aliases,
                 public_path=work_public_path(folder_name),
+                assets=assets,
             )
         )
+
+    def append_file_work(body_path: Path, *, section_folder: str | None) -> None:
+        body_format = body_format_for_file(body_path)
+        if body_format is None:
+            return
+        append_work(
+            source_dir=body_path.parent,
+            folder_name=body_path.stem,
+            body_path=body_path,
+            body_format=body_format,
+            section_folder=section_folder,
+        )
+
+    def append_folder_work(work_dir: Path, *, section_folder: str | None) -> None:
+        meta_path = work_dir / "meta.toml"
+        body_path, body_format = find_body_path(work_dir)
+        append_work(
+            source_dir=work_dir,
+            folder_name=work_dir.name,
+            body_path=body_path,
+            body_format=body_format,
+            section_folder=section_folder,
+            meta_path=meta_path if meta_path.is_file() else None,
+            assets=collect_work_assets(work_dir, body_path=body_path, public_path=work_public_path(work_dir.name)),
+        )
+
+    for source_dir in sorted(path for path in works_root.iterdir() if path.is_dir()):
+        if source_dir.name.startswith("."):
+            continue
+        if is_direct_work_folder(source_dir):
+            append_folder_work(source_dir, section_folder=None)
+            continue
+        for source_path in sorted(source_dir.iterdir()):
+            if source_path.name.startswith("."):
+                continue
+            if source_path.is_file():
+                append_file_work(source_path, section_folder=source_dir.name)
+            elif source_path.is_dir():
+                append_folder_work(source_path, section_folder=source_dir.name)
+    for source_path in sorted(path for path in works_root.iterdir() if path.is_file()):
+        if source_path.name.startswith("."):
+            continue
+        append_file_work(source_path, section_folder=None)
     return work_inputs
 
 
@@ -203,7 +270,8 @@ def build_site_graph(site: SiteConfig, work_inputs: list[WorkInput]) -> SiteGrap
     validate_published_paths(site.source_path.parent, work_inputs)
     work_lookup = build_work_lookup(work_inputs)
     work_paths = frozenset(work.public_path for work in work_inputs)
-    known_paths = frozenset({*FIXED_PUBLIC_PATHS, *work_paths})
+    asset_paths = frozenset(asset.public_path for work in work_inputs for asset in work.assets)
+    known_paths = frozenset({*FIXED_PUBLIC_PATHS, *work_paths, *asset_paths})
     works = tuple(sorted(render_work_documents(site, work_inputs, work_lookup, work_paths), key=sort_key))
     work_by_path = {work.public_path: work for work in works}
     validate_link_items(site.home.links, site.home_path, known_paths)
@@ -347,19 +415,123 @@ def parse_timestamp(value: str, source_path: Path, field: str) -> datetime:
     return parsed.astimezone(UTC)
 
 
+def split_toml_front_matter(text: str, source_path: Path) -> tuple[dict[str, object], str, bool]:
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "+++":
+        return {}, text, False
+    for index, line in enumerate(lines[1:], start=1):
+        if line.strip() == "+++":
+            front_matter_text = "".join(lines[1:index])
+            body_text = "".join(lines[index + 1 :])
+            return parse_toml_text(front_matter_text, source_path), body_text, True
+    raise BuildError(source_path, "missing-required-field", "TOML front matter must close with +++")
+
+
+def parse_toml_text(text: str, source_path: Path) -> dict[str, object]:
+    try:
+        data = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        raise BuildError(source_path, "missing-required-field", "TOML metadata must be valid") from exc
+    if not isinstance(data, dict):
+        raise BuildError(source_path, "missing-required-field", "TOML metadata must contain a table")
+    return data
+
+
+def parse_work_metadata(
+    data: dict[str, object],
+    source_path: Path,
+) -> tuple[datetime | None, datetime | None, str | None, tuple[str, ...]]:
+    validate_work_metadata_keys(data, source_path)
+    created_value = optional_string(data, "created", source_path)
+    updated_value = optional_string(data, "updated", source_path)
+    atom_id_value = optional_string(data, "atom_id", source_path)
+    aliases_value = data.get("aliases", [])
+    if not isinstance(aliases_value, list) or not all(
+        isinstance(item, str) and item.strip() for item in aliases_value
+    ):
+        raise BuildError(source_path, "missing-required-field", "aliases must be a list of strings when present")
+    return (
+        parse_timestamp(created_value, source_path, "created") if created_value is not None else None,
+        parse_timestamp(updated_value, source_path, "updated") if updated_value is not None else None,
+        normalize_absolute_url(atom_id_value, source_path, "atom_id") if atom_id_value is not None else None,
+        tuple(item.strip() for item in aliases_value),
+    )
+
+
+def validate_work_metadata_keys(data: dict[str, object], source_path: Path) -> None:
+    unknown_fields = sorted(set(data) - WORK_METADATA_KEYS)
+    if not unknown_fields:
+        return
+    field = unknown_fields[0]
+    if field == "section":
+        message = "section is set by the parent folder under works; remove section from work metadata"
+    else:
+        message = f"{field} is not supported in work metadata"
+    raise BuildError(source_path, "unsupported-field", message)
+
+
+def optional_string(data: dict[str, object], field: str, source_path: Path) -> str | None:
+    if field not in data:
+        return None
+    return require_string(data, field, source_path)
+
+
 def find_body_path(work_dir: Path) -> tuple[Path, str]:
     candidates = [
-        (work_dir / "index.md", "markdown"),
-        (work_dir / "body.html", "html"),
+        path
+        for path in sorted(work_dir.iterdir())
+        if path.is_file() and (path.name in {"body.html", "index.md"} or path.suffix.lower() == ".md")
     ]
-    existing = [(path, body_format) for path, body_format in candidates if path.exists()]
+    existing = [(path, body_format_for_file(path)) for path in candidates]
     if len(existing) != 1:
         raise BuildError(
             work_dir,
             "missing-required-field",
-            "each work must contain exactly one body file: index.md or body.html",
+            "each work must contain exactly one body file: index.md, body.html, or one *.md file",
         )
-    return existing[0]
+    body_path, body_format = existing[0]
+    if body_format is None:
+        raise BuildError(
+            work_dir,
+            "missing-required-field",
+            "each work must contain exactly one body file: index.md, body.html, or one *.md file",
+        )
+    return body_path, body_format
+
+
+def body_format_for_file(path: Path) -> str | None:
+    return WORK_FILE_FORMATS.get(path.suffix.lower())
+
+
+def is_direct_work_folder(path: Path) -> bool:
+    return any(
+        candidate.is_file()
+        for candidate in (
+            path / "body.html",
+            path / "index.md",
+            path / "meta.toml",
+            path / f"{path.name}.md",
+        )
+    )
+
+
+def collect_work_assets(work_dir: Path, *, body_path: Path, public_path: str) -> tuple[WorkAsset, ...]:
+    ignored = {body_path.resolve(), (work_dir / "meta.toml").resolve()}
+    assets: list[WorkAsset] = []
+    for source_path in sorted(path for path in work_dir.rglob("*") if path.is_file()):
+        if source_path.resolve() in ignored:
+            continue
+        relative_path = source_path.relative_to(work_dir)
+        if any(part.startswith(".") for part in relative_path.parts):
+            continue
+        assets.append(
+            WorkAsset(
+                source_path=source_path,
+                relative_path=relative_path,
+                public_path=f"{public_path}/{relative_path.as_posix()}",
+            )
+        )
+    return tuple(assets)
 
 
 def validate_published_paths(site_root: Path, work_inputs: list[WorkInput]) -> None:
@@ -368,11 +540,21 @@ def validate_published_paths(site_root: Path, work_inputs: list[WorkInput]) -> N
         prior = used_paths.get(work.public_path)
         if prior is not None:
             raise BuildError(
-                work.meta_path,
+                work.metadata_path,
                 "duplicate-published-path",
                 f"{work.public_path} conflicts with {prior}",
             )
-        used_paths[work.public_path] = work.meta_path
+        used_paths[work.public_path] = work.metadata_path
+        work_index_path = f"{work.public_path}/index.html"
+        for asset in work.assets:
+            prior = used_paths.get(asset.public_path)
+            if prior is not None or asset.public_path == work_index_path:
+                raise BuildError(
+                    asset.source_path,
+                    "duplicate-published-path",
+                    f"{asset.public_path} conflicts with {prior or work.body_path}",
+                )
+            used_paths[asset.public_path] = asset.source_path
 
 
 def build_work_lookup(work_inputs: list[WorkInput]) -> dict[str, ResolvedWorkLink]:
@@ -393,28 +575,66 @@ def render_work_documents(
     work_paths: frozenset[str],
 ) -> list[WorkDocument]:
     documents: list[WorkDocument] = []
-    section_names = frozenset(section.name for section in site.home.sections)
+    section_names = {section_folder_key(section.name): section.name for section in site.home.sections}
     for work in work_inputs:
         body = render_work_body(work, work_lookup, work_paths)
+        created, updated = resolve_work_dates(work)
         documents.append(
             WorkDocument(
                 folder_name=work.folder_name,
                 title=work.title,
                 source_dir=work.source_dir,
-                meta_path=work.meta_path,
+                metadata_path=work.metadata_path,
                 body_path=work.body_path,
                 body_format=work.body_format,
-                created=work.created,
-                updated=work.updated,
-                atom_id=work.atom_id,
+                created=created,
+                updated=updated,
+                atom_id=work.atom_id or f"{site.site_url}/id/{work.folder_name}",
                 public_path=work.public_path,
-                resolved_section=resolve_section(work.requested_section, section_names),
+                resolved_section=resolve_section(work.section_folder, section_names),
                 body=body,
                 top_level_headings=top_level_headings(body),
                 outbound_work_paths=extract_outbound_work_paths(work.public_path, body),
+                assets=work.assets,
             )
         )
     return documents
+
+
+def resolve_work_dates(work: WorkInput) -> tuple[datetime, datetime]:
+    derived_created, derived_updated = derive_work_dates(work.body_path)
+    created = work.created or derived_created
+    updated = work.updated or derived_updated
+    if updated < created:
+        updated = created
+    return created, updated
+
+
+def derive_work_dates(path: Path) -> tuple[datetime, datetime]:
+    commit_times = git_commit_times(path)
+    if commit_times:
+        return commit_times[-1], commit_times[0]
+    fallback = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC).replace(microsecond=0)
+    return fallback, fallback
+
+
+def git_commit_times(path: Path) -> tuple[datetime, ...]:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path.parent), "log", "--follow", "--format=%cI", "--", path.name],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+    except FileNotFoundError:
+        return ()
+    if result.returncode != 0:
+        return ()
+    times: list[datetime] = []
+    for line in result.stdout.splitlines():
+        if line.strip():
+            times.append(parse_timestamp(line.strip(), path, "git history"))
+    return tuple(times)
 
 
 def render_work_body(
@@ -426,6 +646,7 @@ def render_work_body(
         current_public_path=work.public_path,
         work_lookup=work_lookup,
         work_paths=work_paths,
+        asset_paths=frozenset(asset.public_path for asset in work.assets),
     )
     if work.body_format == "markdown":
         return render_markdown_body(
@@ -438,10 +659,16 @@ def render_work_body(
     )
 
 
-def resolve_section(requested_section: str | None, section_names: frozenset[str]) -> str:
-    if requested_section in section_names:
-        return requested_section
+def resolve_section(section_folder: str | None, section_names: dict[str, str]) -> str:
+    if section_folder is not None:
+        section_name = section_names.get(section_folder_key(section_folder))
+        if section_name is not None:
+            return section_name
     return "Other works"
+
+
+def section_folder_key(name: str) -> str:
+    return normalize_wikilink_key(name)
 
 
 def top_level_headings(body: BodyRender) -> tuple[Heading, ...]:
@@ -476,7 +703,11 @@ def validate_work_links(
                     "broken-internal-link",
                     f"{link.href} does not resolve to a published path",
                 )
-            if link.fragment and link.fragment not in anchor_map.get(link.resolved_path, set()):
+            if (
+                link.kind != "asset"
+                and link.fragment
+                and link.fragment not in anchor_map.get(link.resolved_path, set())
+            ):
                 raise BuildError(
                     work.body_path,
                     "broken-internal-link",

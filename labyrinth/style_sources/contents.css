@@ -240,28 +240,32 @@
   line-height: var(--leading-tight);
 }
 
-.works-column {
-  display: grid;
-  gap: var(--works-section-stack-gap);
-  min-width: 0;
-}
-
-.works-column:only-child {
-  grid-column: 1 / -1;
-  max-width: var(--home-column-measure);
-}
-
 .works-section {
   display: grid;
-  gap: var(--works-section-gap);
+  grid-template-columns: var(--home-contents-label-width) minmax(0, 1fr);
+  column-gap: var(--home-contents-shelf-gap);
+  row-gap: var(--works-section-gap);
+  align-items: baseline;
   min-width: 0;
+}
+
+.home-contents .works-section {
+  flex: 1 1 calc((100% - var(--home-contents-column-gap)) / 2);
+  max-width: calc((100% - var(--home-contents-column-gap)) / 2);
+}
+
+.works-section-head {
+  grid-column: 1;
 }
 
 .works-section-line {
   display: grid;
-  grid-template-columns: var(--home-contents-label-width) minmax(0, 1fr);
-  column-gap: var(--home-contents-label-gap);
-  align-items: baseline;
+  gap: var(--rail-item-gap);
+  align-items: start;
+}
+
+.home-contents .works-section-line {
+  gap: 0;
 }
 
 .section-heading {
@@ -272,7 +276,7 @@
 
 .home-contents .section-heading {
   font-family: var(--serif);
-  font-size: var(--text-base);
+  font-size: var(--home-section-heading-size);
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
@@ -287,9 +291,19 @@
   color: var(--ink-soft);
 }
 
+.home-contents .section-description {
+  line-height: var(--leading-tight);
+  color: color-mix(in srgb, var(--ink) 38%, var(--page));
+}
+
 .works-list {
   display: grid;
   gap: var(--works-list-gap);
+  grid-column: 2;
+}
+
+.home-contents .works-list {
+  gap: 0;
 }
 
 .works-list:empty {
@@ -310,6 +324,12 @@
   min-height: var(--works-entry-min-height);
   padding: var(--works-entry-pad-block) 0;
   text-decoration: none;
+}
+
+.home-contents .works-entry-link {
+  column-gap: var(--home-contents-entry-gap);
+  min-height: 0;
+  padding-block: 0;
 }
 
 .works-entry-link:hover,
@@ -335,6 +355,10 @@
   white-space: nowrap;
 }
 
+.home-contents .works-entry-title {
+  font-size: var(--text-xs);
+}
+
 .works-entry-leader,
 .toc-leader {
   display: block;
@@ -346,6 +370,11 @@
   letter-spacing: var(--leader-dot-step);
   color: var(--leader-muted);
   pointer-events: none;
+}
+
+.home-contents .works-entry-leader {
+  font-size: var(--text-xs);
+  letter-spacing: var(--home-leader-dot-step);
 }
 
 .works-entry-link:hover .works-entry-leader,

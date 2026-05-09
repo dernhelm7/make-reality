@@ -16,17 +16,16 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(rule, error.exception.rule)
         self.assertIn(source_name, str(error.exception.source_path))
 
-    def test_missing_required_field_case(self) -> None:
+    def test_missing_work_body_case(self) -> None:
         site_root = self.make_site(
             {
                 "alpha": {
-                    "meta.toml": "",
-                    "index.md": "# Opening\n\nA first note.",
+                    "meta.toml": 'atom_id = "https://labyrinth.example/id/alpha"\n',
                 }
             }
         )
 
-        self.assert_build_error(site_root, rule="missing-required-field", source_name="meta.toml")
+        self.assert_build_error(site_root, rule="missing-required-field", source_name="alpha")
 
     def test_missing_site_feed_fields_fail_build(self) -> None:
         for field in ("author_name", "updated"):
@@ -65,8 +64,11 @@ class ValidationTests(unittest.TestCase):
 
             self.assert_build_error(site_root, rule="missing-required-field", source_name=filename)
 
-    def test_missing_work_feed_fields_fail_build(self) -> None:
-        for field in ("updated", "atom_id"):
+    def test_malformed_work_metadata_fails_build(self) -> None:
+        for field, replacement in (
+            ("created", 'created = ""'),
+            ("atom_id", 'atom_id = "/alpha"'),
+        ):
             site_root = self.make_site(
                 {
                     "alpha": {
@@ -76,17 +78,42 @@ class ValidationTests(unittest.TestCase):
                 }
             )
             meta_toml = site_root / "works" / "alpha" / "meta.toml"
-            meta_toml.write_text(
-                "\n".join(
-                    line
-                    for line in meta_toml.read_text(encoding="utf-8").splitlines()
-                    if not line.startswith(f"{field} = ")
-                )
-                + "\n",
-                encoding="utf-8",
-            )
+            lines = [
+                replacement if line.startswith(f"{field} = ") else line
+                for line in meta_toml.read_text(encoding="utf-8").splitlines()
+            ]
+            meta_toml.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
             self.assert_build_error(site_root, rule="missing-required-field", source_name="meta.toml")
+
+    def test_duplicate_front_matter_and_meta_toml_fails_build(self) -> None:
+        site_root = self.make_site(
+            {
+                "alpha": {
+                    "meta.toml": 'atom_id = "https://labyrinth.example/id/alpha"\n',
+                    "index.md": '+++\ncreated = "2024-02-14T00:00:00Z"\n+++\n# Opening\n\nA first note.',
+                }
+            }
+        )
+
+        self.assert_build_error(site_root, rule="duplicate-metadata", source_name="index.md")
+
+    def test_work_section_field_fails_build(self) -> None:
+        site_root = self.make_site(
+            {
+                "alpha": {
+                    "meta.toml": (
+                        'created = "2024-02-14T00:00:00Z"\n'
+                        'updated = "2024-02-14T00:00:00Z"\n'
+                        'atom_id = "https://labyrinth.example/id/alpha"\n'
+                        'section = "Notes"\n'
+                    ),
+                    "index.md": "# Opening\n\nA first note.",
+                }
+            }
+        )
+
+        self.assert_build_error(site_root, rule="unsupported-field", source_name="meta.toml")
 
     def test_duplicate_published_path_case(self) -> None:
         site_root = self.make_site(
@@ -99,6 +126,30 @@ class ValidationTests(unittest.TestCase):
         )
 
         self.assert_build_error(site_root, rule="duplicate-published-path", source_name="meta.toml")
+
+    def test_file_and_folder_work_with_same_slug_fail_build(self) -> None:
+        site_root = self.make_site(
+            {
+                "notes/alpha": {
+                    "index.md": "# Folder Alpha\n\nA folder work.",
+                }
+            }
+        )
+        (site_root / "works" / "notes" / "alpha.md").write_text("# File Alpha\n\nA file work.", encoding="utf-8")
+
+        self.assert_build_error(site_root, rule="duplicate-published-path", source_name="alpha")
+
+    def test_multiple_body_files_fail_build(self) -> None:
+        site_root = self.make_site(
+            {
+                "alpha": {
+                    "index.md": "# Opening\n\nA first note.",
+                    "other.md": "# Other\n\nA second body.",
+                }
+            }
+        )
+
+        self.assert_build_error(site_root, rule="missing-required-field", source_name="alpha")
 
     def test_broken_internal_link_case(self) -> None:
         site_root = self.make_site(
@@ -181,7 +232,7 @@ class ValidationTests(unittest.TestCase):
 
         for name, files in works.items():
             work_root = works_root / name
-            work_root.mkdir()
+            work_root.mkdir(parents=True)
             for filename, content in files.items():
                 (work_root / filename).write_text(content, encoding="utf-8")
         return site_root

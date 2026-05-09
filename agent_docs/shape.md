@@ -14,13 +14,13 @@ Specify relationships and flow of use by author and reader.
 - How readers reach the author
 
 ## Requirements
-1. The author adds works to a folder.
-2. Adding a work there is enough to make it part of the site.
+1. The author adds each work as one named `.md` or `.html` file under `works/` or under a section folder in `works/`. A work may use its own folder when it needs local assets or legacy metadata.
+2. Adding a work file or work folder there is enough to make it part of the site.
 3. The author lists sections as `###` headings under the single `##` contents heading in `home.md`, in the order they should appear in the home-page contents index. Text beneath a section heading defines the home-page shelf description.
-4. A work may set `section` to one of those section names. Unnamed or unmatched works go to `Other works`.
-5. Each work derives its title and published path from its folder name. The home-page contents index uses the title as the entry label and the slashless path as the reference label.
-6. Publish each work at `/<folder-name>`.
-7. A work can be written in Markdown or HTML body content.
+4. A work belongs to a home-page section when its parent folder under `works/` matches that section name, ignoring case and treating spaces, underscores, and hyphens as the same. Works directly under `works/` or under an unmatched section folder go to `Other works`.
+5. Each work derives its title and published path from its file stem or folder name. The home-page contents index uses the title as the entry label and the slashless path as the reference label.
+6. Publish each work at `/<slug>`.
+7. A Markdown work body is parsed as CommonMark, with wikilinks as a Labyrinth inline feature. A work can also be authored as an HTML body fragment.
 8. People using the site get a cover page at `/`, one work page for each work, and `/feed.xml`.
 9. The home page places the site contents index beneath the cover.
 10. Every page except the Atom feed uses the shared site frame.
@@ -39,7 +39,7 @@ Specify relationships and flow of use by author and reader.
 ## Micro-Features
 - `Heading self-links`: Give each body heading an id from its visible text. Link the heading text to that id.
 - `Content nav sidebar`: Two or more top-level body headings add current-work links under the current work entry in the wide-screen left rail and in the narrow-screen collapsed `Contents` block. The current target marks the matching entry there. Without a target, the first entry is current.
-- `wikilinks`: A `[[...]]` link is a soft reference to a work. Match against the work title, folder name, and any aliases in `meta.toml`. Ignore case and treat spaces, underscores, and hyphens as the same. Link matches to the work's published path. Use the label as the visible text when present. Render plain text for misses.
+- `wikilinks`: A `[[...]]` link is a soft reference to a work. Match against the work title, slug, and any aliases in work metadata. Ignore case and treat spaces, underscores, and hyphens as the same. Link matches to the work's published path. Use the label as the visible text when present. Render plain text for misses.
 - `Backlinks`: A work-to-work link adds the source work title to a backlinks section on the destination work page. The backlinks section appears after the body content.
 
 ## Acceptance Checks

@@ -12,12 +12,12 @@ Keep each example small and focused. When a rule changes, update the owning spec
 
 Current entries:
 
-- `minimal-markdown`: one Markdown work with derived defaults
-- `named-sections`: works assigned to named sections from `home.md`, with section descriptions and one empty shelf
+- `minimal-markdown`: one self-contained Markdown work file with derived defaults
+- `named-sections`: works assigned through section folders matching `home.md`, with section descriptions and one empty shelf
 - `html-work`: one authored HTML body fragment, including author-provided JavaScript
 - `reading-microfeatures`: automatic heading anchors, linked section index, backlinks, and link treatment
 - `section-fallback`: one work whose section falls back to `Other works`
-- `wikilinks-and-assets`: wikilinks, aliases, and missing-link fallback
+- `wikilinks-and-assets`: wikilinks, aliases, missing-link fallback, and one local work asset
 - `validation-severity.md`: named validation cases
 - `fluid-type-scale.css`: illustrative stylesheet reference — colors, fluid type scale, and cursor
 

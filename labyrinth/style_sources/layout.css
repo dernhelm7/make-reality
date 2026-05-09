@@ -143,8 +143,8 @@
 }
 
 .works-body {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   column-gap: var(--home-contents-column-gap);
   row-gap: var(--works-section-stack-gap);
   align-items: start;

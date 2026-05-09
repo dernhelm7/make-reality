@@ -8,11 +8,16 @@ import re
 import unicodedata
 from urllib.parse import urlsplit
 
+from markdown_it import MarkdownIt
+from markdown_it.token import Token
+
 from .urls import relative_public_href
 
 
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
 STANDARD_LINK_RE = re.compile(r"\[(?P<label>[^\]]+)\]\((?P<href>[^)]+)\)")
+WIKILINK_RE = re.compile(r"\[\[(?P<raw>[^\]]+)\]\]")
+MARKDOWN = MarkdownIt("commonmark", {"html": False})
 
 
 @dataclass(frozen=True)
@@ -42,6 +47,7 @@ class BodyContext:
     current_public_path: str
     work_lookup: dict[str, ResolvedWorkLink]
     work_paths: frozenset[str]
+    asset_paths: frozenset[str] = frozenset()
 
     def resolve_wikilink(self, raw_target: str) -> ResolvedWorkLink | None:
         return self.work_lookup.get(normalize_wikilink_key(raw_target))
@@ -70,6 +76,21 @@ class BodyContext:
             return f"{rendered}#{link.fragment}"
         return rendered
 
+    def analyze_asset(self, href: str) -> BodyLink:
+        resolved = resolve_page_asset_path(self.current_public_path, href)
+        if resolved is None:
+            return BodyLink(href=href, resolved_path=None, fragment=None, kind="external")
+        resolved_path, fragment = resolved
+        return BodyLink(href=href, resolved_path=resolved_path, fragment=fragment, kind="asset")
+
+    def render_asset_href(self, link: BodyLink) -> str:
+        if link.kind == "external" or link.resolved_path is None:
+            return link.href
+        rendered = relative_public_href(self.current_public_path, link.resolved_path)
+        if link.fragment:
+            return f"{rendered}#{link.fragment}"
+        return rendered
+
 
 @dataclass(frozen=True)
 class BodyRender:
@@ -91,72 +112,152 @@ def render_markdown_body(
     *,
     context: BodyContext,
 ) -> BodyRender:
-    lines = body_text.splitlines()
-    blocks: list[tuple[str, str, int]] = []
-    buffer: list[str] = []
+    tokens = MARKDOWN.parse(body_text)
+    expand_wikilinks(tokens, context=context)
+    headings = apply_heading_self_links(tokens)
+    links = rewrite_markdown_links(tokens, context=context)
+    html = MARKDOWN.renderer.render(tokens, MARKDOWN.options, {}).rstrip("\n")
+    return BodyRender(
+        html=html,
+        headings=tuple(headings),
+        anchor_ids=frozenset(heading.anchor_id for heading in headings),
+        links=tuple(links),
+    )
 
-    def flush_paragraph() -> None:
-        if not buffer:
-            return
-        paragraph = " ".join(part.strip() for part in buffer if part.strip()).strip()
-        if paragraph:
-            blocks.append(("paragraph", paragraph, 0))
-        buffer.clear()
 
-    for line in lines:
-        match = HEADING_RE.match(line)
-        if match:
-            flush_paragraph()
-            level = len(match.group(1))
-            blocks.append(("heading", match.group(2).strip(), level))
+def expand_wikilinks(tokens: list[Token], *, context: BodyContext) -> None:
+    for token in tokens:
+        if token.children:
+            token.children = expand_wikilinks_in_children(token.children, context=context)
+
+
+def expand_wikilinks_in_children(children: list[Token], *, context: BodyContext) -> list[Token]:
+    expanded: list[Token] = []
+    for token in children:
+        if token.type != "text":
+            if token.children:
+                token.children = expand_wikilinks_in_children(token.children, context=context)
+            expanded.append(token)
             continue
 
-        if not line.strip():
-            flush_paragraph()
-            continue
+        cursor = 0
+        for match in WIKILINK_RE.finditer(token.content):
+            if match.start() > cursor:
+                expanded.append(markdown_text_token(token.content[cursor : match.start()]))
+            target, label = split_wikilink(match.group("raw"))
+            visible_label = label or target
+            resolved = context.resolve_wikilink(target)
+            if resolved is None:
+                expanded.append(markdown_text_token(visible_label))
+            else:
+                expanded.extend(markdown_link_tokens(resolved.public_path, visible_label))
+            cursor = match.end()
+        if cursor < len(token.content):
+            expanded.append(markdown_text_token(token.content[cursor:]))
+    return expanded
 
-        buffer.append(line)
 
-    flush_paragraph()
+def markdown_text_token(text: str) -> Token:
+    token = Token("text", "", 0)
+    token.content = text
+    return token
 
-    pieces: list[str] = []
+
+def markdown_link_tokens(href: str, label: str) -> list[Token]:
+    link_open = Token("link_open", "a", 1)
+    link_open.attrSet("href", href)
+    text = markdown_text_token(label)
+    link_close = Token("link_close", "a", -1)
+    return [link_open, text, link_close]
+
+
+def apply_heading_self_links(tokens: list[Token]) -> list[Heading]:
     headings: list[Heading] = []
-    links: list[BodyLink] = []
     used_ids: set[str] = set()
-
-    for block_type, content, source_level in blocks:
-        inline = render_inline(
-            content,
-            context=context,
-        )
-        links.extend(inline.links)
-
-        if block_type == "paragraph":
-            pieces.append(f"<p>{inline.html}</p>")
+    for index, token in enumerate(tokens):
+        if token.type != "heading_open":
+            continue
+        if index + 2 >= len(tokens):
+            continue
+        inline = tokens[index + 1]
+        close = tokens[index + 2]
+        if inline.type != "inline" or close.type != "heading_close":
             continue
 
-        anchor_id = unique_anchor_id(slugify_visible_text(inline.visible_text), used_ids)
+        source_level = int(token.tag[1])
         rendered_level = min(6, source_level + 1)
+        visible_text = markdown_visible_text(inline.children or ())
+        anchor_id = unique_anchor_id(slugify_visible_text(visible_text), used_ids)
+        token.tag = f"h{rendered_level}"
+        close.tag = f"h{rendered_level}"
+        token.attrSet("id", anchor_id)
+        inline.children = heading_anchor_tokens(anchor_id, inline.children or [])
         headings.append(
             Heading(
-                text=inline.visible_text,
+                text=visible_text,
                 anchor_id=anchor_id,
                 source_level=source_level,
                 rendered_level=rendered_level,
             )
         )
-        pieces.append(
-            f'<h{rendered_level} id="{escape(anchor_id)}">'
-            f'<a class="heading-anchor" href="#{escape(anchor_id)}">{inline.html}</a>'
-            f"</h{rendered_level}>"
-        )
+    return headings
 
-    return BodyRender(
-        html="\n".join(pieces),
-        headings=tuple(headings),
-        anchor_ids=frozenset(heading.anchor_id for heading in headings),
-        links=tuple(links),
-    )
+
+def heading_anchor_tokens(anchor_id: str, children: list[Token]) -> list[Token]:
+    link_open = Token("link_open", "a", 1)
+    link_open.attrSet("class", "heading-anchor")
+    link_open.attrSet("href", f"#{anchor_id}")
+    link_close = Token("link_close", "a", -1)
+    return [link_open, *children, link_close]
+
+
+def rewrite_markdown_links(tokens: list[Token], *, context: BodyContext) -> list[BodyLink]:
+    links: list[BodyLink] = []
+    for token in tokens:
+        rewrite_markdown_token_links(token, context=context, links=links)
+    return links
+
+
+def rewrite_markdown_token_links(token: Token, *, context: BodyContext, links: list[BodyLink]) -> None:
+    if token.type == "link_open":
+        if "heading-anchor" in (token.attrGet("class") or "").split():
+            return
+        href = token.attrGet("href")
+        if not href:
+            return
+        link = context.analyze_link(href)
+        token.attrSet("href", context.render_href(link))
+        token.attrSet("class", merge_class_values(token.attrGet("class"), link_class_name(link)))
+        links.append(link)
+        return
+
+    if token.type == "image":
+        src = token.attrGet("src")
+        if src:
+            link = context.analyze_asset(src)
+            token.attrSet("src", context.render_asset_href(link))
+            links.append(link)
+        return
+
+    for child in token.children or ():
+        rewrite_markdown_token_links(child, context=context, links=links)
+
+
+def markdown_visible_text(tokens: tuple[Token, ...] | list[Token]) -> str:
+    pieces: list[str] = []
+    for token in tokens:
+        if token.type in {"text", "code_inline"}:
+            pieces.append(token.content)
+            continue
+        if token.type in {"softbreak", "hardbreak"}:
+            pieces.append("\n")
+            continue
+        if token.type == "image":
+            pieces.append(token.content)
+            continue
+        if token.children:
+            pieces.append(markdown_visible_text(token.children))
+    return "".join(pieces).strip()
 
 
 def render_markdown_paragraphs(
@@ -520,6 +621,28 @@ def resolve_internal_path(current_public_path: str, href: str) -> tuple[str, str
     return normalized, fragment
 
 
+def resolve_page_asset_path(current_public_path: str, href: str) -> tuple[str, str | None] | None:
+    parts = urlsplit(href)
+    if parts.scheme or parts.netloc:
+        return None
+
+    raw_path = parts.path
+    fragment = parts.fragment or None
+    if raw_path == "":
+        return current_public_path, fragment
+
+    if raw_path.startswith("/"):
+        normalized = posixpath.normpath(raw_path)
+    else:
+        normalized = posixpath.normpath(posixpath.join(current_public_path, raw_path))
+
+    if normalized == ".":
+        normalized = "/"
+    if not normalized.startswith("/"):
+        normalized = "/" + normalized
+    return normalized, fragment
+
+
 def render_start_tag(
     tag: str,
     attrs: list[tuple[str, str | None]],
@@ -615,4 +738,6 @@ def link_class_name(link: BodyLink) -> str:
         return "external-link"
     if link.kind == "work":
         return "internal-link work-link"
+    if link.kind == "asset":
+        return "internal-link asset-link"
     return "internal-link"

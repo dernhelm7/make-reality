@@ -36,6 +36,8 @@ Apply these standards to planning, specification, and implementation.
 - Keep each requirement owned in one document.
 - When code changes behavior, update the owning spec in the same task.
 - When a task touches a documented rule, update the matching example under `agent_docs/examples/` if one exists.
+- Treat `README.md` files as orientation documents, not implementation specs. Put build rules in `agent_docs/build.md`, product behavior in the matching scope doc, and fixture notes in `agent_docs/examples/`.
+- Preserve `agent_docs/README.md` as the project aim. Edit it only when the user asks to change the aim.
 - If the repo does not yet contain a needed command or check, say so plainly instead of inventing one.
 
 ## Validation
@@ -59,4 +61,3 @@ Apply these standards to planning, specification, and implementation.
 
 - No build-generated JavaScript in the shared site output; I wannt the site dependencies super light and clean. A specific work may use author-provided JavaScript. 
 - Use concrete nouns, name the action or choice that changes the outcome, and stop once you have named the lever that matters.
-

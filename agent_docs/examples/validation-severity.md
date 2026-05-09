@@ -5,6 +5,8 @@ Use these named cases when defining or testing validation behavior. The main spe
 | Case | Expected Behavior | Owning Doc |
 | --- | --- | --- |
 | `missing-required-field` | Report the missing field clearly. | `build.md` |
+| `unsupported-field` | Report a source field the build no longer reads clearly. | `build.md` |
+| `duplicate-metadata` | Report competing metadata sources for one work clearly. | `build.md` |
 | `duplicate-published-path` | Report the conflicting published path clearly. | `build.md` |
 | `broken-internal-link` | Report the broken authored internal link clearly. | `build.md` |
 | `missing-canonical-link` | Report the failed output validation clearly. | `web-rules.md` |

@@ -36,6 +36,7 @@
   --page-title-display-size: clamp(var(--step-p6), calc(var(--step-p5) + 2.8vw), var(--step-p10));
   --page-title-section-size: clamp(var(--step-p3), calc(var(--step-p3) + 0.6vw), var(--step-p5));
   --page-title-work-size: clamp(var(--step-p5), calc(var(--step-p4) + 1.45vw), var(--step-p8));
+  --home-section-heading-size: clamp(var(--step-p2), calc(var(--step-p2) + 0.25vw), var(--step-p3));
   --reading-h1-size: clamp(var(--step-p2), calc(var(--step-p1) + 0.75vw), var(--step-p4));
   --reading-h2-size: clamp(var(--step-p1), calc(var(--step-p1) + 0.4vw), var(--step-p3));
   --reading-h3-size: clamp(var(--step-0), calc(var(--step-0) + 0.18vw), var(--step-p1));
@@ -46,8 +47,11 @@
   --home-contents-measure: min(var(--reading-span), 70rem);
   --home-main-indent: max(var(--site-side-space), calc((100vw - var(--home-contents-measure)) / 2));
   --home-contents-column-gap: clamp(var(--step-p4), 7vw, var(--step-p9));
-  --home-contents-label-width: clamp(6.75rem, 8vw, 7.5rem);
+  --home-contents-label-width: clamp(5.2rem, 7vw, 6.15rem);
   --home-contents-label-gap: var(--step-p1);
+  --home-contents-shelf-gap: clamp(var(--step-p2), 3.4vw, var(--step-p5));
+  --home-contents-entry-gap: var(--step-n1);
+  --home-leader-dot-step: 0.12em;
   --work-title-measure: 18ch;
   --sidebar-width: 11rem;
   --date-width: clamp(12rem, calc(11rem + 1.5vw), 13rem);

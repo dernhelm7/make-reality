@@ -4,3 +4,4 @@
 - `[[__Garden_Path__|Mapped]]` resolves to the published path `/garden-path` because matching ignores case and treats spaces, underscores, and hyphens as the same.
 - `[[Café|Cafe]]` becomes visible plain text `Cafe` with no hyperlink.
 - `[[Missing Note|Elsewhere]]` becomes visible plain text `Elsewhere` with no hyperlink.
+- `garden-path/hedge.svg` is published beside `/garden-path` and the Markdown image points to that public asset.

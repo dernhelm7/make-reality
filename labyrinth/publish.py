@@ -24,6 +24,10 @@ def write_public_files(
         output_path = publish_root / page.output_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(page.html, encoding="utf-8")
+        for source_path, relative_output_path in page.assets:
+            asset_output_path = publish_root / relative_output_path
+            asset_output_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_path, asset_output_path)
 
     (publish_root / "site.css").write_text(stylesheet, encoding="utf-8")
     (publish_root / "feed.css").write_text(feed_stylesheet, encoding="utf-8")

@@ -44,6 +44,7 @@ class AcceptanceTests(FixtureSiteTestCase):
 
     def assert_home_reflects_graph(self, publish_root: Path, graph: SiteGraph) -> None:
         home_page = self.page_text(publish_root, "/")
+        self.assertNotIn('class="works-column"', home_page)
         self.assert_all_in(
             home_page,
             [
@@ -269,6 +270,38 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assertTrue((publish_root / "feed.css").is_file())
         self.assertTrue((publish_root / "site.css").is_file())
         self.assertEqual([], list(publish_root.rglob("*.js")))
+
+    def test_work_markdown_renders_commonmark_and_publishes_local_assets(self) -> None:
+        site_root, publish_root = self.make_fixture("minimal-markdown")
+        home_path = site_root / "home.md"
+        home_path.write_text(
+            home_path.read_text(encoding="utf-8").replace("## Read", "## Read\n\n### Notes\nsleep notes"),
+            encoding="utf-8",
+        )
+        work_dir = site_root / "works" / "notes" / "hypnosis"
+        work_dir.mkdir(parents=True)
+        (work_dir / "Hypnosis.md").write_text(
+            (
+                "+++\n"
+                'created = "2024-02-14T00:00:00Z"\n'
+                'updated = "2024-02-14T00:00:00Z"\n'
+                "+++\n"
+                "# Opening\n\n"
+                "- First\n"
+                "- Second\n\n"
+                "![](./out_of_the_dark_world_32.png)\n"
+            ),
+            encoding="utf-8",
+        )
+        (work_dir / "out_of_the_dark_world_32.png").write_bytes(b"image bytes")
+
+        build_site(site_root, publish_root)
+        work_page = self.page_text(publish_root, "/hypnosis")
+
+        self.assertIn("<ul>", work_page)
+        self.assertIn("<li>Second</li>", work_page)
+        self.assertIn('<img src="out_of_the_dark_world_32.png" alt=""', work_page)
+        self.assertEqual(b"image bytes", (publish_root / "hypnosis" / "out_of_the_dark_world_32.png").read_bytes())
 
     def test_publish_root_is_deterministic(self) -> None:
         first_root = self.build_fixture("minimal-markdown")[1]

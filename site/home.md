@@ -18,10 +18,10 @@ thoughts, fragments, philosophy
 exploration with references
 
 ### Guides
-how I've solved problems
+problems solved
 
 ### Projects
-tools, adaptations, records of things made
+tools, adaptations, things made
 
 ### Cabinet
-influences, recommendations, bibliography, aesthetics
+influences, bibliography, aesthetics

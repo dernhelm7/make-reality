@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+import os
 from pathlib import Path
 import tempfile
 import textwrap
@@ -120,15 +122,89 @@ class MarkupAndGraphTests(unittest.TestCase):
         self.assertIn('href="../feed.css"', graph.work_by_path["/alpha"].body.html)
         self.assertIn('href="../feed.xsl"', graph.work_by_path["/alpha"].body.html)
 
+    def test_direct_markdown_file_derives_work_defaults(self) -> None:
+        site_root = self.make_site({})
+        self.set_home_sections(site_root, "### Poems")
+        poems_root = site_root / "works" / "poems"
+        poems_root.mkdir()
+        body_path = poems_root / "know.md"
+        body_path.write_text("# Opening\n\nA poem.", encoding="utf-8")
+        os.utime(body_path, (1_700_000_000, 1_700_000_000))
+
+        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        work = graph.work_by_path["/know"]
+
+        self.assertEqual("Know", work.title)
+        self.assertEqual("Poems", work.resolved_section)
+        self.assertEqual("https://labyrinth.example/id/know", work.atom_id)
+        self.assertEqual(datetime.fromtimestamp(1_700_000_000, tz=UTC), work.created)
+        self.assertIn("<p>A poem.</p>", work.body.html)
+
+    def test_toml_front_matter_overrides_work_metadata(self) -> None:
+        site_root = self.make_site(
+            {
+                "notes/source-note": {
+                    "index.md": (
+                        "+++\n"
+                        'created = "2024-02-16T00:00:00Z"\n'
+                        'updated = "2024-02-17T00:00:00Z"\n'
+                        'atom_id = "https://labyrinth.example/id/custom-source"\n'
+                        'aliases = ["Origin"]\n'
+                        "+++\n"
+                        "# Source\n\nSee [[Origin]]."
+                    ),
+                }
+            }
+        )
+        self.set_home_sections(site_root, "### Notes")
+
+        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        work = graph.work_by_path["/source-note"]
+
+        self.assertEqual(datetime(2024, 2, 16, tzinfo=UTC), work.created)
+        self.assertEqual(datetime(2024, 2, 17, tzinfo=UTC), work.updated)
+        self.assertEqual("https://labyrinth.example/id/custom-source", work.atom_id)
+        self.assertEqual("/source-note", graph.work_lookup["origin"].public_path)
+        self.assertNotIn("created =", work.body.html)
+
+    def test_direct_html_file_uses_toml_front_matter(self) -> None:
+        site_root = self.make_site({})
+        html_path = site_root / "works" / "artifact.html"
+        html_path.write_text(
+            '+++\ncreated = "2024-02-16T00:00:00Z"\n+++\n<p>Authored HTML.</p>',
+            encoding="utf-8",
+        )
+
+        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        work = graph.work_by_path["/artifact"]
+
+        self.assertEqual(datetime(2024, 2, 16, tzinfo=UTC), work.created)
+        self.assertEqual("html", work.body_format)
+        self.assertEqual("<p>Authored HTML.</p>", work.body.html)
+
+    def test_folder_work_accepts_one_arbitrary_markdown_body(self) -> None:
+        site_root = self.make_site(
+            {
+                "poems/know": {
+                    "know.md": "# Opening\n\nA poem.",
+                }
+            }
+        )
+        self.set_home_sections(site_root, "### Poems")
+
+        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+
+        self.assertEqual("Poems", graph.work_by_path["/know"].resolved_section)
+        self.assertIn("<p>A poem.</p>", graph.work_by_path["/know"].body.html)
+
     def test_home_markdown_defines_links_and_sections(self) -> None:
         site_root = self.make_site(
             {
-                "alpha": {
+                "notes/alpha": {
                     "meta.toml": (
                         'created = "2024-02-14T00:00:00Z"\n'
                         'updated = "2024-02-14T00:00:00Z"\n'
                         'atom_id = "https://labyrinth.example/id/alpha"\n'
-                        'section = "Notes"\n'
                     ),
                     "index.md": "# Opening\n\nA first note.",
                 }
@@ -171,25 +247,23 @@ class MarkupAndGraphTests(unittest.TestCase):
     def test_site_graph_groups_contents_sections_in_one_configured_order(self) -> None:
         site_root = self.make_site(
             {
-                "alpha-note": {
+                "shelf-one/alpha-note": {
                     "meta.toml": (
                         'created = "2024-02-16T00:00:00Z"\n'
                         'updated = "2024-02-16T00:00:00Z"\n'
                         'atom_id = "https://labyrinth.example/id/alpha-note"\n'
-                        'section = "Shelf One"\n'
                     ),
                     "index.md": "# Alpha\n\nA note.",
                 },
-                "beta-essay": {
+                "shelf-two/beta-essay": {
                     "meta.toml": (
                         'created = "2024-02-15T00:00:00Z"\n'
                         'updated = "2024-02-15T00:00:00Z"\n'
                         'atom_id = "https://labyrinth.example/id/beta-essay"\n'
-                        'section = "Shelf Two"\n'
                     ),
                     "index.md": "# Beta\n\nAn essay.",
                 },
-                "loose-map": {
+                "maps/loose-map": {
                     "meta.toml": (
                         'created = "2024-02-14T00:00:00Z"\n'
                         'updated = "2024-02-14T00:00:00Z"\n'
@@ -257,6 +331,13 @@ class MarkupAndGraphTests(unittest.TestCase):
             work_paths=frozenset({"/field-notes", "/garden-path"}),
         )
 
+    def set_home_sections(self, site_root: Path, headings: str) -> None:
+        home_md = site_root / "home.md"
+        home_md.write_text(
+            home_md.read_text(encoding="utf-8").replace("## Index", f"## Index\n\n{headings}"),
+            encoding="utf-8",
+        )
+
     def make_site(self, works: dict[str, dict[str, str]]) -> Path:
         site_root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         (site_root / "site.toml").write_text(
@@ -297,7 +378,7 @@ class MarkupAndGraphTests(unittest.TestCase):
 
         for name, files in works.items():
             work_root = works_root / name
-            work_root.mkdir()
+            work_root.mkdir(parents=True)
             for filename, content in files.items():
                 (work_root / filename).write_text(content, encoding="utf-8")
         return site_root

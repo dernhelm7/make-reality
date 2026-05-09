@@ -7,7 +7,7 @@ Keep the spec itself in `agent_docs/`.
 
 The site has homepage links authored in `home.md`.
 The site has a home-page contents index with section headings I can customize.
-When I add a new work in the works area, it should appear in that contents index automatically. Each work uses its folder name, published at `/<folder-name>`. A work may name one section from the site config.
+When I add a new work in the works area, it should appear in that contents index automatically. Each work uses its file stem or folder name as its slug, published at `/<slug>`. A work belongs to a named section when it lives inside a `works/<section-folder>/` folder that matches a home-page section heading.
 Work pages need linked body headings, a generated section index, work-to-work links, backlinks, and external link treatment readers can distinguish without relying on color alone.
 
 ## Scopes 
