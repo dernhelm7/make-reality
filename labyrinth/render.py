@@ -11,14 +11,22 @@ from .model import BuildError, ContentsSection, LinkItem, SiteGraph, WorkDocumen
 from .urls import (
     FEED_PUBLIC_PATH,
     FEED_STYLESHEET_PUBLIC_PATH,
-    FEED_TRANSFORM_PUBLIC_PATH,
     HOME_PUBLIC_PATH,
     PageUrls,
     SITE_STYLESHEET_PUBLIC_PATH,
+    WRITE_PUBLIC_PATH,
 )
 
 TOC_LEADER_DOTS = ".&nbsp;" * 64
-TALLY_EMBED_QUERY = "alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1&formEventsForwarding=1"
+TALLY_EMBED_QUERY = "alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
+TALLY_WIDGET_SCRIPT = (
+    'var d=document,w="https://tally.so/widgets/embed.js",v=function(){'
+    '"undefined"!=typeof Tally?Tally.loadEmbeds():'
+    'd.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){'
+    "e.src=e.dataset.tallySrc"
+    '}))};if("undefined"!=typeof Tally)v();else if(d.querySelector(\'script[src="\'+w+\'"]\')==null){'
+    'var s=d.createElement("script");s.src=w,s.onload=v,s.onerror=v,d.body.appendChild(s);}'
+)
 
 
 @dataclass(frozen=True)
@@ -30,14 +38,6 @@ class RenderedPage:
     assets: tuple[tuple[Path, Path], ...] = ()
 
 
-@dataclass(frozen=True)
-class LinkPreview:
-    key: str
-    panel_class: str
-    label: str
-    html: str
-
-
 def join_html_lines(*parts: str) -> str:
     return "\n".join(part for part in parts if part)
 
@@ -45,6 +45,100 @@ def join_html_lines(*parts: str) -> str:
 def indent_html(html: str, spaces: int) -> str:
     prefix = " " * spaces
     return "\n".join(f"{prefix}{line}" if line else "" for line in html.splitlines())
+
+
+def render_theme_boot_script() -> str:
+    return join_html_lines(
+        "<script>",
+        "(function () {",
+        '  var key = "labyrinth-theme";',
+        "  try {",
+        "    var theme = sessionStorage.getItem(key);",
+        '    if (theme === "dark" || theme === "light") {',
+        "      document.documentElement.dataset.theme = theme;",
+        "    }",
+        "  } catch (error) {}",
+        "}());",
+        "</script>",
+    )
+
+
+def render_theme_control_script() -> str:
+    return join_html_lines(
+        "<script>",
+        "(function () {",
+        '  var key = "labyrinth-theme";',
+        "  var root = document.documentElement;",
+        '  var toggle = document.getElementById("site-theme-toggle");',
+        "  var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;",
+        "  if (!toggle) {",
+        "    return;",
+        "  }",
+        "  function systemTheme() {",
+        '    return media && media.matches ? "dark" : "light";',
+        "  }",
+        "  function storedTheme() {",
+        "    try {",
+        "      var theme = sessionStorage.getItem(key);",
+        '      if (theme === "dark" || theme === "light") {',
+        "        return theme;",
+        "      }",
+        "    } catch (error) {}",
+        '    return "";',
+        "  }",
+        "  function saveTheme(theme) {",
+        "    try {",
+        "      if (theme) {",
+        "        sessionStorage.setItem(key, theme);",
+        "      } else {",
+        "        sessionStorage.removeItem(key);",
+        "      }",
+        "      return true;",
+        "    } catch (error) {",
+        "      return false;",
+        "    }",
+        "  }",
+        "  function applyTheme(theme) {",
+        '    if (theme === "dark" || theme === "light") {',
+        "      root.dataset.theme = theme;",
+        "    } else {",
+        "      delete root.dataset.theme;",
+        "    }",
+        "  }",
+        "  function syncToggle() {",
+        "    var system = systemTheme();",
+        "    var stored = storedTheme();",
+        "    var selected = stored || system;",
+        "    applyTheme(stored);",
+        "    toggle.checked = selected !== system;",
+        "  }",
+        "  toggle.addEventListener('change', function () {",
+        "    if (toggle.checked) {",
+        '      var theme = systemTheme() === "dark" ? "light" : "dark";',
+        "      var saved = saveTheme(theme);",
+        "      applyTheme(theme);",
+        "      if (saved) {",
+        "        syncToggle();",
+        "      }",
+        "    } else {",
+        '      var reset = saveTheme("");',
+        '      applyTheme("");',
+        "      if (reset) {",
+        "        syncToggle();",
+        "      }",
+        "    }",
+        "  });",
+        "  if (media) {",
+        "    if (media.addEventListener) {",
+        "      media.addEventListener('change', syncToggle);",
+        "    } else if (media.addListener) {",
+        "      media.addListener(syncToggle);",
+        "    }",
+        "  }",
+        "  syncToggle();",
+        "}());",
+        "</script>",
+    )
 
 
 def page_urls(graph: SiteGraph, public_path: str) -> PageUrls:
@@ -56,6 +150,7 @@ def page_urls(graph: SiteGraph, public_path: str) -> PageUrls:
 
 
 def render_pages(graph: SiteGraph) -> list[RenderedPage]:
+    write_item = write_link_item(graph.site.home.links)
     rendered = [
         RenderedPage(
             public_path=HOME_PUBLIC_PATH,
@@ -64,6 +159,15 @@ def render_pages(graph: SiteGraph) -> list[RenderedPage]:
             source_path=graph.site.source_path,
         ),
     ]
+    if write_item is not None:
+        rendered.append(
+            RenderedPage(
+                public_path=WRITE_PUBLIC_PATH,
+                output_path=Path(WRITE_PUBLIC_PATH.lstrip("/")) / "index.html",
+                html=render_write_page(graph, write_item),
+                source_path=graph.site.home_path,
+            )
+        )
     for work in graph.works:
         rendered.append(
             RenderedPage(
@@ -84,19 +188,10 @@ def render_home_page(graph: SiteGraph) -> str:
     urls = page_urls(graph, HOME_PUBLIC_PATH)
     content = join_html_lines(
         '<div class="page page--home">',
-        '  <section class="page page--cover cover">',
-        '    <header class="page-head page-head--cover">',
-        f'      <h1 class="page-title page-title--display cover-title">{escape(graph.site.home.title)}</h1>',
-        indent_html(render_home_cover_text(graph), 6),
-        "    </header>",
-        '    <div class="home-cover-meta">',
-        indent_html(render_global_links_section(graph, urls=urls, enable_previews=True), 6),
-        "    </div>",
+        '  <section class="page page--cover cover" aria-label="Home cover">',
+        indent_html(render_home_cover_nav(graph, urls=urls), 4),
         "  </section>",
-        '  <section class="page home-contents" id="contents" aria-labelledby="contents-heading">',
-        '    <header class="page-head">',
-        f'      <h2 class="page-title page-title--section" id="contents-heading"><a class="home-contents-heading-link" href="#contents"><span>{escape(graph.site.home.read_label)}</span><span class="home-contents-heading-arrow" aria-hidden="true">&rarr;</span></a></h2>',
-        "    </header>",
+        f'  <section class="page home-contents" id="contents" aria-label="{escape(graph.site.home.read_label)}">',
         '    <div class="page-body works-body" id="read-index">',
         indent_html(render_contents_sections(graph, urls=urls), 6),
         "    </div>",
@@ -111,6 +206,44 @@ def render_home_page(graph: SiteGraph) -> str:
         sidebar_html="",
         main_content=content,
         head_extra_html="",
+    )
+
+
+def render_write_page(graph: SiteGraph, item: LinkItem) -> str:
+    form_src = tally_embed_src(item.href)
+    if form_src is None:
+        raise BuildError(graph.site.home_path, "missing-required-field", "write page requires a Tally link")
+
+    urls = page_urls(graph, WRITE_PUBLIC_PATH)
+    content = join_html_lines(
+        '<article class="page utility-page write-page" id="write">',
+        '  <header class="page-head utility-header">',
+        f'    <h1 class="page-title page-title--section">{escape(item.label)}</h1>',
+        "  </header>",
+        '  <div class="page-body utility-body write-body">',
+        indent_html(render_tally_embed(form_src), 4),
+        "  </div>",
+        "</article>",
+    )
+    return render_page(
+        graph=graph,
+        urls=urls,
+        page_title=f"{item.label} - {graph.site.title}",
+        page_kind="utility",
+        sidebar_html="",
+        main_content=content,
+        head_extra_html=render_tally_head_links(),
+    )
+
+
+def render_tally_head_links() -> str:
+    return '<link rel="preconnect" href="https://tally.so">'
+
+
+def render_tally_embed(form_src: str) -> str:
+    return join_html_lines(
+        f'<iframe src="{escape(form_src)}" data-tally-src="{escape(form_src)}" loading="eager" width="100%" height="330" frameborder="0" marginheight="0" marginwidth="0" title="Send me a message"></iframe>',
+        f"<script>{TALLY_WIDGET_SCRIPT}</script>",
     )
 
 
@@ -189,11 +322,19 @@ def render_contents_sections(graph: SiteGraph, *, urls: PageUrls) -> str:
 
 def render_contents_section(section: ContentsSection, *, urls: PageUrls) -> str:
     items = join_html_lines(
-        *(render_works_entry(work, urls=urls) for work in section.works)
+        *(
+            render_works_entry(
+                work,
+                urls=urls,
+                anchor_id=section.anchor_id if index == 0 else None,
+            )
+            for index, work in enumerate(section.works)
+        )
     )
     description_html = (
         f'      <p class="section-description">{escape(section.description)}</p>' if section.description else ""
     )
+    heading_id = f"{section.anchor_id}-heading" if items else section.anchor_id
     works_list_html = ""
     if items:
         works_list_html = join_html_lines(
@@ -202,10 +343,10 @@ def render_contents_section(section: ContentsSection, *, urls: PageUrls) -> str:
             "  </ol>",
         )
     return join_html_lines(
-        f'<section class="works-section" aria-labelledby="{escape(section.anchor_id)}">',
+        f'<section class="works-section" aria-labelledby="{escape(heading_id)}">',
         '  <header class="works-section-head">',
         '    <div class="works-section-line">',
-        f'      <h3 class="section-heading" id="{escape(section.anchor_id)}">{escape(section.name)}</h3>',
+        f'      <h3 class="section-heading" id="{escape(heading_id)}">{escape(section.name)}</h3>',
         description_html,
         "    </div>",
         "  </header>",
@@ -214,12 +355,13 @@ def render_contents_section(section: ContentsSection, *, urls: PageUrls) -> str:
     )
 
 
-def render_works_entry(work: WorkDocument, *, urls: PageUrls) -> str:
+def render_works_entry(work: WorkDocument, *, urls: PageUrls, anchor_id: str | None = None) -> str:
     work_href = escape(urls.relative_href(work.public_path))
     title = escape(work.title)
     reference = escape(work_path_reference(work.public_path))
+    id_attr = f' id="{escape(anchor_id)}"' if anchor_id else ""
     return join_html_lines(
-        '<li class="works-entry">',
+        f'<li class="works-entry"{id_attr}>',
         f'  <a class="works-entry-link" href="{work_href}" aria-label="{title}">',
         f'    <span class="works-entry-title">{title}</span>',
         f'    <span class="works-entry-leader toc-leader" aria-hidden="true">{TOC_LEADER_DOTS}</span>',
@@ -243,6 +385,9 @@ def render_page(
     main_content: str,
     head_extra_html: str,
 ) -> str:
+    description_html = (
+        f'  <meta name="description" content="{escape(graph.site.statement)}">' if graph.site.statement else ""
+    )
     return join_html_lines(
         "<!DOCTYPE html>",
         f'<html lang="{escape(graph.site.lang)}">',
@@ -250,16 +395,23 @@ def render_page(
         '  <meta charset="utf-8">',
         '  <meta name="viewport" content="width=device-width, initial-scale=1">',
         f"  <title>{escape(page_title)}</title>",
-        f'  <meta name="description" content="{escape(graph.site.statement)}">',
-        '  <meta name="theme-color" content="#0a7c80">',
+        description_html,
+        f'  <meta name="theme-color" content="{escape(graph.site.primary_color)}">',
         f'  <base href="{escape(urls.base_href)}">',
         f'  <link rel="canonical" href="{escape(urls.canonical_url)}">',
+        indent_html(render_theme_boot_script(), 2),
         f'  <link rel="stylesheet" href="{escape(urls.relative_href(SITE_STYLESHEET_PUBLIC_PATH))}">',
         f'  <link rel="alternate" type="application/atom+xml" title="{escape(graph.site.title)} feed" href="{escape(urls.relative_href(FEED_PUBLIC_PATH))}">',
         indent_html(head_extra_html, 2),
         "</head>",
         f'<body class="site-page site-page--{escape(page_kind)}">',
+        '  <input class="theme-toggle-input visually-hidden" type="checkbox" id="site-theme-toggle" autocomplete="off">',
+        '  <label class="theme-toggle" for="site-theme-toggle">',
+        '    <span class="visually-hidden">Use alternate color theme</span>',
+        "  </label>",
+        indent_html(render_theme_control_script(), 2),
         '  <div class="site-shell">',
+        indent_html(render_site_header_nav(graph, urls=urls, page_kind=page_kind), 4),
         '    <div class="page-surface">',
         '      <div class="site-frame">',
         '        <div class="site-layout">',
@@ -281,7 +433,6 @@ def render_site_sidebar(graph: SiteGraph, current_work: WorkDocument | None = No
         '<aside class="site-sidebar">',
         '  <div class="site-bar">',
         indent_html(render_sidebar_primary(graph, current_work, urls), 4),
-        indent_html(render_global_links_section(graph, urls=urls), 4),
         "  </div>",
         "</aside>",
     )
@@ -293,9 +444,6 @@ def render_sidebar_primary(graph: SiteGraph, current_work: WorkDocument | None, 
 
     contents_groups_html = render_sidebar_contents_groups(graph, current_work, urls)
     return join_html_lines(
-        '<div class="site-bar-section site-bar-section--primary">',
-        f'  <a class="site-back-link" href="{escape(urls.relative_href(HOME_PUBLIC_PATH, fragment="contents"))}">Back to contents</a>',
-        "</div>",
         '<section class="site-bar-section site-bar-section--contents" aria-labelledby="site-contents-label">',
         '  <h2 class="site-contents-label visually-hidden" id="site-contents-label">Site contents</h2>',
         '  <div class="site-contents-groups">',
@@ -305,142 +453,112 @@ def render_sidebar_primary(graph: SiteGraph, current_work: WorkDocument | None, 
     )
 
 
-def render_global_links_section(graph: SiteGraph, *, urls: PageUrls, enable_previews: bool = False) -> str:
-    items = graph.site.home.links
-    previews = tuple(link_preview_for_item(item, graph=graph, urls=urls) for item in items)
-    links_html = join_html_lines(
+def render_site_header_nav(graph: SiteGraph, *, urls: PageUrls, page_kind: str) -> str:
+    title_html = (
+        f'<h1 class="site-header-title"><a class="site-header-title-link" href="{escape(urls.relative_href(HOME_PUBLIC_PATH))}">{escape(graph.site.home.title)}</a></h1>'
+        if page_kind == "home"
+        else f'<a class="site-header-title" href="{escape(urls.relative_href(HOME_PUBLIC_PATH))}">{escape(graph.site.title)}</a>'
+    )
+    subtitle_html = render_home_subtitle(graph) if page_kind == "home" else ""
+    nav_html = (
+        ""
+        if page_kind == "home"
+        else join_html_lines(
+            '  <p class="site-global-label visually-hidden">Site links</p>',
+            '  <nav class="site-nav site-header-nav" aria-label="Site navigation">',
+            indent_html(render_site_header_nav_items(site_header_link_parts(graph, urls=urls)), 4),
+            "  </nav>",
+        )
+    )
+    return join_html_lines(
+        '<header class="site-header-actions" aria-label="Site">',
+        f"  {title_html}",
+        indent_html(subtitle_html, 2),
+        nav_html,
+        "</header>",
+    )
+
+
+def render_home_cover_nav(graph: SiteGraph, *, urls: PageUrls) -> str:
+    return join_html_lines(
+        '<nav class="site-nav site-header-nav home-cover-nav" aria-label="Site navigation">',
+        indent_html(render_site_header_nav_items(site_header_link_parts(graph, urls=urls)), 2),
+        "</nav>",
+    )
+
+
+def site_header_link_parts(graph: SiteGraph, *, urls: PageUrls) -> tuple[str, ...]:
+    read_link = (
+        f'<a class="site-link site-header-link site-header-link--read" '
+        f'href="{escape(urls.relative_href(HOME_PUBLIC_PATH, fragment="contents"))}">'
+        f"{escape(graph.site.home.read_label)}</a>"
+    )
+    return (
+        read_link,
         *(
             render_global_link(
                 item,
-                preview=preview if enable_previews else None,
                 urls=urls,
             )
-            for item, preview in zip(items, previews, strict=True)
-        )
-    )
-    preview_html = render_global_link_previews(tuple(preview for preview in previews if preview), urls=urls) if enable_previews else ""
-    return join_html_lines(
-        '<div class="site-bar-section site-bar-section--global">',
-        '  <p class="site-global-label visually-hidden">Links</p>',
-        '  <nav class="site-nav site-nav--global" aria-label="Global links">',
-        indent_html(links_html, 4),
-        "  </nav>",
-        indent_html(preview_html, 2),
-        "</div>",
+            for item in ordered_site_header_links(graph.site.home.links)
+        ),
     )
 
 
-def render_global_link(item: LinkItem, *, preview: LinkPreview | None, urls: PageUrls) -> str:
-    classes = ["site-link"]
-    if item.href == FEED_PUBLIC_PATH:
-        classes.append("feed-link")
-    if preview:
-        classes.append("site-link--preview")
-
-    href = escape(urls.root_relative_href(item.href))
-    label = escape(item.label)
-    if preview:
-        return (
-            f'<a class="{" ".join(classes)}" href="{href}" '
-            f'data-site-preview-trigger="{escape(preview.key)}" '
-            f'aria-controls="site-link-preview-{escape(preview.key)}">{label}</a>'
-        )
-    return f'<a class="{" ".join(classes)}" href="{href}" data-site-preview-clear>{label}</a>'
-
-
-def link_preview_for_item(item: LinkItem, *, graph: SiteGraph, urls: PageUrls) -> LinkPreview | None:
-    form_src = tally_embed_src(item.href)
-    if form_src:
-        return LinkPreview(
-            key="write",
-            panel_class="site-link-preview-panel--embed",
-            label=f"{item.label} form",
-            html=(
-                f'<iframe class="site-link-preview-frame" src="{escape(form_src)}" '
-                'title="Send me a message"></iframe>'
-            ),
-        )
-
-    if item.href == FEED_PUBLIC_PATH:
-        return LinkPreview(
-            key="follow",
-            panel_class="site-link-preview-panel--text",
-            label=f"{item.label} preview",
-            html=render_feed_link_preview(graph, urls=urls),
-        )
-
-    return None
-
-
-def render_global_link_previews(previews: tuple[LinkPreview, ...], *, urls: PageUrls) -> str:
-    if not previews:
-        return ""
-    panels = join_html_lines(
-        *(
-            join_html_lines(
-                f'<div class="site-link-preview-panel {preview.panel_class}" id="site-link-preview-{escape(preview.key)}" aria-label="{escape(preview.label)}" aria-hidden="true">',
-                indent_html(preview.html, 2),
-                "</div>",
-            )
-            for preview in previews
-        )
-    )
-    return join_html_lines(
-        '<div class="site-link-preview-region" data-site-preview-region>',
-        indent_html(panels, 2),
-        "  </div>",
-        render_global_link_preview_script(),
-    )
-
-
-def render_global_link_preview_script() -> str:
-    return join_html_lines(
-        '<script>',
-        "(() => {",
-        "  const root = document.currentScript.closest('.site-bar-section--global');",
-        "  const panels = new Map([...root.querySelectorAll('.site-link-preview-panel')].map((panel) => [panel.id.replace('site-link-preview-', ''), panel]));",
-        "  const show = (key) => panels.forEach((panel, panelKey) => { panel.setAttribute('aria-hidden', panelKey !== key ? 'true' : 'false'); });",
-        "  const clear = () => panels.forEach((panel) => { panel.setAttribute('aria-hidden', 'true'); });",
-        "  root.querySelectorAll('[data-site-preview-trigger]').forEach((link) => {",
-        "    const key = link.dataset.sitePreviewTrigger;",
-        "    link.addEventListener('pointerenter', () => show(key));",
-        "    link.addEventListener('focus', () => show(key));",
-        "  });",
-        "  root.querySelectorAll('[data-site-preview-clear]').forEach((link) => {",
-        "    link.addEventListener('pointerenter', clear);",
-        "    link.addEventListener('focus', clear);",
-        "  });",
-        "})();",
-        "</script>",
-    )
-
-
-def render_feed_link_preview(graph: SiteGraph, *, urls: PageUrls) -> str:
-    feed_href = urls.relative_href(FEED_PUBLIC_PATH)
-    preview_text = graph.site.feed_guide_text.replace(
-        "{feed_url}",
-        feed_href,
-    )
+def render_home_subtitle(graph: SiteGraph) -> str:
     paragraphs = render_markdown_paragraphs(
-        preview_text,
+        graph.site.home.cover_text,
         context=body_context(graph, HOME_PUBLIC_PATH),
     )
-    action = (
-        f'<p class="site-link-preview-action"><a class="internal-link" href="{escape(feed_href)}">'
-        'Follow <span class="site-link-preview-arrow" aria-hidden="true">&rarr;</span></a></p>'
-    )
-    copy_html = join_html_lines(
-        '<div class="site-link-preview-copy-block">',
-        indent_html(
-            join_html_lines(*(f'<p class="site-link-preview-copy">{paragraph.html}</p>' for paragraph in paragraphs)),
-            2,
+    if not paragraphs:
+        return ""
+
+    return join_html_lines(
+        '<div class="site-header-subtitle">',
+        *(
+            f'  <p class="site-header-subtitle-line">{paragraph.html}</p>'
+            for paragraph in paragraphs
         ),
         "</div>",
     )
-    return join_html_lines(
-        copy_html,
-        action,
-    )
+
+
+def render_site_header_nav_items(items: tuple[str, ...]) -> str:
+    parts: list[str] = []
+    for index, item in enumerate(items):
+        if index:
+            parts.append('<span class="site-header-separator" aria-hidden="true">&bull;</span>')
+        parts.append(item)
+    return join_html_lines(*parts)
+
+
+def ordered_site_header_links(items: tuple[LinkItem, ...]) -> tuple[LinkItem, ...]:
+    feed_links = tuple(item for item in items if item.href == FEED_PUBLIC_PATH)
+    other_links = tuple(item for item in items if item.href != FEED_PUBLIC_PATH)
+    return (*feed_links, *other_links)
+
+
+def render_global_link(item: LinkItem, *, urls: PageUrls) -> str:
+    classes = ["site-link", "site-header-link"]
+    if item.href == FEED_PUBLIC_PATH:
+        classes.append("feed-link")
+
+    href = escape(site_header_link_href(item, urls))
+    label = escape(item.label)
+    return f'<a class="{" ".join(classes)}" href="{href}">{label}</a>'
+
+
+def site_header_link_href(item: LinkItem, urls: PageUrls) -> str:
+    if tally_embed_src(item.href):
+        return urls.relative_href(WRITE_PUBLIC_PATH)
+    return urls.root_relative_href(item.href)
+
+
+def write_link_item(items: tuple[LinkItem, ...]) -> LinkItem | None:
+    for item in items:
+        if tally_embed_src(item.href):
+            return item
+    return None
 
 
 def tally_embed_src(href: str) -> str | None:
@@ -462,12 +580,15 @@ def render_sidebar_contents_groups(graph: SiteGraph, current_work: WorkDocument,
     if current_section is None:
         return ""
 
+    section_href = escape(urls.relative_href(HOME_PUBLIC_PATH, fragment=current_section.anchor_id))
     items = join_html_lines(
         *(render_sidebar_contents_item(work, current_work, urls) for work in current_section.works)
     )
     return join_html_lines(
         '<section class="site-contents-group site-contents-group--current">',
-        f'  <p class="site-contents-summary">{escape(current_section.name)}</p>',
+        '  <p class="site-contents-summary">',
+        f'    <a class="site-contents-summary-link" href="{section_href}">{escape(current_section.name)}</a>',
+        "  </p>",
         '  <ol class="site-contents-list">',
         indent_html(items, 4),
         "  </ol>",
@@ -506,25 +627,12 @@ def render_mobile_work_end_matter(graph: SiteGraph, work: WorkDocument, *, urls:
     return join_html_lines(
         '<footer class="mobile-work-end" aria-label="Work links">',
         '  <div class="mobile-work-actions">',
-        '    <nav class="site-nav site-nav--global mobile-work-global-links" aria-label="Global links">',
-        indent_html(render_mobile_global_links(graph, urls=urls), 6),
-        "    </nav>",
         '    <a class="site-link mobile-work-top-link" href="#work-top" aria-label="Top of page">'
         '<span class="mobile-work-top-icon" aria-hidden="true">&uarr;</span></a>',
         f"    {date_html}",
         "  </div>",
         indent_html(render_mobile_work_section_links(graph, work, urls=urls), 2),
-        f'  <a class="home-contents-heading-link mobile-work-index-link" href="{escape(urls.relative_href(HOME_PUBLIC_PATH, fragment="contents"))}">',
-        '    <span class="home-contents-heading-arrow" aria-hidden="true">&larr;</span>',
-        "    <span>Back to Contents</span>",
-        "  </a>",
         "</footer>",
-    )
-
-
-def render_mobile_global_links(graph: SiteGraph, *, urls: PageUrls) -> str:
-    return join_html_lines(
-        *(render_global_link(item, preview=None, urls=urls) for item in graph.site.home.links)
     )
 
 
@@ -625,88 +733,19 @@ def render_work_heading_target_styles(headings: tuple[Heading, ...]) -> str:
     )
 
 
-def render_feed_transform(graph: SiteGraph) -> str:
-    return join_html_lines(
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<xsl:stylesheet version="1.0"',
-        '  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"',
-        '  xmlns:atom="http://www.w3.org/2005/Atom"',
-        '  xmlns:xhtml="http://www.w3.org/1999/xhtml"',
-        '  exclude-result-prefixes="atom xhtml">',
-        '  <xsl:output method="html" encoding="UTF-8" doctype-system="about:legacy-compat"/>',
-        '  <xsl:template match="/">',
-        f'    <html lang="{xml_escape(graph.site.lang)}">',
-        "      <head>",
-        '        <meta charset="utf-8"/>',
-        '        <meta name="viewport" content="width=device-width, initial-scale=1"/>',
-        "        <title><xsl:value-of select=\"/atom:feed/atom:title\"/> feed</title>",
-        f'        <link rel="stylesheet" href="{FEED_STYLESHEET_PUBLIC_PATH.lstrip("/")}"/>',
-        "      </head>",
-        '      <body class="feed-document">',
-        '        <main class="feed-page">',
-        '          <xsl:apply-templates select="/atom:feed/xhtml:section[contains(concat(\' \', normalize-space(@class), \' \'), \' feed-guide \')]"/>',
-        '          <section class="feed-code" aria-label="Feed entries">',
-        '            <div class="feed-code-row feed-code-row--meta">',
-        '              <span class="feed-code-cell feed-code-title"><xsl:value-of select="/atom:feed/atom:title"/></span>',
-        '              <span class="feed-code-cell feed-code-subtitle"><xsl:value-of select="/atom:feed/atom:subtitle"/></span>',
-        '              <span class="feed-code-cell feed-code-updated"><xsl:value-of select="/atom:feed/atom:updated"/></span>',
-        "            </div>",
-        '            <xsl:for-each select="/atom:feed/atom:entry">',
-        '              <article class="feed-code-row feed-entry">',
-        '                <a class="feed-code-cell feed-entry-title">',
-        '                  <xsl:attribute name="href"><xsl:value-of select="atom:link[@rel=\'alternate\']/@href"/></xsl:attribute>',
-        '                  <xsl:value-of select="atom:title"/>',
-        "                </a>",
-        '                <time class="feed-code-cell feed-entry-published"><xsl:value-of select="atom:published"/></time>',
-        '                <time class="feed-code-cell feed-entry-updated"><xsl:value-of select="atom:updated"/></time>',
-        '                <a class="feed-code-cell feed-entry-url">',
-        '                  <xsl:attribute name="href"><xsl:value-of select="atom:link[@rel=\'alternate\']/@href"/></xsl:attribute>',
-        '                  <xsl:value-of select="atom:link[@rel=\'alternate\']/@href"/>',
-        "                </a>",
-        "              </article>",
-        "            </xsl:for-each>",
-        "          </section>",
-        "        </main>",
-        "      </body>",
-        "    </html>",
-        "  </xsl:template>",
-        '  <xsl:template match="xhtml:section">',
-        '    <section class="feed-guide" aria-label="How to use this feed">',
-        "      <xsl:apply-templates/>",
-        "    </section>",
-        "  </xsl:template>",
-        '  <xsl:template match="xhtml:p">',
-        "    <p>",
-        '      <xsl:if test="@class"><xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute></xsl:if>',
-        "      <xsl:apply-templates/>",
-        "    </p>",
-        "  </xsl:template>",
-        '  <xsl:template match="xhtml:a">',
-        "    <a>",
-        '      <xsl:if test="@href"><xsl:attribute name="href"><xsl:value-of select="@href"/></xsl:attribute></xsl:if>',
-        '      <xsl:if test="@class"><xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute></xsl:if>',
-        "      <xsl:apply-templates/>",
-        "    </a>",
-        "  </xsl:template>",
-        '  <xsl:template match="xhtml:em">',
-        "    <em><xsl:apply-templates/></em>",
-        "  </xsl:template>",
-        "</xsl:stylesheet>",
-    )
-
-
 def render_feed(graph: SiteGraph) -> str:
     feed_urls = page_urls(graph, FEED_PUBLIC_PATH)
     home_urls = page_urls(graph, HOME_PUBLIC_PATH)
     feed_updated = max([graph.site.updated, *(work.updated for work in graph.works)])
     entries = join_html_lines(*(render_feed_entry(graph, work) for work in graph.works))
+    subtitle_html = f"  <subtitle>{xml_escape(graph.site.statement)}</subtitle>" if graph.site.statement else ""
     return join_html_lines(
         '<?xml version="1.0" encoding="UTF-8"?>',
-        f'<?xml-stylesheet type="text/xsl" href="{FEED_TRANSFORM_PUBLIC_PATH.lstrip("/")}"?>',
+        f'<?xml-stylesheet type="text/css" href="{FEED_STYLESHEET_PUBLIC_PATH.lstrip("/")}"?>',
         '<feed xmlns="http://www.w3.org/2005/Atom">',
         indent_html(render_feed_guide(graph, feed_url=feed_urls.output_url), 2),
         f"  <title>{xml_escape(graph.site.title)}</title>",
-        f"  <subtitle>{xml_escape(graph.site.statement)}</subtitle>",
+        subtitle_html,
         f"  <id>{xml_escape(feed_urls.canonical_url)}</id>",
         f"  <updated>{xml_escape(format_atom_datetime(feed_updated))}</updated>",
         '  <author>',
@@ -721,12 +760,10 @@ def render_feed(graph: SiteGraph) -> str:
 
 def render_feed_guide(graph: SiteGraph, *, feed_url: str) -> str:
     guide_text = graph.site.feed_guide_text.replace("{feed_url}", feed_url)
-    home_url = page_urls(graph, HOME_PUBLIC_PATH).output_url
     paragraphs = render_markdown_paragraphs(
         guide_text,
         context=body_context(graph, FEED_PUBLIC_PATH),
         tag_prefix="xhtml:",
-        include_link_class=False,
     )
     paragraph_html = []
     for index, paragraph in enumerate(paragraphs):
@@ -736,20 +773,48 @@ def render_feed_guide(graph: SiteGraph, *, feed_url: str) -> str:
         paragraph_html.append(f"  <xhtml:p{class_name}>{paragraph.html}</xhtml:p>")
     return join_html_lines(
         '<xhtml:section xmlns:xhtml="http://www.w3.org/1999/xhtml" class="feed-guide" aria-label="How to use this feed">',
-        f'  <xhtml:p class="feed-home-link"><xhtml:a href="{xml_escape(home_url)}">&#8592; Home</xhtml:a></xhtml:p>',
+        indent_html(render_feed_heading(graph), 2),
         *paragraph_html,
         "</xhtml:section>",
     )
 
 
-def render_home_cover_text(graph: SiteGraph) -> str:
-    paragraphs = render_markdown_paragraphs(
-        graph.site.home.cover_text,
-        context=body_context(graph, HOME_PUBLIC_PATH),
-    )
+def render_feed_heading(graph: SiteGraph) -> str:
+    home_urls = page_urls(graph, HOME_PUBLIC_PATH)
     return join_html_lines(
-        *(f'<p class="page-deck cover-statement">{paragraph.html}</p>' for paragraph in paragraphs)
+        '<xhtml:header class="site-header-actions feed-heading" aria-label="Site">',
+        f'  <xhtml:a class="site-header-title" href="{xml_escape(home_urls.output_url)}">{xml_escape(graph.site.title)}</xhtml:a>',
+        indent_html(render_feed_heading_links(graph), 2),
+        "</xhtml:header>",
     )
+
+
+def render_feed_heading_links(graph: SiteGraph) -> str:
+    feed_urls = page_urls(graph, FEED_PUBLIC_PATH)
+    home_urls = page_urls(graph, HOME_PUBLIC_PATH)
+    links = [
+        (graph.site.home.read_label, f"{home_urls.output_url}#contents"),
+        *(
+            (item.label, feed_heading_link_href(item, graph=graph, urls=feed_urls))
+            for item in ordered_site_header_links(graph.site.home.links)
+        ),
+    ]
+    parts = []
+    for index, (label, href) in enumerate(links):
+        if index:
+            parts.append('<xhtml:span class="site-header-separator" aria-hidden="true">&#8226;</xhtml:span>')
+        parts.append(f'<xhtml:a class="site-link site-header-link" href="{xml_escape(href)}">{xml_escape(label)}</xhtml:a>')
+    return join_html_lines(
+        '<xhtml:nav class="site-nav site-header-nav" aria-label="Site navigation">',
+        indent_html(join_html_lines(*parts), 2),
+        "</xhtml:nav>",
+    )
+
+
+def feed_heading_link_href(item: LinkItem, *, graph: SiteGraph, urls: PageUrls) -> str:
+    if tally_embed_src(item.href):
+        return page_urls(graph, WRITE_PUBLIC_PATH).output_url
+    return urls.absolute_href(item.href)
 
 
 def body_context(graph: SiteGraph, current_public_path: str) -> BodyContext:

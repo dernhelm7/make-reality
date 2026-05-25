@@ -20,14 +20,17 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .site-page--home .page-head--cover,
-  .site-page--home .home-cover-meta,
   .site-page--home .home-contents {
     grid-column: 1;
   }
 
-  .site-sidebar {
+  .site-sidebar,
+  .site-page--work .site-sidebar {
     position: static;
+    inset: auto;
+    width: auto;
+    max-height: none;
+    overflow: visible;
   }
 
   .site-page--work .site-sidebar,
@@ -40,21 +43,6 @@
     gap: var(--step-0);
     min-height: 0;
     padding-top: var(--text-sm);
-    border-top: 0.06rem solid var(--line);
-  }
-
-  .site-bar-section--global {
-    margin-top: 0;
-  }
-
-  .site-nav {
-    gap: var(--mobile-nav-gap);
-  }
-
-  .site-nav--global {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--mobile-nav-gap) var(--mobile-nav-column-gap);
   }
 
   .site-contents-groups {
@@ -73,7 +61,6 @@
     width: 100%;
     max-width: var(--measure);
     padding-top: var(--text-sm);
-    border-top: 0.06rem solid var(--line);
   }
 
   .mobile-work-actions {
@@ -81,17 +68,12 @@
     max-width: 100%;
   }
 
-  .home-contents .works-section {
-    flex-basis: 100%;
-    max-width: none;
-  }
-
-  .page--cover {
-    padding-top: var(--step-p2);
-  }
-
-  .home-cover-meta {
-    --link-preview-side-space: var(--site-side-space-narrow);
+  .home-cover-nav {
+    --home-action-nav-top: 58svh;
+    --home-action-nav-size: clamp(var(--step-p4), 12vw, var(--step-p8));
+    flex-wrap: wrap;
+    width: calc(100vw - (var(--site-side-space-narrow) * 2));
+    max-width: calc(100vw - (var(--site-side-space-narrow) * 2));
   }
 }
 
@@ -100,15 +82,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .home-cover-meta {
-    position: relative;
-    --link-preview-width: min(82vw, var(--link-preview-max-width));
-    --link-preview-height: min(50vh, var(--link-preview-max-height));
-    --link-preview-top: calc(100% + var(--step-n2));
-  }
-
-  .home-cover-meta .site-link-preview-region {
-    inset-inline-start: 0;
+  .utility-page {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .home-contents {
@@ -151,7 +126,6 @@
   .reading-prose aside.sidenote {
     padding: var(--text-sm) 0 0;
     border-left: 0;
-    border-top: 0.06rem solid var(--line);
   }
 
   .work-date-note {
@@ -159,6 +133,5 @@
     grid-row: auto;
     margin-top: 0;
     padding: 0;
-    border-top: 0;
   }
 }

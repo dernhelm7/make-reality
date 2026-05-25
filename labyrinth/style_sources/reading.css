@@ -32,6 +32,7 @@
 .reading-prose h5,
 .reading-prose h6 {
   margin: var(--prose-heading-space) 0 var(--prose-heading-trail);
+  font-family: var(--display);
   line-height: var(--leading-tight);
   font-weight: 400;
 }
@@ -68,10 +69,7 @@
 }
 
 .reading-prose hr {
-  border: none;
-  border-top: 0.06rem solid var(--line-strong);
-  margin: var(--prose-divider-space) 0;
-  width: 38%;
+  display: none;
 }
 
 .reading-prose ul,
@@ -166,13 +164,11 @@
 .reading-prose td {
   padding: var(--table-cell-pad-block) var(--table-cell-pad-inline);
   text-align: left;
-  border-bottom: 0.06rem solid var(--line);
 }
 
 .reading-prose th {
   font-family: var(--sans);
   letter-spacing: 0.05em;
-  border-bottom-color: var(--line-strong);
 }
 
 .heading-anchor {
@@ -244,7 +240,6 @@
 .backlinks {
   margin-top: var(--backlinks-space);
   padding-top: var(--backlinks-pad-top);
-  border-top: 0.06rem solid var(--line);
 }
 
 .backlinks-title {

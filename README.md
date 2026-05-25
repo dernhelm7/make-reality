@@ -48,6 +48,8 @@ You can also pass a site root, publish root, and port:
 /Users/dernhelm/Projects/Labyrinth/preview-site agent_docs/examples/reading-microfeatures /tmp/labyrinth-visual-check 8001
 ```
 
+If the port is already in use, the helper exits cleanly before building. Stop that server or pass another port.
+
 ## Validation
 
 Run the local checks with:

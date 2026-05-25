@@ -1,0 +1,26 @@
+- iframe [ref=e2]:
+  - generic [active] [ref=f5e1]:
+    - main [ref=f5e4]:
+      - generic [ref=f5e6]:
+        - progressbar [ref=f5e7]: Page 1 of 1
+        - generic [ref=f5e8]:
+          - generic [ref=f5e11]:
+            - heading "Message" [level=3] [ref=f5e12]
+            - generic [ref=f5e14] [cursor=pointer]: "*"
+          - textbox "Message" [ref=f5e18]:
+            - /placeholder: ""
+          - generic [ref=f5e19]:
+            - textbox "name" [ref=f5e24]
+            - textbox "email" [ref=f5e29]
+        - generic [ref=f5e30]:
+          - button "Submit" [ref=f5e32] [cursor=pointer]:
+            - generic [ref=f5e33]: Submit
+            - img [ref=f5e35]
+            - generic:
+              - img
+          - link "Made with Tally" [ref=f5e39] [cursor=pointer]:
+            - /url: https://tally.so?utm_source=tally&utm_medium=website&utm_campaign=powered-by_embed&version=8&device=desktop
+            - generic [ref=f5e40]:
+              - generic [ref=f5e41]: Made with Tally
+              - img [ref=f5e42]
+    - alert [ref=f5e44]

@@ -192,6 +192,44 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(error.exception.rule, "missing-required-field")
         self.assertEqual(Path("<command-line>"), error.exception.source_path)
 
+    def test_invalid_primary_color_case(self) -> None:
+        site_root = self.make_site(
+            {
+                "alpha": {
+                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
+                    "index.md": "# Opening\n\nA first note.",
+                }
+            }
+        )
+        site_toml = site_root / "site.toml"
+        site_toml.write_text(site_toml.read_text(encoding="utf-8") + 'primary_color = "plum"\n', encoding="utf-8")
+
+        self.assert_build_error(site_root, rule="missing-required-field", source_name="site.toml")
+
+    def test_primary_color_is_written_to_stylesheets(self) -> None:
+        site_root = self.make_site(
+            {
+                "alpha": {
+                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
+                    "index.md": "# Opening\n\nA first note.",
+                }
+            }
+        )
+        site_toml = site_root / "site.toml"
+        site_toml.write_text(site_toml.read_text(encoding="utf-8") + 'primary_color = "#224466"\n', encoding="utf-8")
+        publish_root = site_root / "public"
+
+        build_site(site_root, publish_root)
+
+        self.assertIn(
+            ":root { --primary-color: #224466; --primary-dark-page: #041222; }",
+            (publish_root / "site.css").read_text(encoding="utf-8"),
+        )
+        self.assertIn(
+            ":root { --primary-color: #224466; --primary-dark-page: #041222; }",
+            (publish_root / "feed.css").read_text(encoding="utf-8"),
+        )
+
     def make_site(self, works: dict[str, dict[str, str]]) -> Path:
         site_root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         (site_root / "site.toml").write_text(

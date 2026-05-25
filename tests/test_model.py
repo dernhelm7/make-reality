@@ -108,7 +108,7 @@ class MarkupAndGraphTests(unittest.TestCase):
             {
                 "alpha": {
                     "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
-                    "index.md": "# Opening\n\n[Styles](/site.css), [Feed styles](/feed.css), and [Feed transform](/feed.xsl).",
+                    "index.md": "# Opening\n\n[Styles](/site.css) and [Feed styles](/feed.css).",
                 }
             }
         )
@@ -117,10 +117,8 @@ class MarkupAndGraphTests(unittest.TestCase):
 
         self.assertIn("/site.css", graph.known_paths)
         self.assertIn("/feed.css", graph.known_paths)
-        self.assertIn("/feed.xsl", graph.known_paths)
         self.assertIn('href="../site.css"', graph.work_by_path["/alpha"].body.html)
         self.assertIn('href="../feed.css"', graph.work_by_path["/alpha"].body.html)
-        self.assertIn('href="../feed.xsl"', graph.work_by_path["/alpha"].body.html)
 
     def test_direct_markdown_file_derives_work_defaults(self) -> None:
         site_root = self.make_site({})

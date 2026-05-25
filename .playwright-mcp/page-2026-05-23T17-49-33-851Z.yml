@@ -1,0 +1,234 @@
+- generic [active] [ref=e1]:
+  - checkbox "Use alternate color theme" [ref=e2]
+  - generic [ref=e4]: Use alternate color theme
+  - generic [ref=e5]:
+    - banner "Site" [ref=e6]:
+      - link "Lay the Land" [ref=e7]:
+        - /url: ../
+      - paragraph [ref=e8]: Site links
+      - navigation "Site navigation" [ref=e9]:
+        - link "Read" [ref=e10]:
+          - /url: ../#contents
+        - generic [ref=e11]: •
+        - link "Follow" [ref=e12]:
+          - /url: ../feed.xml
+        - generic [ref=e13]: •
+        - link "Write" [ref=e14]:
+          - /url: ../write
+    - generic [ref=e17]:
+      - main [ref=e18]:
+        - article [ref=e19]:
+          - generic [ref=e20]:
+            - heading "Bibliography" [level=1] [ref=e21]
+            - link "Permalink" [ref=e22]:
+              - /url: https://dernhelm7.github.io/make-reality/bibliography
+          - complementary "Published" [ref=e23]:
+            - time [ref=e24]: 29 January 2024
+          - generic [ref=e29]:
+            - paragraph [ref=e30]: This bibliography collects the external references that shaped Lay the Land's direction.
+            - paragraph [ref=e31]: It keeps the sources you introduced while describing the site, plus the one reference formalized into the brief during drafting.
+            - paragraph [ref=e32]: It leaves out placeholder URLs, assistant-only research links, and operational repo links that did not shape the project direction.
+            - heading "Design Direction" [level=2] [ref=e33]:
+              - link "Design Direction" [ref=e34]:
+                - /url: "#design-direction"
+            - list [ref=e35]:
+              - listitem [ref=e36]:
+                - link "sive.rs ↗" [ref=e37]:
+                  - /url: https://sive.rs/
+                - text: set the tone for direct navigation, low chrome, and editorial clarity.
+              - listitem [ref=e38]:
+                - link "laminae.org ↗" [ref=e39]:
+                  - /url: https://laminae.org/
+                - text: reinforced an essay-first reading rhythm and stronger typographic hierarchy.
+              - listitem [ref=e40]:
+                - link "bachtogauss.com/about ↗" [ref=e41]:
+                  - /url: https://bachtogauss.com/about/
+                - text: gave the reference for narrow reading measure, one scale driving type and spacing, and rare media-query pivots.
+              - listitem [ref=e42]:
+                - link "Typographics 2020 Schedule ↗" [ref=e43]:
+                  - /url: https://2020.typographics.com/schedule/
+                - text: pushed the spec toward dense but highly legible information layout.
+              - listitem [ref=e44]:
+                - link "jacobleech.com ↗" [ref=e45]:
+                  - /url: https://jacobleech.com/
+                - text: supported giving the site visual personality while keeping motion restrained.
+              - listitem [ref=e46]:
+                - link "sive.rs/su ↗" [ref=e47]:
+                  - /url: https://sive.rs/su
+                - text: set the bar for short, root-level, slashless public URLs.
+              - listitem [ref=e48]:
+                - link "101 Design Rules ↗" [ref=e49]:
+                  - /url: https://wearecollins.com/story/101-design-rules/
+                - text: provided principled rules for design restraint and defensible decisions.
+              - listitem [ref=e50]:
+                - link "justinjackson.ca/words ↗" [ref=e51]:
+                  - /url: https://justinjackson.ca/words.html
+                - text: calibrated the lower bound for minimalism and helped define how far to go.
+              - listitem [ref=e52]:
+                - link "justinjackson.ca/xslt ↗" [ref=e53]:
+                  - /url: https://justinjackson.ca/xslt
+                - text: showed how one styled feed file can stay readable in browsers without adding a separate feed page.
+              - listitem [ref=e54]:
+                - link "musa.bet/home.htm ↗" [ref=e55]:
+                  - /url: https://musa.bet/home.htm
+                - text: served as a conceptual reference for featural symbol logic and internal consistency, not the site's visual style.
+              - listitem [ref=e56]:
+                - link "Type Terms ↗" [ref=e57]:
+                  - /url: https://avark.agency/typeterms
+                - text: set the model for interactive teaching pieces and how a work might move and instruct.
+              - listitem [ref=e58]:
+                - link "Mechanical Watch ↗" [ref=e59]:
+                  - /url: https://ciechanow.ski/mechanical-watch/
+                - text: shows the level of interactive teaching, spatial explanation, and patient guided motion worth pursuing.
+              - listitem [ref=e60]:
+                - link "barcia.dev ↗" [ref=e61]:
+                  - /url: https://barcia.dev/
+                - text: showed generous breathing room and whitespace as a primary design material.
+              - listitem [ref=e62]:
+                - link "manuelmoreale.com ↗" [ref=e63]:
+                  - /url: https://manuelmoreale.com/
+                - text: showed narrow column, generous spacing, and restrained typography.
+              - listitem [ref=e64]:
+                - link "paco.me ↗" [ref=e65]:
+                  - /url: https://paco.me
+                - text: showed a disciplined, spacious page with minimal ornament.
+              - listitem [ref=e66]:
+                - link "shud.in/projects ↗" [ref=e67]:
+                  - /url: https://shud.in/projects
+                - text: de-emphasized layout and gave content more room.
+              - listitem [ref=e68]:
+                - link "subpixel.space/entries ↗" [ref=e69]:
+                  - /url: https://subpixel.space/entries/
+                - text: pushed maximum whitespace and minimal decoration.
+              - listitem [ref=e70]:
+                - link "thesephist.com ↗" [ref=e71]:
+                  - /url: https://thesephist.com/
+                - text: showed academic plainness where content commands attention.
+              - listitem [ref=e72]:
+                - link "danilafe.com/blog/blog_microfeatures ↗" [ref=e73]:
+                  - /url: https://danilafe.com/blog/blog_microfeatures/
+                - text: clarified the reading microfeatures the site should have.
+              - listitem [ref=e74]:
+                - link "Euclid, Book I, Proposition 3 ↗" [ref=e75]:
+                  - /url: https://www.c82.net/euclid/book1/#prop3
+                - text: showed structured content presentation, cross-referencing, and diagrams treated as co-equal with text.
+              - listitem [ref=e76]:
+                - link "Printing Types ↗" [ref=e77]:
+                  - /url: https://www.c82.net/printing-types/
+                - text: "gave the strongest interface and navigation reference: a book made into a digital edition with deep-linkable headings and readable cross-references."
+              - listitem [ref=e78]:
+                - link "Notes on the Euclid project ↗" [ref=e79]:
+                  - /url: https://www.c82.net/blog/?id=79
+                - text: covered typeface selection for historical fidelity, SVG structural elements, and decorative initials turned into a custom font.
+            - heading "Animation Direction" [level=2] [ref=e80]:
+              - link "Animation Direction" [ref=e81]:
+                - /url: "#animation-direction"
+            - list [ref=e82]:
+              - listitem [ref=e83]:
+                - link "UI Ball Loaders ↗" [ref=e84]:
+                  - /url: https://uiball.com/ldrs/
+                - text: gave the animation reference. The implementation direction still moved toward CSS and inline SVG rather than a JavaScript dependency.
+            - heading "Spec Direction" [level=2] [ref=e85]:
+              - link "Spec Direction" [ref=e86]:
+                - /url: "#spec-direction"
+            - list [ref=e87]:
+              - listitem [ref=e88]:
+                - link "Writing a good CLAUDE.md ↗" [ref=e89]:
+                  - /url: https://www.humanlayer.dev/blog/writing-a-good-claude-md
+                - text: helped shape the push toward a shorter, denser, more directive
+                - code [ref=e90]: AGENTS.md
+                - text: and planning style.
+            - heading "Low-JS Direction" [level=2] [ref=e91]:
+              - link "Low-JS Direction" [ref=e92]:
+                - /url: "#low-js-direction"
+            - list [ref=e93]:
+              - listitem [ref=e94]:
+                - link "Do you really need JavaScript in 2024? ↗" [ref=e95]:
+                  - /url: https://the-sustainable.dev/do-you-really-need-javascript-in-2024/
+                - text: strengthened the case for HTML and CSS carrying the site, with JavaScript added only when a feature earns its cost.
+              - listitem [ref=e96]:
+                - link "The Bottleneck of the Web ↗" [ref=e97]:
+                  - /url: https://css-tricks.com/the-bottleneck-of-the-web/
+                - text: framed JavaScript as a CPU and main-thread cost, so shared scripts should stay small and direct.
+              - listitem [ref=e98]:
+                - link "How this site is coded ↗" [ref=e99]:
+                  - /url: https://liamnugent.me/posts/how-this-site-is-coded/
+                - text: reinforced semantic HTML, browser defaults, minimal CSS, and content-first structure over branding chrome.
+            - heading "Typography and CSS Technique" [level=2] [ref=e100]:
+              - link "Typography and CSS Technique" [ref=e101]:
+                - /url: "#typography-and-css-technique"
+            - list [ref=e102]:
+              - listitem [ref=e103]:
+                - link "More Meaningful Typography ↗" [ref=e104]:
+                  - /url: https://alistapart.com/article/more-meaningful-typography/
+                - text: introduced modular type scales from harmonic ratios and informed the
+                - code [ref=e105]: pow()
+                - text: "-based scale approach."
+              - listitem [ref=e106]:
+                - 'link "Math in CSS: powers ↗" [ref=e107]':
+                  - /url: https://danielcwilson.com/posts/mathematicss-powers/
+                - text: documented CSS
+                - code [ref=e108]: pow()
+                - text: and related math functions, which enabled clean single-point derivation of the type scale.
+              - listitem [ref=e109]:
+                - link "Fluid type on web.dev ↗" [ref=e110]:
+                  - /url: https://web.dev/articles/baseline-in-action-fluid-type
+                - text: reinforced the fluid type approach and flagged the WCAG 1.4.4 zoom constraint.
+              - listitem [ref=e111]:
+                - link "Fluid Typography ↗" [ref=e112]:
+                  - /url: https://www.smashingmagazine.com/2016/05/fluid-typography/
+                - text: introduced continuous fluid scaling via
+                - code [ref=e113]: clamp()
+                - text: and viewport units and shaped the no-breakpoints approach.
+              - listitem [ref=e114]:
+                - link "em, px, pt, cm, in… ↗" [ref=e115]:
+                  - /url: https://www.w3.org/Style/LieBos3e/em.en.html
+                - text: "anchored the proportional units system:"
+                - code [ref=e116]: rem
+                - text: ","
+                - code [ref=e117]: em
+                - text: ", and"
+                - code [ref=e118]: ch
+                - text: over
+                - code [ref=e119]: px
+                - text: .
+            - heading "Brief Reference Added During Drafting" [level=2] [ref=e120]:
+              - link "Brief Reference Added During Drafting" [ref=e121]:
+                - /url: "#brief-reference-added-during-drafting"
+            - list [ref=e122]:
+              - listitem [ref=e123]:
+                - link "POSSE ↗" [ref=e124]:
+                  - /url: https://indieweb.org/POSSE
+                - text: anchored the IndieWeb compatibility goal that was later written into the project aim.
+      - complementary [ref=e125]:
+        - region "Site contents" [ref=e127]:
+          - heading "Site contents" [level=2] [ref=e128]
+          - generic [ref=e130]:
+            - paragraph [ref=e131]:
+              - link "Cabinet" [ref=e132]:
+                - /url: ../#cabinet
+            - list [ref=e133]:
+              - listitem [ref=e134]:
+                - generic [ref=e135]: Bibliography
+                - list [ref=e136]:
+                  - listitem [ref=e137]:
+                    - link "Design Direction" [ref=e138]:
+                      - /url: "#design-direction"
+                  - listitem [ref=e139]:
+                    - link "Animation Direction" [ref=e140]:
+                      - /url: "#animation-direction"
+                  - listitem [ref=e141]:
+                    - link "Spec Direction" [ref=e142]:
+                      - /url: "#spec-direction"
+                  - listitem [ref=e143]:
+                    - link "Low-JS Direction" [ref=e144]:
+                      - /url: "#low-js-direction"
+                  - listitem [ref=e145]:
+                    - link "Typography and CSS Technique" [ref=e146]:
+                      - /url: "#typography-and-css-technique"
+                  - listitem [ref=e147]:
+                    - link "Brief Reference Added During Drafting" [ref=e148]:
+                      - /url: "#brief-reference-added-during-drafting"
+              - listitem [ref=e149]:
+                - link "Style Cabinet" [ref=e150]:
+                  - /url: ../style-cabinet

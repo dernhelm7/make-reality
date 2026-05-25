@@ -25,6 +25,8 @@ WORK_FILE_FORMATS = {
     ".html": "html",
     ".md": "markdown",
 }
+DEFAULT_PRIMARY_COLOR = "#110411"
+HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 @dataclass(frozen=True)
@@ -73,6 +75,7 @@ class SiteConfig:
     statement: str
     author_name: str
     updated: datetime
+    primary_color: str
 
 
 @dataclass(frozen=True)
@@ -149,9 +152,13 @@ def load_site_config(site_root: Path, build_url: str | None = None) -> SiteConfi
     title = require_string(data, "title", site_path)
     home = parse_home_markdown(home_path)
     feed_guide_text = read_required_markdown(feed_guide_path)
-    statement = require_string(data, "statement", site_path)
+    statement = optional_string(data, "statement", site_path) or ""
     author_name = require_string(data, "author_name", site_path)
     updated = parse_timestamp(require_string(data, "updated", site_path), site_path, "updated")
+    primary_color = parse_hex_color(
+        optional_string(data, "primary_color", site_path) or DEFAULT_PRIMARY_COLOR,
+        site_path,
+    )
 
     return SiteConfig(
         source_path=site_path,
@@ -166,6 +173,7 @@ def load_site_config(site_root: Path, build_url: str | None = None) -> SiteConfi
         statement=statement,
         author_name=author_name,
         updated=updated,
+        primary_color=primary_color,
     )
 
 
@@ -803,6 +811,12 @@ def require_string(data: dict[str, object], field: str, source_path: Path) -> st
 def require_absolute_url(data: dict[str, object], field: str, source_path: Path) -> str:
     value = require_string(data, field, source_path)
     return normalize_absolute_url(value, source_path, field)
+
+
+def parse_hex_color(value: str, source_path: Path) -> str:
+    if not HEX_COLOR_RE.fullmatch(value):
+        raise BuildError(source_path, "missing-required-field", "primary_color must be a six-digit hex color")
+    return value.lower()
 
 
 def normalize_absolute_url(value: str, source_path: Path, field: str) -> str:

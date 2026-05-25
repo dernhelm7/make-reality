@@ -72,6 +72,42 @@ find_python() {
 
 python_bin=$(find_python)
 
+case "$port" in
+  ''|*[!0-9]*)
+    printf 'Preview port must be a number, got %s.\n' "$port" >&2
+    exit 1
+    ;;
+esac
+
+if [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
+  printf 'Preview port must be between 1 and 65535, got %s.\n' "$port" >&2
+  exit 1
+fi
+
+ensure_port_free() {
+  if "$python_bin" -c '
+import socket
+import sys
+
+port = int(sys.argv[1])
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+try:
+    sock.bind(("", port))
+except OSError:
+    raise SystemExit(1)
+finally:
+    sock.close()
+' "$port"; then
+    return
+  fi
+
+  printf 'Port %s is already in use. Stop that server or pass another port.\n' "$port" >&2
+  exit 1
+}
+
+ensure_port_free
+
 case "$site_root" in
   /*) ;;
   *) site_root="$script_dir/$site_root" ;;

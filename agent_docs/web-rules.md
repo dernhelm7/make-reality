@@ -21,6 +21,7 @@ Specify accessibility and interoperability rules.
 8. Public URLs stay stable for unchanged content across rebuilds.
 9. Each work page exposes an `h-entry` for the work title, canonical URL, and main body content.
 10. Public HTML pages expose canonical URLs and Atom feed discovery metadata.
+11. The light/dark theme switch is keyboard usable, names its action for assistive technology, works on the current page without scripting, and persists a manual choice across same-tab navigation when scripting is available.
 
 ## Acceptance Checks
 1. Build the `web-output fixtures` named in `agent_docs/examples/README.md`.

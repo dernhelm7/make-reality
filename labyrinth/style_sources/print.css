@@ -11,6 +11,12 @@
     display: none;
   }
 
+  .site-header-actions,
+  .theme-toggle,
+  .theme-toggle-input {
+    display: none;
+  }
+
   body {
     line-height: 1.45;
     color: #000;

@@ -6,7 +6,7 @@ Each fixture directory is one self-contained site root plus one `expected.md` fi
 
 Examples may show one accepted file layout, naming convention, or created-date shape. Treat those as concrete examples unless a main spec doc makes them a general requirement.
 Each `expected.md` should record only the exact outcomes worth checking for its fixture. Do not restate generic success or common output files unless the fixture adds a distinct case.
-Automated acceptance tests should check fixture behavior and public contracts, not incidental prose, exact CSS formulas, exact dimensions, or the current wording of the real `site/` source.
+Automated acceptance tests should verify only that the built site functions: core pages exist, navigation links resolve, feeds render, authored content appears, and generated assets are present or absent as required. Do not add acceptance tests for styling, exact copy, layout formulas, or implementation details.
 
 Keep each example small and focused. When a rule changes, update the owning spec and the affected example in the same change.
 
@@ -14,7 +14,7 @@ Current entries:
 
 - `minimal-markdown`: one self-contained Markdown work file with derived defaults
 - `named-sections`: works assigned through section folders matching `home.md`, with section descriptions and one empty shelf
-- `html-work`: one authored HTML body fragment, including author-provided JavaScript
+- `html-work`: one authored HTML body fragment, including small author-provided JavaScript
 - `reading-microfeatures`: automatic heading anchors, linked section index, backlinks, and link treatment
 - `section-fallback`: one work whose section falls back to `Other works`
 - `wikilinks-and-assets`: wikilinks, aliases, missing-link fallback, and one local work asset

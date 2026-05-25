@@ -21,6 +21,16 @@
   color: var(--label-muted);
 }
 
+.site-contents-summary-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-contents-summary-link:hover,
+.site-contents-summary-link:focus-visible {
+  color: var(--accent);
+}
+
 .site-contents-list,
 .works-list {
   list-style: none;
@@ -97,7 +107,7 @@
   top: var(--rail-marker-center);
   width: var(--rail-guide-dot-size);
   height: var(--rail-guide-dot-size);
-  border-radius: 999px;
+  border-radius: 999rem;
   background: var(--accent);
   box-shadow: 0 0 0 var(--rail-guide-dot-gap) var(--page);
   transform: translateY(-50%);
@@ -121,24 +131,6 @@
 .site-link--work-index:hover,
 .site-link--work-index:focus-visible {
   color: inherit;
-}
-
-.home-contents > .page-head {
-  justify-items: start;
-  text-align: left;
-}
-
-.home-contents-heading-link {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--step-n3);
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.home-contents-heading-arrow {
-  font-size: 0.56em;
-  line-height: 1;
 }
 
 .mobile-work-contents {
@@ -182,23 +174,16 @@
 .mobile-work-actions {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   width: 100%;
   align-items: baseline;
   gap: var(--mobile-nav-gap) var(--mobile-nav-column-gap);
 }
 
-.mobile-work-global-links {
-  order: 1;
-  grid-column: 1;
-  justify-self: start;
-  min-width: 0;
-}
-
 .mobile-work-top-link {
   position: absolute;
   left: 50%;
-  order: 2;
+  order: 1;
   font-family: var(--serif);
   font-size: var(--text-sm);
   line-height: 1;
@@ -209,8 +194,8 @@
 }
 
 .mobile-work-date {
-  order: 3;
-  grid-column: 3;
+  order: 2;
+  grid-column: 2;
   justify-self: end;
   min-width: 0;
   margin: 0;
@@ -234,12 +219,6 @@
   gap: var(--works-section-gap);
 }
 
-.mobile-work-index-link {
-  justify-self: start;
-  font-size: var(--text-sm);
-  line-height: var(--leading-tight);
-}
-
 .works-section {
   display: grid;
   grid-template-columns: var(--home-contents-label-width) minmax(0, 1fr);
@@ -247,11 +226,6 @@
   row-gap: var(--works-section-gap);
   align-items: baseline;
   min-width: 0;
-}
-
-.home-contents .works-section {
-  flex: 1 1 calc((100% - var(--home-contents-column-gap)) / 2);
-  max-width: calc((100% - var(--home-contents-column-gap)) / 2);
 }
 
 .works-section-head {
@@ -275,10 +249,11 @@
 }
 
 .home-contents .section-heading {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: var(--home-section-heading-size);
   font-weight: 400;
   letter-spacing: 0;
+  scroll-margin-top: var(--site-top-space);
   text-transform: none;
   color: var(--ink);
 }
@@ -292,7 +267,8 @@
 }
 
 .home-contents .section-description {
-  line-height: var(--leading-tight);
+  font-size: var(--home-contents-text-size);
+  line-height: var(--leading-running);
   color: color-mix(in srgb, var(--ink) 38%, var(--page));
 }
 
@@ -303,7 +279,7 @@
 }
 
 .home-contents .works-list {
-  gap: 0;
+  gap: var(--home-contents-row-gap);
 }
 
 .works-list:empty {
@@ -313,6 +289,10 @@
 .works-entry {
   min-width: 0;
   margin: 0;
+}
+
+.home-contents .works-entry[id] {
+  scroll-margin-top: var(--site-top-space);
 }
 
 .works-entry-link {
@@ -330,6 +310,10 @@
   column-gap: var(--home-contents-entry-gap);
   min-height: 0;
   padding-block: 0;
+}
+
+.home-contents .works-entry-reference {
+  font-size: var(--home-contents-reference-size);
 }
 
 .works-entry-link:hover,
@@ -356,7 +340,8 @@
 }
 
 .home-contents .works-entry-title {
-  font-size: var(--text-xs);
+  font-size: var(--home-contents-text-size);
+  line-height: var(--leading-running);
 }
 
 .works-entry-leader,
@@ -373,8 +358,18 @@
 }
 
 .home-contents .works-entry-leader {
-  font-size: var(--text-xs);
+  font-size: var(--home-contents-text-size);
+  line-height: var(--leading-running);
   letter-spacing: var(--home-leader-dot-step);
+}
+
+@media (min-width: 50.001rem) {
+  .home-contents .works-section-head {
+    position: sticky;
+    top: var(--site-top-space);
+    align-self: start;
+  }
+
 }
 
 .works-entry-link:hover .works-entry-leader,

@@ -1,0 +1,71 @@
+- generic [active] [ref=e1]:
+  - checkbox "Use alternate color theme" [checked] [ref=e2]
+  - generic [ref=e4]: Use alternate color theme
+  - generic [ref=e5]:
+    - banner "Site" [ref=e6]:
+      - link "Lay the Land" [ref=e7]:
+        - /url: ../
+      - paragraph [ref=e8]: Site links
+      - navigation "Site navigation" [ref=e9]:
+        - link "Read" [ref=e10]:
+          - /url: ../#contents
+        - generic [ref=e11]: •
+        - link "Follow" [ref=e12]:
+          - /url: ../feed.xml
+        - generic [ref=e13]: •
+        - link "Write" [ref=e14]:
+          - /url: ../write
+    - main [ref=e18]:
+      - article [ref=e19]:
+        - generic [ref=e20]:
+          - heading "Starter Note" [level=1] [ref=e21]
+          - link "Permalink" [ref=e22]:
+            - /url: https://dernhelm7.github.io/make-reality/starter-note
+        - generic [ref=e23]:
+          - group [ref=e24]:
+            - generic "Contents" [ref=e25]:
+              - generic [ref=e26]: Contents
+              - generic [ref=e27]: →
+          - generic [ref=e29]:
+            - generic [ref=e31]:
+              - heading "Opening" [level=2] [ref=e32]:
+                - link "Opening" [ref=e33]:
+                  - /url: "#opening"
+              - paragraph [ref=e34]: This is starter content for the default preview. Replace or remove this folder when you add your own work.
+              - heading "Next" [level=2] [ref=e35]:
+                - link "Next" [ref=e36]:
+                  - /url: "#next"
+              - paragraph [ref=e37]:
+                - text: See
+                - link "Margin Study" [ref=e38]:
+                  - /url: ../margin-study
+                - text: for HTML sidenotes and
+                - link "Style Cabinet" [ref=e39]:
+                  - /url: ../style-cabinet
+                - text: for lists, tables, figures, and code blocks.
+            - region "Backlinks" [ref=e40]:
+              - heading "Backlinks" [level=2] [ref=e41]
+              - list [ref=e42]:
+                - listitem [ref=e43]:
+                  - link "Margin Study" [ref=e44]:
+                    - /url: ../margin-study
+                - listitem [ref=e45]:
+                  - link "Style Cabinet" [ref=e46]:
+                    - /url: ../style-cabinet
+        - generic "Work links" [ref=e47]:
+          - generic [ref=e48]:
+            - link "Top of page" [ref=e49]:
+              - /url: "#work-top"
+              - text: ↑
+            - paragraph [ref=e50]:
+              - generic [ref=e51]: Published
+              - time [ref=e52]: 01 January 2024
+          - region "More in Notes" [ref=e53]:
+            - heading "More in Notes" [level=2] [ref=e56]
+            - list [ref=e57]:
+              - listitem [ref=e58]:
+                - link "Hypnosis" [ref=e59]:
+                  - /url: ../hypnosis
+                  - generic [ref=e60]: Hypnosis
+                  - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                  - generic [ref=e61]: hypnosis

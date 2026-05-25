@@ -46,11 +46,17 @@ class FixtureSiteTestCase(unittest.TestCase):
         self.assertTrue((publish_root / "index.html").is_file())
         self.assertFalse((publish_root / "works").exists())
         self.assertTrue((publish_root / "feed.xml").is_file())
-        self.assertTrue((publish_root / "feed.xsl").is_file())
         self.assertTrue((publish_root / "feed.css").is_file())
         self.assertTrue((publish_root / "site.css").is_file())
         self.assertTrue(any(path.suffix == ".woff" for path in (publish_root / "fonts").rglob("*")))
         self.assertEqual([], list(publish_root.rglob("*.js")))
+        for public_path in ["/", *expected_pages]:
+            page = self.page_text(publish_root, public_path)
+            self.assertIn(
+                '<input class="theme-toggle-input visually-hidden" type="checkbox" id="site-theme-toggle" autocomplete="off">',
+                page,
+            )
+            self.assertIn('<label class="theme-toggle" for="site-theme-toggle">', page)
         for public_path in expected_pages:
             self.assertTrue(self.public_page_path(publish_root, public_path).exists(), public_path)
 

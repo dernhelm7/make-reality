@@ -1,0 +1,119 @@
+- generic [active] [ref=e1]:
+  - checkbox "Use alternate color theme" [checked] [ref=e2]
+  - generic [ref=e4]: Use alternate color theme
+  - generic [ref=e5]:
+    - banner "Site" [ref=e6]:
+      - heading "Lay the Land" [level=1] [ref=e7]:
+        - link "Lay the Land" [ref=e8]:
+          - /url: ./
+      - paragraph [ref=e10]:
+        - text: Wanting to know one another
+        - text: they made the Universe.
+    - main [ref=e14]:
+      - generic [ref=e15]:
+        - region "Home cover" [ref=e16]:
+          - navigation "Site navigation" [ref=e17]:
+            - link "Read" [ref=e18]:
+              - /url: ./#contents
+            - generic [ref=e19]: •
+            - link "Follow" [ref=e20]:
+              - /url: feed.xml
+            - generic [ref=e21]: •
+            - link "Write" [ref=e22]:
+              - /url: write
+        - region "Read" [ref=e23]:
+          - generic [ref=e24]:
+            - region "Poems" [ref=e25]:
+              - generic [ref=e27]:
+                - heading "Poems" [level=3] [ref=e28]
+                - paragraph [ref=e29]: the stuff of reality
+              - list [ref=e30]:
+                - listitem [ref=e31]:
+                  - link "Know" [ref=e32]:
+                    - /url: know
+                    - generic [ref=e33]: Know
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e34]: know
+                - listitem [ref=e35]:
+                  - link "Life" [ref=e36]:
+                    - /url: life
+                    - generic [ref=e37]: Life
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e38]: life
+            - region "Notes" [ref=e39]:
+              - generic [ref=e41]:
+                - heading "Notes" [level=3] [ref=e42]
+                - paragraph [ref=e43]: thoughts, fragments, philosophy
+              - list [ref=e44]:
+                - listitem [ref=e45]:
+                  - link "Hypnosis" [ref=e46]:
+                    - /url: hypnosis
+                    - generic [ref=e47]: Hypnosis
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e48]: hypnosis
+                - listitem [ref=e49]:
+                  - link "Starter Note" [ref=e50]:
+                    - /url: starter-note
+                    - generic [ref=e51]: Starter Note
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e52]: starter-note
+            - region "Studies" [ref=e53]:
+              - generic [ref=e55]:
+                - heading "Studies" [level=3] [ref=e56]
+                - paragraph [ref=e57]: exploration with references
+              - list [ref=e58]:
+                - listitem [ref=e59]:
+                  - link "Fungus" [ref=e60]:
+                    - /url: fungus
+                    - generic [ref=e61]: Fungus
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e62]: fungus
+                - listitem [ref=e63]:
+                  - link "Learning" [ref=e64]:
+                    - /url: learning
+                    - generic [ref=e65]: Learning
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e66]: learning
+                - listitem [ref=e67]:
+                  - link "Potato" [ref=e68]:
+                    - /url: potato
+                    - generic [ref=e69]: Potato
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e70]: potato
+                - listitem [ref=e71]:
+                  - link "Red Light" [ref=e72]:
+                    - /url: red-light
+                    - generic [ref=e73]: Red Light
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e74]: red-light
+                - listitem [ref=e75]:
+                  - link "Margin Study" [ref=e76]:
+                    - /url: margin-study
+                    - generic [ref=e77]: Margin Study
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e78]: margin-study
+            - region "Guides" [ref=e79]:
+              - generic [ref=e81]:
+                - heading "Guides" [level=3] [ref=e82]
+                - paragraph [ref=e83]: problems solved
+            - region "Projects" [ref=e84]:
+              - generic [ref=e86]:
+                - heading "Projects" [level=3] [ref=e87]
+                - paragraph [ref=e88]: tools, adaptations, things made
+            - region "Cabinet" [ref=e89]:
+              - generic [ref=e91]:
+                - heading "Cabinet" [level=3] [ref=e92]
+                - paragraph [ref=e93]: influences, bibliography, aesthetics
+              - list [ref=e94]:
+                - listitem [ref=e95]:
+                  - link "Bibliography" [ref=e96]:
+                    - /url: bibliography
+                    - generic [ref=e97]: Bibliography
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e98]: bibliography
+                - listitem [ref=e99]:
+                  - link "Style Cabinet" [ref=e100]:
+                    - /url: style-cabinet
+                    - generic [ref=e101]: Style Cabinet
+                    - generic: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+                    - generic [ref=e102]: style-cabinet

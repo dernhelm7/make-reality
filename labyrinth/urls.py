@@ -7,16 +7,16 @@ from urllib.parse import SplitResult, urljoin, urlsplit, urlunsplit
 
 HOME_PUBLIC_PATH = "/"
 FEED_PUBLIC_PATH = "/feed.xml"
-FEED_TRANSFORM_PUBLIC_PATH = "/feed.xsl"
 FEED_STYLESHEET_PUBLIC_PATH = "/feed.css"
 SITE_STYLESHEET_PUBLIC_PATH = "/site.css"
+WRITE_PUBLIC_PATH = "/write"
 FIXED_PUBLIC_PATHS = frozenset(
     {
         HOME_PUBLIC_PATH,
         FEED_PUBLIC_PATH,
-        FEED_TRANSFORM_PUBLIC_PATH,
         FEED_STYLESHEET_PUBLIC_PATH,
         SITE_STYLESHEET_PUBLIC_PATH,
+        WRITE_PUBLIC_PATH,
     }
 )
 

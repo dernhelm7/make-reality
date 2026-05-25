@@ -1,0 +1,16 @@
+- iframe [ref=e2]:
+  - main [ref=f2e4]:
+    - generic [ref=f2e6]:
+      - progressbar [ref=f2e7]: Page 1 of 1
+      - generic [ref=f2e8]:
+        - heading "Message" [level=3] [ref=f2e12]
+        - textbox "Message" [ref=f2e16]:
+          - /placeholder: ""
+        - generic [ref=f2e17]:
+          - textbox "name" [ref=f2e22]
+          - textbox "email" [ref=f2e27]
+      - button "Submit" [ref=f2e30] [cursor=pointer]:
+        - generic [ref=f2e31]: Submit
+        - img [ref=f2e33]
+        - generic:
+          - img

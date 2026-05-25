@@ -23,6 +23,9 @@ It leaves out placeholder URLs, assistant-only research links, and operational r
 - `https://jacobleech.com/`
   Supported giving the site visual personality while keeping motion restrained.
 
+- `https://rorysaur.blog/`
+  Added another reference point for a personal site that feels authored, spare, and deliberately paced.
+
 - `https://sive.rs/su`
   Set the bar for short, root-level, slashless public URLs.
 
@@ -84,7 +87,10 @@ It leaves out placeholder URLs, assistant-only research links, and operational r
 ## Low-JS Direction
 
 - `https://the-sustainable.dev/do-you-really-need-javascript-in-2024/`
-  Strengthened the case for making no build-generated JavaScript the default, with HTML and CSS carrying the site.
+  Strengthened the case for HTML and CSS carrying the site, with JavaScript added only when a feature earns its cost.
+
+- `https://css-tricks.com/the-bottleneck-of-the-web/`
+  Framed JavaScript as a CPU and main-thread bottleneck, so the site policy favors browser-native features and direct browser APIs before adding script.
 
 - `https://liamnugent.me/posts/how-this-site-is-coded/`
   Reinforced semantic HTML, browser defaults, minimal CSS, and a content-first structure over branding chrome.

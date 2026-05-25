@@ -1,12 +1,13 @@
 # Expected Outcome
 
 - `field-notes` renders self-linking body headings with ids `materials`, `turn`, `turn-2`, and `marks`.
+- `field-notes` shows the site title in the same top line as the compact site navigation.
 - `field-notes` keeps the work header to the title and places the publish date at the top of the margin-note track as muted metadata.
 - Those self-linking body headings keep a plain heading treatment without an underline.
 - The home contents row for `Garden Path` places `Garden Path` at the left, a close-set baseline dotted leader in the middle, and `garden-path` at the right like a page reference.
-- The wide-screen left rail nests linked section entries for `Materials`, `Turn`, and `Turn` under `Field Notes` as one close-set list with a guide line and teal current-entry dot.
+- The wide-screen left rail nests linked section entries for `Materials`, `Turn`, and `Turn` under `Field Notes` as one close-set list with a guide line and accent current-entry dot.
 - The narrow-screen work page places a collapsed `Contents` block after the title with the same heading links and a right-arrow cue.
-- The narrow-screen end matter places `Write` and `Follow` at the left, a centered up-arrow link to the top of the work, and the publish date at the right, then shows muted `More in Other works`, the `Garden Path` home-contents row, and a teal `← Back to Contents` link to the home contents index.
+- The narrow-screen end matter places a centered up-arrow link to the top of the work and the publish date at the right, then shows muted `More in Other works` and the `Garden Path` home-contents row.
 - The link to `[[Garden Path]]` resolves to the published path `/garden-path` and reads as a body link without a heavy underline.
 - The external link to `https://archive.example/atlas` uses the appended link marker without a heavy underline.
 - The Atom feed entry for `Field Notes` rewrites `Garden Path` and `Archive Atlas` to absolute URLs inside entry content.

@@ -21,20 +21,23 @@ Specify relationships and flow of use by author and reader.
 5. Each work derives its title and published path from its file stem or folder name. The home-page contents index uses the title as the entry label and the slashless path as the reference label.
 6. Publish each work at `/<slug>`.
 7. A Markdown work body is parsed as CommonMark, with wikilinks as a Labyrinth inline feature. A work can also be authored as an HTML body fragment.
-8. People using the site get a cover page at `/`, one work page for each work, and `/feed.xml`.
-9. The home page places the site contents index beneath the cover.
+8. People using the site get a cover page at `/`, one work page for each work, `/feed.xml`, and a `/write` page when `home.md` defines a Tally link.
+9. The home page places the site contents index below the cover.
 10. Every page except the Atom feed uses the shared site frame.
 11. Put work-page navigation in a left-side rail on wide screens and after the work on narrow screens.
-12. Put the home-page global links block beneath the cover header in the main reading column.
-13. Build the home-page contents index and the work-page site contents groups from one section-and-work list.
-14. On wide work pages, put a back link, the current section label, and that section's works in the left rail. Nest the current-work heading index under the current work entry.
-15. On narrow work pages, put the current-work heading index in a collapsed `Contents` block after the title. Put global links, a centered up-arrow link to the work top, and the right-aligned publish date directly after the work body and backlinks. Then show the other current-section works as home contents rows and the back link to the home contents index.
-16. Show only the current section in work-page navigation.
-17. Show every named section on the home page even when no works resolve there. Show `Other works` only when at least one work falls back there.
-18. Use row entries in the home-page contents index. Pair each work title with a baseline dotted leader and the slashless path reference aligned at the right. Do not show publish dates there.
-19. Keep the work body and backlinks in one page body.
-20. Home-page global links may reveal a preview panel. A Tally link reveals the same form from an already-mounted iframe so the reveal does not wait for hover-time loading. The feed link reveals an excerpt from `feed.md`. Entering or focusing a preview link changes the shown panel. Entering or focusing a normal global link clears it. Pointer exit does not change the panel.
-21. The home-page contents heading links to the top of the contents section.
+12. Build one shared site navigation from the home contents link and the authored homepage links. On the home page, place it in the cover so it starts large, resolves to compact navigation on scroll, and fades before the contents section reaches it. On work and utility pages, put compact navigation in normal document flow so it reserves space and scrolls with the page. Route a Tally `home.md` link through the generated `/write` page.
+13. Put the site title in the shared top line on every shared-frame page, and make that title link to the home page on every shared-frame page including the home page itself. Show the authored home cover text as subtitle metadata on the home page only.
+14. Build the home-page contents index and the work-page site contents groups from one section-and-work list.
+15. On wide work pages, put the current section label and that section's works in the left rail. Link the section label to its matching home-page contents section. Nest the current-work heading index under the current work entry.
+16. On narrow work pages, put the current-work heading index in a collapsed `Contents` block after the title. Put a centered up-arrow link to the work top and the right-aligned publish date directly after the work body and backlinks. Then show the other current-section works as home contents rows.
+17. Show only the current section in work-page navigation.
+18. Show every named section on the home page even when no works resolve there. Show `Other works` only when at least one work falls back there.
+19. Use row entries in the home-page contents index. Pair each work title with a baseline dotted leader and the slashless path reference aligned at the right. Do not show publish dates there.
+20. Keep the work body and backlinks in one page body.
+21. Site navigation links are plain links. Feed and contact content live on `/feed.xml` and `/write` rather than in hover panels.
+22. Embed the Tally form on `/write` so site navigation remains available around the form.
+23. Put the site title and Read, Follow, and Write heading links in the browser-facing feed guide.
+24. The shared `Read` link targets the home-page contents section and lands with the compact home navigation still visible at the top.
 
 ## Micro-Features
 - `Heading self-links`: Give each body heading an id from its visible text. Link the heading text to that id.

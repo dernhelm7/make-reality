@@ -1,0 +1,70 @@
+- generic [active] [ref=e1]:
+  - checkbox "Use alternate color theme" [ref=e2]
+  - generic [ref=e4]: Use alternate color theme
+  - generic [ref=e5]:
+    - banner "Site" [ref=e6]:
+      - link "Lay the Land" [ref=e7]:
+        - /url: ../
+      - paragraph [ref=e8]: Site links
+      - navigation "Site navigation" [ref=e9]:
+        - link "Read" [ref=e10]:
+          - /url: ../#contents
+        - generic [ref=e11]: •
+        - link "Follow" [ref=e12]:
+          - /url: ../feed.xml
+        - generic [ref=e13]: •
+        - link "Write" [ref=e14]:
+          - /url: ../write
+    - generic [ref=e17]:
+      - main [ref=e18]:
+        - article [ref=e19]:
+          - generic [ref=e20]:
+            - heading "Starter Note" [level=1] [ref=e21]
+            - link "Permalink" [ref=e22]:
+              - /url: https://dernhelm7.github.io/make-reality/starter-note
+          - complementary "Published" [ref=e23]:
+            - time [ref=e24]: 01 January 2024
+          - generic [ref=e27]:
+            - generic [ref=e29]:
+              - heading "Opening" [level=2] [ref=e30]:
+                - link "Opening" [ref=e31]:
+                  - /url: "#opening"
+              - paragraph [ref=e32]: This is starter content for the default preview. Replace or remove this folder when you add your own work.
+              - heading "Next" [level=2] [ref=e33]:
+                - link "Next" [ref=e34]:
+                  - /url: "#next"
+              - paragraph [ref=e35]:
+                - text: See
+                - link "Margin Study" [ref=e36]:
+                  - /url: ../margin-study
+                - text: for HTML sidenotes and
+                - link "Style Cabinet" [ref=e37]:
+                  - /url: ../style-cabinet
+                - text: for lists, tables, figures, and code blocks.
+            - region "Backlinks" [ref=e38]:
+              - heading "Backlinks" [level=2] [ref=e39]
+              - list [ref=e40]:
+                - listitem [ref=e41]:
+                  - link "Margin Study" [ref=e42]:
+                    - /url: ../margin-study
+                - listitem [ref=e43]:
+                  - link "Style Cabinet" [ref=e44]:
+                    - /url: ../style-cabinet
+      - complementary [ref=e45]:
+        - region "Site contents" [ref=e47]:
+          - heading "Site contents" [level=2] [ref=e48]
+          - generic [ref=e50]:
+            - paragraph [ref=e51]: Notes
+            - list [ref=e52]:
+              - listitem [ref=e53]:
+                - link "Hypnosis" [ref=e54]:
+                  - /url: ../hypnosis
+              - listitem [ref=e55]:
+                - generic [ref=e56]: Starter Note
+                - list [ref=e57]:
+                  - listitem [ref=e58]:
+                    - link "Opening" [ref=e59]:
+                      - /url: "#opening"
+                  - listitem [ref=e60]:
+                    - link "Next" [ref=e61]:
+                      - /url: "#next"

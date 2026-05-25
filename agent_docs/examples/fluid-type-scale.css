@@ -1,7 +1,7 @@
 /*
   Labyrinth — stylesheet reference
   Illustrative values for key design decisions.
-  Tune to taste once rendered in ET Book.
+  Tune to taste once rendered in ET Book body text and Basteleur display text.
 */
 
 
@@ -10,7 +10,8 @@
 :root {
   --color-bg:     #ffffff;  /* page background          */
   --color-ink:    #202020;  /* body text                */
-  --color-accent: #0a7c80;  /* links, active, emphasis  */
+  --color-primary: #110411; /* site.toml primary_color  */
+  --color-accent: var(--color-primary); /* links, active, emphasis */
 }
 
 

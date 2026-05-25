@@ -1,0 +1,22 @@
+- generic [active] [ref=e1]:
+  - checkbox "Use alternate color theme" [checked] [ref=e2]
+  - generic [ref=e4]: Use alternate color theme
+  - generic [ref=e5]:
+    - banner "Site" [ref=e6]:
+      - link "Lay the Land" [ref=e7]:
+        - /url: ../
+      - paragraph [ref=e8]: Site links
+      - navigation "Site navigation" [ref=e9]:
+        - link "Read" [ref=e10]:
+          - /url: ../#contents
+        - generic [ref=e11]: •
+        - link "Follow" [ref=e12]:
+          - /url: ../feed.xml
+        - generic [ref=e13]: •
+        - link "Write" [ref=e14]:
+          - /url: "#write"
+    - main [ref=e18]:
+      - article [ref=e19]:
+        - heading "Write" [level=1] [ref=e21]
+        - iframe [ref=e23]:
+          

@@ -1,0 +1,46 @@
+- generic [active] [ref=e1]:
+  - checkbox "Use alternate color theme" [checked] [ref=e2]
+  - generic [ref=e4]: Use alternate color theme
+  - generic [ref=e5]:
+    - banner "Site" [ref=e6]:
+      - link "Lay the Land" [ref=e7]:
+        - /url: ../
+      - paragraph [ref=e8]: Site links
+      - navigation "Site navigation" [ref=e9]:
+        - link "Read" [ref=e10]:
+          - /url: ../#contents
+        - generic [ref=e11]: •
+        - link "Follow" [ref=e12]:
+          - /url: ../feed.xml
+        - generic [ref=e13]: •
+        - link "Write" [ref=e14]:
+          - /url: "#write"
+    - main [ref=e18]:
+      - article [ref=e19]:
+        - heading "Write" [level=1] [ref=e21]
+        - iframe [ref=e24]:
+          - generic [active] [ref=f1e1]:
+            - main [ref=f1e4]:
+              - generic [ref=f1e6]:
+                - progressbar [ref=f1e7]: Page 1 of 1
+                - generic [ref=f1e8]:
+                  - generic [ref=f1e11]:
+                    - heading "Message" [level=3] [ref=f1e12]
+                    - generic [ref=f1e14] [cursor=pointer]: "*"
+                  - textbox "Message" [ref=f1e18]:
+                    - /placeholder: ""
+                  - generic [ref=f1e19]:
+                    - textbox "name" [ref=f1e24]
+                    - textbox "email" [ref=f1e29]
+                - generic [ref=f1e30]:
+                  - button "Submit" [ref=f1e32] [cursor=pointer]:
+                    - generic [ref=f1e33]: Submit
+                    - img [ref=f1e35]
+                    - generic:
+                      - img
+                  - link "Made with Tally" [ref=f1e39] [cursor=pointer]:
+                    - /url: https://tally.so?utm_source=tally&utm_medium=website&utm_campaign=powered-by_embed&version=8&device=desktop
+                    - generic [ref=f1e40]:
+                      - generic [ref=f1e41]: Made with Tally
+                      - img [ref=f1e42]
+            - alert [ref=f1e44]
