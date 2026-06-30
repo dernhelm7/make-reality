@@ -123,6 +123,7 @@ PYTHON=$python_bin "$script_dir/build-site" --build-url "http://localhost:$port"
 printf 'Built %s\n' "$publish_root"
 printf 'Previewing at http://localhost:%s\n' "$port"
 
-# Python 3.14 still reads the process cwd while parsing http.server args.
+# Python 3.14 still reads the process cwd while parsing server args.
+export PYTHONPATH="${script_dir}${PYTHONPATH:+:${PYTHONPATH}}"
 cd /
-exec "$python_bin" -m http.server "$port" --directory "$publish_root"
+exec "$python_bin" -m labyrinth.preview "$port" "$publish_root"

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import hashlib
 import shutil
 import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -14,6 +14,58 @@ EXAMPLES_ROOT = REPO_ROOT / "agent_docs" / "examples"
 
 
 class FixtureSiteTestCase(unittest.TestCase):
+    def make_site(self, works: dict[str, dict[str, str]]) -> Path:
+        site_root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        (site_root / "site.toml").write_text(
+            textwrap.dedent(
+                """\
+                url = "https://labyrinth.example"
+                lang = "en"
+                title = "Labyrinth"
+                statement = "A room for poems, projects, and notes."
+                author_name = "Labyrinth Author"
+                updated = "2024-02-14T00:00:00Z"
+                """
+            ),
+            encoding="utf-8",
+        )
+        (site_root / "home.md").write_text(
+            textwrap.dedent(
+                """\
+                # Labyrinth
+
+                A room for poems, projects, and notes.
+
+                [First](https://first.example/labyrinth)
+                [Second](https://second.example/labyrinth)
+                [Feed](/feed.xml)
+
+                ## Index
+                """
+            ),
+            encoding="utf-8",
+        )
+        (site_root / "feed.md").write_text(
+            "Web feed\n\nCopy [the feed URL]({feed_url}) into a feed reader.",
+            encoding="utf-8",
+        )
+        works_root = site_root / "works"
+        works_root.mkdir()
+
+        for name, files in works.items():
+            work_root = works_root / name
+            work_root.mkdir(parents=True)
+            for filename, content in files.items():
+                (work_root / filename).write_text(content, encoding="utf-8")
+        return site_root
+
+    def set_home_sections(self, site_root: Path, headings: str) -> None:
+        home_md = site_root / "home.md"
+        home_md.write_text(
+            home_md.read_text(encoding="utf-8").replace("## Index", f"## Index\n\n{headings}"),
+            encoding="utf-8",
+        )
+
     def make_fixture(self, fixture_name: str) -> tuple[Path, Path]:
         temp_dir = self.enterContext(tempfile.TemporaryDirectory())
         site_root = Path(temp_dir) / "site"
@@ -27,7 +79,7 @@ class FixtureSiteTestCase(unittest.TestCase):
         return site_root, publish_root
 
     def page_text(self, publish_root: Path, public_path: str) -> str:
-        return read_text(self.public_page_path(publish_root, public_path))
+        return self.public_page_path(publish_root, public_path).read_text(encoding="utf-8")
 
     def public_page_path(self, publish_root: Path, public_path: str) -> Path:
         if public_path == "/":
@@ -52,22 +104,6 @@ class FixtureSiteTestCase(unittest.TestCase):
         self.assertEqual([], list(publish_root.rglob("*.js")))
         for public_path in ["/", *expected_pages]:
             page = self.page_text(publish_root, public_path)
-            self.assertIn(
-                '<input class="theme-toggle-input visually-hidden" type="checkbox" id="site-theme-toggle" autocomplete="off">',
-                page,
-            )
-            self.assertIn('<label class="theme-toggle" for="site-theme-toggle">', page)
+            self.assertIn('id="site-theme-toggle"', page)
         for public_path in expected_pages:
             self.assertTrue(self.public_page_path(publish_root, public_path).exists(), public_path)
-
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
-
-
-def tree_digest(root: Path) -> str:
-    digest = hashlib.sha256()
-    for path in sorted(item for item in root.rglob("*") if item.is_file()):
-        digest.update(path.relative_to(root).as_posix().encode("utf-8"))
-        digest.update(path.read_bytes())
-    return digest.hexdigest()

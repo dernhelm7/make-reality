@@ -21,12 +21,11 @@ from .urls import FIXED_PUBLIC_PATHS
 
 HOME_LINK_RE = re.compile(r"^\[(?P<label>[^\]]+)\]\((?P<href>[^)]+)\)$")
 WORK_METADATA_KEYS = frozenset({"aliases", "atom_id", "created", "updated"})
+WORK_BODY_FILENAMES = frozenset({"body.html", "index.md"})
 WORK_FILE_FORMATS = {
     ".html": "html",
     ".md": "markdown",
 }
-DEFAULT_PRIMARY_COLOR = "#110411"
-HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 @dataclass(frozen=True)
@@ -75,7 +74,6 @@ class SiteConfig:
     statement: str
     author_name: str
     updated: datetime
-    primary_color: str
 
 
 @dataclass(frozen=True)
@@ -83,7 +81,6 @@ class WorkInput:
     section_folder: str | None
     folder_name: str
     title: str
-    source_dir: Path
     metadata_path: Path
     body_path: Path
     body_format: str
@@ -98,12 +95,8 @@ class WorkInput:
 
 @dataclass(frozen=True)
 class WorkDocument:
-    folder_name: str
     title: str
-    source_dir: Path
-    metadata_path: Path
     body_path: Path
-    body_format: str
     created: datetime
     updated: datetime
     atom_id: str
@@ -137,7 +130,6 @@ class SiteGraph:
     contents_sections: tuple[ContentsSection, ...]
     contents_section_by_name: dict[str, ContentsSection]
     backlinks: dict[str, tuple[WorkDocument, ...]]
-    known_paths: frozenset[str]
     work_lookup: dict[str, ResolvedWorkLink]
     work_by_path: dict[str, WorkDocument]
 
@@ -155,10 +147,6 @@ def load_site_config(site_root: Path, build_url: str | None = None) -> SiteConfi
     statement = optional_string(data, "statement", site_path) or ""
     author_name = require_string(data, "author_name", site_path)
     updated = parse_timestamp(require_string(data, "updated", site_path), site_path, "updated")
-    primary_color = parse_hex_color(
-        optional_string(data, "primary_color", site_path) or DEFAULT_PRIMARY_COLOR,
-        site_path,
-    )
 
     return SiteConfig(
         source_path=site_path,
@@ -173,11 +161,13 @@ def load_site_config(site_root: Path, build_url: str | None = None) -> SiteConfi
         statement=statement,
         author_name=author_name,
         updated=updated,
-        primary_color=primary_color,
     )
 
 
-def load_work_inputs(site_root: Path) -> list[WorkInput]:
+def load_work_inputs(
+    site_root: Path,
+    site_sections: tuple[SectionDefinition, ...] = (),
+) -> list[WorkInput]:
     works_root = site_root / "works"
     if not works_root.exists():
         return []
@@ -185,93 +175,110 @@ def load_work_inputs(site_root: Path) -> list[WorkInput]:
         raise BuildError(works_root, "missing-required-field", "works must be a directory")
 
     work_inputs: list[WorkInput] = []
-
-    def append_work(
-        *,
-        source_dir: Path,
-        folder_name: str,
-        body_path: Path,
-        body_format: str,
-        section_folder: str | None,
-        meta_path: Path | None = None,
-        assets: tuple[WorkAsset, ...] = (),
-    ) -> None:
-        body_text = body_path.read_text(encoding="utf-8")
-        front_matter, body_text, has_front_matter = split_toml_front_matter(body_text, body_path)
-        metadata = front_matter
-        metadata_path = body_path
-        if meta_path is not None:
-            if has_front_matter:
-                raise BuildError(
-                    body_path,
-                    "duplicate-metadata",
-                    "work metadata must live in either TOML front matter or meta.toml, not both",
-                )
-            metadata = read_toml(meta_path)
-            metadata_path = meta_path
-        created, updated, atom_id, aliases = parse_work_metadata(metadata, metadata_path)
-        work_inputs.append(
-            WorkInput(
-                section_folder=section_folder,
-                folder_name=folder_name,
-                title=humanize_folder_name(folder_name),
-                source_dir=source_dir,
-                metadata_path=metadata_path,
-                body_path=body_path,
-                body_format=body_format,
-                body_text=body_text,
-                created=created,
-                updated=updated,
-                atom_id=atom_id,
-                aliases=aliases,
-                public_path=work_public_path(folder_name),
-                assets=assets,
-            )
-        )
-
-    def append_file_work(body_path: Path, *, section_folder: str | None) -> None:
-        body_format = body_format_for_file(body_path)
-        if body_format is None:
-            return
-        append_work(
-            source_dir=body_path.parent,
-            folder_name=body_path.stem,
-            body_path=body_path,
-            body_format=body_format,
-            section_folder=section_folder,
-        )
-
-    def append_folder_work(work_dir: Path, *, section_folder: str | None) -> None:
-        meta_path = work_dir / "meta.toml"
-        body_path, body_format = find_body_path(work_dir)
-        append_work(
-            source_dir=work_dir,
-            folder_name=work_dir.name,
-            body_path=body_path,
-            body_format=body_format,
-            section_folder=section_folder,
-            meta_path=meta_path if meta_path.is_file() else None,
-            assets=collect_work_assets(work_dir, body_path=body_path, public_path=work_public_path(work_dir.name)),
-        )
-
-    for source_dir in sorted(path for path in works_root.iterdir() if path.is_dir()):
-        if source_dir.name.startswith("."):
+    children = visible_children(works_root)
+    section_folders = {section_folder_key(section.name) for section in site_sections}
+    for source_dir in (child for child in children if child.is_dir()):
+        if section_folder_key(source_dir.name) not in section_folders and is_direct_work_folder(source_dir):
+            work_inputs.append(work_input_from_folder(source_dir, section_folder=None))
             continue
-        if is_direct_work_folder(source_dir):
-            append_folder_work(source_dir, section_folder=None)
-            continue
-        for source_path in sorted(source_dir.iterdir()):
-            if source_path.name.startswith("."):
-                continue
-            if source_path.is_file():
-                append_file_work(source_path, section_folder=source_dir.name)
-            elif source_path.is_dir():
-                append_folder_work(source_path, section_folder=source_dir.name)
-    for source_path in sorted(path for path in works_root.iterdir() if path.is_file()):
-        if source_path.name.startswith("."):
-            continue
-        append_file_work(source_path, section_folder=None)
+        work_inputs.extend(section_work_inputs(source_dir))
+    for source_path in (child for child in children if child.is_file()):
+        work = work_input_from_file(source_path, section_folder=None)
+        if work is not None:
+            work_inputs.append(work)
     return work_inputs
+
+
+def section_work_inputs(section_dir: Path) -> list[WorkInput]:
+    work_inputs: list[WorkInput] = []
+    for source_path in visible_children(section_dir):
+        if source_path.is_file():
+            work = work_input_from_file(source_path, section_folder=section_dir.name)
+            if work is not None:
+                work_inputs.append(work)
+        elif source_path.is_dir():
+            work_inputs.append(work_input_from_folder(source_path, section_folder=section_dir.name))
+    return work_inputs
+
+
+def work_input_from_file(body_path: Path, *, section_folder: str | None) -> WorkInput | None:
+    body_format = body_format_for_file(body_path)
+    if body_format is None:
+        return None
+    return build_work_input(
+        folder_name=body_path.stem,
+        body_path=body_path,
+        body_format=body_format,
+        section_folder=section_folder,
+    )
+
+
+def work_input_from_folder(work_dir: Path, *, section_folder: str | None) -> WorkInput:
+    body_path, body_format = find_body_path(work_dir)
+    public_path = work_public_path(work_dir.name)
+    return build_work_input(
+        folder_name=work_dir.name,
+        body_path=body_path,
+        body_format=body_format,
+        section_folder=section_folder,
+        meta_path=metadata_file(work_dir),
+        assets=collect_work_assets(work_dir, body_path=body_path, public_path=public_path),
+    )
+
+
+def build_work_input(
+    *,
+    folder_name: str,
+    body_path: Path,
+    body_format: str,
+    section_folder: str | None,
+    meta_path: Path | None = None,
+    assets: tuple[WorkAsset, ...] = (),
+) -> WorkInput:
+    body_text = body_path.read_text(encoding="utf-8")
+    metadata, body_text, metadata_path = read_work_metadata(body_text, body_path, meta_path)
+    created, updated, atom_id, aliases = parse_work_metadata(metadata, metadata_path)
+    return WorkInput(
+        section_folder=section_folder,
+        folder_name=folder_name,
+        title=humanize_folder_name(folder_name),
+        metadata_path=metadata_path,
+        body_path=body_path,
+        body_format=body_format,
+        body_text=body_text,
+        created=created,
+        updated=updated,
+        atom_id=atom_id,
+        aliases=aliases,
+        public_path=work_public_path(folder_name),
+        assets=assets,
+    )
+
+
+def read_work_metadata(
+    body_text: str,
+    body_path: Path,
+    meta_path: Path | None,
+) -> tuple[dict[str, object], str, Path]:
+    front_matter, body_text, has_front_matter = split_toml_front_matter(body_text, body_path)
+    if meta_path is None:
+        return front_matter, body_text, body_path
+    if has_front_matter:
+        raise BuildError(
+            body_path,
+            "duplicate-metadata",
+            "work metadata must live in either TOML front matter or meta.toml, not both",
+        )
+    return read_toml(meta_path), body_text, meta_path
+
+
+def metadata_file(work_dir: Path) -> Path | None:
+    meta_path = work_dir / "meta.toml"
+    return meta_path if meta_path.is_file() else None
+
+
+def visible_children(path: Path) -> list[Path]:
+    return sorted(child for child in path.iterdir() if not child.name.startswith("."))
 
 
 def build_site_graph(site: SiteConfig, work_inputs: list[WorkInput]) -> SiteGraph:
@@ -293,7 +300,6 @@ def build_site_graph(site: SiteConfig, work_inputs: list[WorkInput]) -> SiteGrap
         contents_sections=contents_sections,
         contents_section_by_name=contents_section_by_name,
         backlinks=backlinks,
-        known_paths=known_paths,
         work_lookup=work_lookup,
         work_by_path=work_by_path,
     )
@@ -485,11 +491,7 @@ def optional_string(data: dict[str, object], field: str, source_path: Path) -> s
 
 
 def find_body_path(work_dir: Path) -> tuple[Path, str]:
-    candidates = [
-        path
-        for path in sorted(work_dir.iterdir())
-        if path.is_file() and (path.name in {"body.html", "index.md"} or path.suffix.lower() == ".md")
-    ]
+    candidates = [path for path in sorted(work_dir.iterdir()) if path.is_file() and is_folder_body_file(path)]
     existing = [(path, body_format_for_file(path)) for path in candidates]
     if len(existing) != 1:
         raise BuildError(
@@ -512,15 +514,23 @@ def body_format_for_file(path: Path) -> str | None:
 
 
 def is_direct_work_folder(path: Path) -> bool:
-    return any(
-        candidate.is_file()
-        for candidate in (
-            path / "body.html",
-            path / "index.md",
-            path / "meta.toml",
-            path / f"{path.name}.md",
-        )
+    if metadata_file(path) is not None:
+        return True
+
+    children = visible_children(path)
+    has_body_file = any(child.is_file() and is_folder_body_file(child) for child in children)
+    has_child_work_folder = any(child.is_dir() and is_work_source_folder(child) for child in children)
+    return has_body_file and not has_child_work_folder
+
+
+def is_work_source_folder(path: Path) -> bool:
+    return metadata_file(path) is not None or any(
+        child.is_file() and is_folder_body_file(child) for child in visible_children(path)
     )
+
+
+def is_folder_body_file(path: Path) -> bool:
+    return path.name in WORK_BODY_FILENAMES or path.suffix.lower() == ".md"
 
 
 def collect_work_assets(work_dir: Path, *, body_path: Path, public_path: str) -> tuple[WorkAsset, ...]:
@@ -589,12 +599,8 @@ def render_work_documents(
         created, updated = resolve_work_dates(work)
         documents.append(
             WorkDocument(
-                folder_name=work.folder_name,
                 title=work.title,
-                source_dir=work.source_dir,
-                metadata_path=work.metadata_path,
                 body_path=work.body_path,
-                body_format=work.body_format,
                 created=created,
                 updated=updated,
                 atom_id=work.atom_id or f"{site.site_url}/id/{work.folder_name}",
@@ -811,12 +817,6 @@ def require_string(data: dict[str, object], field: str, source_path: Path) -> st
 def require_absolute_url(data: dict[str, object], field: str, source_path: Path) -> str:
     value = require_string(data, field, source_path)
     return normalize_absolute_url(value, source_path, field)
-
-
-def parse_hex_color(value: str, source_path: Path) -> str:
-    if not HEX_COLOR_RE.fullmatch(value):
-        raise BuildError(source_path, "missing-required-field", "primary_color must be a six-digit hex color")
-    return value.lower()
 
 
 def normalize_absolute_url(value: str, source_path: Path, field: str) -> str:

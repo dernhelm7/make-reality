@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-import tempfile
 import textwrap
-import unittest
 
 from labyrinth.builder import BuildError, RenderedPage, build_site, validate_rendered_pages
+from labyrinth.theme import render_theme_tokens
+
+from .fixture_support import FixtureSiteTestCase
 
 
-class ValidationTests(unittest.TestCase):
+class ValidationTests(FixtureSiteTestCase):
     def assert_build_error(self, site_root: Path, *, rule: str, source_name: str) -> None:
         with self.assertRaises(BuildError) as error:
             build_site(site_root, site_root / "public")
@@ -192,7 +193,7 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(error.exception.rule, "missing-required-field")
         self.assertEqual(Path("<command-line>"), error.exception.source_path)
 
-    def test_invalid_primary_color_case(self) -> None:
+    def test_stylesheets_include_author_palette_and_derived_theme_tokens(self) -> None:
         site_root = self.make_site(
             {
                 "alpha": {
@@ -201,80 +202,33 @@ class ValidationTests(unittest.TestCase):
                 }
             }
         )
-        site_toml = site_root / "site.toml"
-        site_toml.write_text(site_toml.read_text(encoding="utf-8") + 'primary_color = "plum"\n', encoding="utf-8")
-
-        self.assert_build_error(site_root, rule="missing-required-field", source_name="site.toml")
-
-    def test_primary_color_is_written_to_stylesheets(self) -> None:
-        site_root = self.make_site(
-            {
-                "alpha": {
-                    "meta.toml": 'created = "2024-02-14T00:00:00Z"\nupdated = "2024-02-14T00:00:00Z"\natom_id = "https://labyrinth.example/id/alpha"\n',
-                    "index.md": "# Opening\n\nA first note.",
-                }
-            }
-        )
-        site_toml = site_root / "site.toml"
-        site_toml.write_text(site_toml.read_text(encoding="utf-8") + 'primary_color = "#224466"\n', encoding="utf-8")
         publish_root = site_root / "public"
 
         build_site(site_root, publish_root)
 
-        self.assertIn(
-            ":root { --primary-color: #224466; --primary-dark-page: #041222; }",
-            (publish_root / "site.css").read_text(encoding="utf-8"),
+        for stylesheet_name in ("site.css", "feed.css"):
+            stylesheet = (publish_root / stylesheet_name).read_text(encoding="utf-8")
+            self.assertRegex(stylesheet, r"--theme-light-page: #[0-9a-fA-F]{6};")
+            self.assertRegex(stylesheet, r"--theme-dark-page: #[0-9a-fA-F]{6};")
+            self.assertRegex(stylesheet, r"rgba\(\d+,\d+,\d+,0\.38\)")
+            self.assertRegex(stylesheet, r"rgba\(\d+,\d+,\d+,0\.48\)")
+            self.assertNotIn("__THEME_", stylesheet)
+
+    def test_cursor_colors_follow_changed_author_palette_during_build(self) -> None:
+        source = textwrap.dedent(
+            """\
+            :root {
+              --theme-light-page: #faf0e6;
+              --theme-dark-page: #690000;
+              --cursor-light: rgba(__THEME_DARK_PAGE_RGB__,0.38);
+              --cursor-dark: rgba(__THEME_LIGHT_PAGE_RGB__,0.48);
+            }
+            """
         )
-        self.assertIn(
-            ":root { --primary-color: #224466; --primary-dark-page: #041222; }",
-            (publish_root / "feed.css").read_text(encoding="utf-8"),
-        )
 
-    def make_site(self, works: dict[str, dict[str, str]]) -> Path:
-        site_root = Path(self.enterContext(tempfile.TemporaryDirectory()))
-        (site_root / "site.toml").write_text(
-            textwrap.dedent(
-                """\
-                url = "https://labyrinth.example"
-                lang = "en"
-                title = "Labyrinth"
-                statement = "A room for poems, projects, and notes."
-                author_name = "Labyrinth Author"
-                updated = "2024-02-14T00:00:00Z"
-                """
-            ),
-            encoding="utf-8",
-        )
-        (site_root / "home.md").write_text(
-            textwrap.dedent(
-                """\
-                # Labyrinth
+        rendered = render_theme_tokens(source, Path("tokens.css"))
 
-                A room for poems, projects, and notes.
-
-                [First](https://first.example/labyrinth)
-                [Second](https://second.example/labyrinth)
-                [Feed](/feed.xml)
-
-                ## Index
-                """
-            ),
-            encoding="utf-8",
-        )
-        (site_root / "feed.md").write_text(
-            "Web feed\n\nCopy [the feed URL]({feed_url}) into a feed reader.",
-            encoding="utf-8",
-        )
-        works_root = site_root / "works"
-        works_root.mkdir()
-
-        for name, files in works.items():
-            work_root = works_root / name
-            work_root.mkdir(parents=True)
-            for filename, content in files.items():
-                (work_root / filename).write_text(content, encoding="utf-8")
-        return site_root
-
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertIn("--theme-dark-page: #690000;", rendered)
+        self.assertIn("--cursor-light: rgba(105,0,0,0.38);", rendered)
+        self.assertIn("--cursor-dark: rgba(250,240,230,0.48);", rendered)
+        self.assertNotIn("__THEME_", rendered)

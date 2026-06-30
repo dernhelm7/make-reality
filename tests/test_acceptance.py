@@ -27,7 +27,8 @@ GRAPH_FIXTURES = (
 class AcceptanceTests(FixtureSiteTestCase):
     def build_fixture_graph(self, fixture_name: str) -> tuple[Path, Path, SiteGraph]:
         site_root, publish_root = self.build_fixture(fixture_name)
-        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        site = load_site_config(site_root)
+        graph = build_site_graph(site, load_work_inputs(site_root, site.home.sections))
         return site_root, publish_root, graph
 
     def assert_all_in(self, text: str, needles: list[str]) -> None:
@@ -42,10 +43,8 @@ class AcceptanceTests(FixtureSiteTestCase):
                 "<!DOCTYPE html>",
                 f'<base href="{escape(graph.site.site_url)}/">',
                 'rel="alternate" type="application/atom+xml"',
-                '<header class="site-header-actions" aria-label="Site">',
-                '<nav class="site-nav site-header-nav home-cover-nav" aria-label="Site navigation">',
                 'href="./#contents"',
-                '<section class="page home-contents" id="contents"',
+                'id="contents"',
                 escape(graph.site.home.title),
                 escape(graph.site.home.read_label),
             ],
@@ -74,8 +73,7 @@ class AcceptanceTests(FixtureSiteTestCase):
                 "<!DOCTYPE html>",
                 f'<base href="{escape(urls.base_href)}">',
                 f'<link rel="canonical" href="{escape(urls.canonical_url)}">',
-                '<header class="site-header-actions" aria-label="Site">',
-                '<article class="page page--work work-page h-entry" id="work-top">',
+                'id="work-top"',
                 escape(work.title),
                 escape(work.created.isoformat()),
                 escape(work.resolved_section),
@@ -109,7 +107,6 @@ class AcceptanceTests(FixtureSiteTestCase):
                 '<?xml version="1.0" encoding="UTF-8"?>',
                 '<?xml-stylesheet type="text/css" href="feed.css"?>',
                 '<feed xmlns="http://www.w3.org/2005/Atom">',
-                '<xhtml:nav class="site-nav site-header-nav" aria-label="Site navigation">',
                 f"<id>{escape(graph.site.site_url)}/feed.xml</id>",
                 f'<link rel="self" type="application/atom+xml" href="{escape(graph.site.build_url)}/feed.xml"/>',
                 f'<link rel="alternate" type="text/html" href="{escape(graph.site.build_url)}"/>',
@@ -152,12 +149,10 @@ class AcceptanceTests(FixtureSiteTestCase):
         self.assert_all_in(
             write_page,
             [
-                '<body class="site-page site-page--utility">',
-                '<link rel="preconnect" href="https://tally.so">',
-                '<article class="page utility-page write-page" id="write">',
-                '<iframe src="https://tally.so/embed/7RJ6Z2?alignLeft=1&amp;hideTitle=1&amp;transparentBackground=1&amp;dynamicHeight=1" data-tally-src="https://tally.so/embed/7RJ6Z2?alignLeft=1&amp;hideTitle=1&amp;transparentBackground=1&amp;dynamicHeight=1" loading="eager" width="100%" height="330" frameborder="0" marginheight="0" marginwidth="0" title="Send me a message"></iframe>',
+                'id="write"',
+                "https://tally.so/embed/7RJ6Z2",
                 "https://tally.so/widgets/embed.js",
-                'href=".">Write</a>',
+                ">Write</a>",
             ],
         )
         self.assertIn('href="https://dernhelm7.github.io/make-reality/write">Write</xhtml:a>', feed)

@@ -57,11 +57,12 @@ feed {
 
 .feed-guide {
   display: block;
+  position: relative;
   box-sizing: border-box;
   width: 100vw;
   max-width: 100vw;
   margin: 0 0 var(--step-p3) calc(var(--feed-content-indent) * -1);
-  padding: var(--site-top-space) var(--feed-content-indent) var(--step-p3);
+  padding: var(--site-top-space) var(--feed-content-indent) calc(var(--step-p3) + var(--step-p8));
   background: var(--feed-guide-bg);
   color: var(--feed-guide-ink);
   white-space: normal;
@@ -83,13 +84,57 @@ feed {
   max-width: none;
   margin-top: 0;
   margin-left: calc(var(--site-side-space) - var(--feed-content-indent));
-  font-size: var(--site-header-nav-size);
   line-height: var(--leading-tight);
 }
 
-.feed-heading .site-header-title,
-.feed-heading .site-header-nav {
-  font-size: var(--site-header-nav-size);
+.feed-heading .site-masthead {
+  display: flex;
+}
+
+.feed-heading .site-header-title {
+  color: var(--site-header-title-color);
+  font-family: var(--feed-serif);
+  font-size: var(--site-header-title-size);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: var(--leading-tight);
+  text-decoration: none;
+}
+
+.feed-guide > .feed-utility-nav {
+  position: absolute;
+  inset-inline-start: var(--site-side-space);
+  inset-block-end: var(--step-p3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--step-n4) var(--step-n2);
+  max-width: min(var(--feed-guide-measure), 86ch);
+  margin: 0;
+  color: color-mix(in srgb, var(--feed-guide-ink) 46%, transparent);
+  font-family: var(--feed-mono);
+  font-size: var(--text-2xs);
+  font-variant-caps: all-small-caps;
+  font-feature-settings: "c2sc" 1, "smcp" 1, "tnum" 1;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  line-height: var(--leading-running);
+  text-transform: lowercase;
+}
+
+.feed-guide > .feed-utility-nav [href] {
+  color: inherit;
+  text-decoration: none;
+}
+
+.feed-guide > .feed-utility-nav [href]:hover,
+.feed-guide > .feed-utility-nav [href]:focus-visible {
+  color: color-mix(in srgb, var(--feed-guide-ink) 68%, transparent);
+}
+
+.feed-guide > .feed-utility-nav .site-utility-separator {
+  color: color-mix(in srgb, var(--feed-guide-ink) 28%, transparent);
+  transform: translateY(-0.03em);
 }
 
 .feed-guide-url {
@@ -199,5 +244,9 @@ entry > updated {
   .feed-guide > .feed-heading {
     width: calc(100vw - (var(--site-side-space-narrow) * 2));
     margin-left: calc(var(--site-side-space-narrow) - var(--feed-content-indent));
+  }
+
+  .feed-guide > .feed-utility-nav {
+    inset-inline-start: var(--site-side-space-narrow);
   }
 }

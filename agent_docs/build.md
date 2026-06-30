@@ -17,7 +17,7 @@ Specify how to generate the static site from source files.
 - The local shell launchers select Python 3.11 or newer before importing the `labyrinth` package.
 - The repo may define a GitHub Pages workflow. That workflow builds `site/` to `public/` with `./build-site`.
 - The site root contains `site.toml`, `home.md`, `feed.md`, and may contain `works/`.
-- `site.toml` defines `url`, `lang`, `title`, `author_name`, and `updated`. It may define `statement` for generated description metadata and the Atom subtitle, and `primary_color` as a six-digit hex color for the generated theme. Missing `primary_color` defaults to `#110411`. The generated stylesheet emits the configured primary color and a concrete sRGB dark page color derived from it.
+- `site.toml` defines `url`, `lang`, `title`, `author_name`, and `updated`. It may define `statement` for generated description metadata and the Atom subtitle.
 - `home.md` defines the homepage title, cover text, homepage links, contents link label, and contents section labels and descriptions.
 - `feed.md` defines the browser-facing feed guide. The build replaces `{feed_url}` with the current feed URL.
 - `site.toml` `url` is the canonical site URL.
@@ -25,11 +25,12 @@ Specify how to generate the static site from source files.
 - A `home.md` link to `https://tally.so/r/<id>` is the source for `/write`. The `/write` page preconnects to Tally, gives the iframe a direct eager source so the form starts loading with the page, and includes the Tally widget loader for enhancement.
 - A `home.md` link to `/feed.xml` points readers to the browser-facing feed guide built from `feed.md`.
 - `--build-url` sets the output base URL for one build.
-- Local preview uses `./preview-site`, which passes `--build-url http://localhost:<port>` before serving the publish root.
+- Local preview uses `./preview-site`, which passes `--build-url http://localhost:<port>` before serving the publish root and disables browser caching for preview responses so a rebuilt stylesheet is visible on reload.
 - The public HTML uses relative links for pages and assets.
 - The public HTML sets a page base URL from the current build URL and the current public path.
 - The public HTML uses line breaks and indentation.
 - HTML and CSS carry shared content, navigation, reading, and layout by default.
+- While composing shared CSS, the build fills embedded SVG cursor RGB channels from the active light and dark page colors configured at the top of `labyrinth/style_sources/tokens.css`.
 - Shared JavaScript, when present, is a small author-written inline snippet for one feature. It calls browser APIs directly, stays scoped to that feature, and stays optional to core reading and navigation.
 - The shared theme persistence script uses `sessionStorage`, `matchMedia`, and `document.documentElement.dataset` to keep a manual theme choice in the current tab session.
 - The `/write` page may load Tally's widget script for the embedded form. Its inline loader stays scoped to that page, uses direct browser APIs, and keeps the publish root free of standalone JavaScript assets.

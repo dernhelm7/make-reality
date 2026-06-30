@@ -2,17 +2,20 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 import os
-from pathlib import Path
-import tempfile
 import textwrap
-import unittest
 
 from labyrinth.markup import BodyContext, ResolvedWorkLink, render_html_body, render_markdown_body
 from labyrinth.model import BuildError, build_site_graph, load_site_config, load_work_inputs
 from labyrinth.urls import PageUrls
 
+from .fixture_support import FixtureSiteTestCase
 
-class MarkupAndGraphTests(unittest.TestCase):
+
+class MarkupAndGraphTests(FixtureSiteTestCase):
+    def build_graph(self, site_root):
+        site = load_site_config(site_root)
+        return build_site_graph(site, load_work_inputs(site_root, site.home.sections))
+
     def test_markdown_body_tracks_structured_links(self) -> None:
         body = render_markdown_body(
             "See [[Garden Path]]. Compare [Turn](./garden-path#turn). Visit [Archive](https://archive.example). Stay [Here](#opening).",
@@ -94,7 +97,7 @@ class MarkupAndGraphTests(unittest.TestCase):
             }
         )
 
-        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        graph = self.build_graph(site_root)
         source = graph.work_by_path["/source-work"]
         target = graph.work_by_path["/target-work"]
 
@@ -103,7 +106,7 @@ class MarkupAndGraphTests(unittest.TestCase):
         self.assertIs(graph.contents_sections[0], graph.contents_section_by_name[source.resolved_section])
         self.assertEqual((source.public_path,), tuple(work.public_path for work in graph.backlinks[target.public_path]))
 
-    def test_site_graph_treats_fixed_public_files_as_known_paths(self) -> None:
+    def test_site_graph_resolves_fixed_public_file_links(self) -> None:
         site_root = self.make_site(
             {
                 "alpha": {
@@ -113,10 +116,8 @@ class MarkupAndGraphTests(unittest.TestCase):
             }
         )
 
-        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        graph = self.build_graph(site_root)
 
-        self.assertIn("/site.css", graph.known_paths)
-        self.assertIn("/feed.css", graph.known_paths)
         self.assertIn('href="../site.css"', graph.work_by_path["/alpha"].body.html)
         self.assertIn('href="../feed.css"', graph.work_by_path["/alpha"].body.html)
 
@@ -129,7 +130,7 @@ class MarkupAndGraphTests(unittest.TestCase):
         body_path.write_text("# Opening\n\nA poem.", encoding="utf-8")
         os.utime(body_path, (1_700_000_000, 1_700_000_000))
 
-        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        graph = self.build_graph(site_root)
         work = graph.work_by_path["/know"]
 
         self.assertEqual("Know", work.title)
@@ -156,7 +157,7 @@ class MarkupAndGraphTests(unittest.TestCase):
         )
         self.set_home_sections(site_root, "### Notes")
 
-        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        graph = self.build_graph(site_root)
         work = graph.work_by_path["/source-note"]
 
         self.assertEqual(datetime(2024, 2, 16, tzinfo=UTC), work.created)
@@ -173,11 +174,10 @@ class MarkupAndGraphTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        graph = self.build_graph(site_root)
         work = graph.work_by_path["/artifact"]
 
         self.assertEqual(datetime(2024, 2, 16, tzinfo=UTC), work.created)
-        self.assertEqual("html", work.body_format)
         self.assertEqual("<p>Authored HTML.</p>", work.body.html)
 
     def test_folder_work_accepts_one_arbitrary_markdown_body(self) -> None:
@@ -190,10 +190,23 @@ class MarkupAndGraphTests(unittest.TestCase):
         )
         self.set_home_sections(site_root, "### Poems")
 
-        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        graph = self.build_graph(site_root)
 
         self.assertEqual("Poems", graph.work_by_path["/know"].resolved_section)
         self.assertIn("<p>A poem.</p>", graph.work_by_path["/know"].body.html)
+
+    def test_direct_folder_work_accepts_one_arbitrary_markdown_body(self) -> None:
+        site_root = self.make_site(
+            {
+                "field-notes": {
+                    "notes.md": "# Opening\n\nA direct folder work.",
+                }
+            }
+        )
+
+        graph = self.build_graph(site_root)
+
+        self.assertIn("<p>A direct folder work.</p>", graph.work_by_path["/field-notes"].body.html)
 
     def test_home_markdown_defines_links_and_sections(self) -> None:
         site_root = self.make_site(
@@ -231,7 +244,7 @@ class MarkupAndGraphTests(unittest.TestCase):
         )
 
         site = load_site_config(site_root)
-        graph = build_site_graph(site, load_work_inputs(site_root))
+        graph = build_site_graph(site, load_work_inputs(site_root, site.home.sections))
 
         self.assertEqual("Labyrinth Home", site.home.title)
         self.assertEqual("Library", site.home.read_label)
@@ -280,7 +293,7 @@ class MarkupAndGraphTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-        graph = build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+        graph = self.build_graph(site_root)
 
         self.assertEqual(
             ("Shelf Two", "Shelf One", "Empty Shelf"),
@@ -313,7 +326,7 @@ class MarkupAndGraphTests(unittest.TestCase):
         )
 
         with self.assertRaises(BuildError) as error:
-            build_site_graph(load_site_config(site_root), load_work_inputs(site_root))
+            self.build_graph(site_root)
 
         self.assertEqual("broken-internal-link", error.exception.rule)
 
@@ -328,55 +341,3 @@ class MarkupAndGraphTests(unittest.TestCase):
             },
             work_paths=frozenset({"/field-notes", "/garden-path"}),
         )
-
-    def set_home_sections(self, site_root: Path, headings: str) -> None:
-        home_md = site_root / "home.md"
-        home_md.write_text(
-            home_md.read_text(encoding="utf-8").replace("## Index", f"## Index\n\n{headings}"),
-            encoding="utf-8",
-        )
-
-    def make_site(self, works: dict[str, dict[str, str]]) -> Path:
-        site_root = Path(self.enterContext(tempfile.TemporaryDirectory()))
-        (site_root / "site.toml").write_text(
-            textwrap.dedent(
-                """\
-                url = "https://labyrinth.example"
-                lang = "en"
-                title = "Labyrinth"
-                statement = "A room for poems, projects, and notes."
-                author_name = "Labyrinth Author"
-                updated = "2024-02-14T00:00:00Z"
-                """
-            ),
-            encoding="utf-8",
-        )
-        (site_root / "home.md").write_text(
-            textwrap.dedent(
-                """\
-                # Labyrinth
-
-                A room for poems, projects, and notes.
-
-                [First](https://first.example/labyrinth)
-                [Second](https://second.example/labyrinth)
-                [Feed](/feed.xml)
-
-                ## Index
-                """
-            ),
-            encoding="utf-8",
-        )
-        (site_root / "feed.md").write_text(
-            "Web feed\n\nCopy [the feed URL]({feed_url}) into a feed reader.",
-            encoding="utf-8",
-        )
-        works_root = site_root / "works"
-        works_root.mkdir()
-
-        for name, files in works.items():
-            work_root = works_root / name
-            work_root.mkdir(parents=True)
-            for filename, content in files.items():
-                (work_root / filename).write_text(content, encoding="utf-8")
-        return site_root

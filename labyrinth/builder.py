@@ -21,17 +21,17 @@ def build_site(site_root: Path, publish_root: Path, *, build_url: str | None = N
     site_root = site_root.resolve()
     publish_root = publish_root.resolve()
     site = load_site_config(site_root, build_url=build_url)
-    work_inputs = load_work_inputs(site_root)
+    work_inputs = load_work_inputs(site_root, site.home.sections)
     graph = build_site_graph(site, work_inputs)
     rendered_pages = render_pages(graph)
-    stylesheet = render_stylesheet(site)
-    feed_stylesheet = render_feed_stylesheet(site)
+    stylesheet = render_stylesheet()
+    feed_stylesheet = render_feed_stylesheet()
     feed = render_feed(graph)
+    validate_rendered_pages(rendered_pages)
 
     temp_root = prepare_temp_publish_root(publish_root)
     try:
         write_public_files(temp_root, rendered_pages, stylesheet, feed_stylesheet, feed)
-        validate_rendered_pages(rendered_pages)
         replace_publish_root(temp_root, publish_root)
     except Exception:
         shutil.rmtree(temp_root, ignore_errors=True)

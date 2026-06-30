@@ -269,7 +269,7 @@
 .home-contents .section-description {
   font-size: var(--home-contents-text-size);
   line-height: var(--leading-running);
-  color: color-mix(in srgb, var(--ink) 38%, var(--page));
+  color: color-mix(in srgb, var(--ink) 38%, transparent);
 }
 
 .works-list {
@@ -374,7 +374,7 @@
 
 .works-entry-link:hover .works-entry-leader,
 .works-entry-link:focus-visible .works-entry-leader {
-  color: color-mix(in srgb, var(--accent) 54%, var(--page));
+  color: color-mix(in srgb, var(--accent) 54%, transparent);
 }
 
 .work-date {

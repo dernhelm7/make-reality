@@ -57,7 +57,7 @@
   padding: var(--blockquote-pad-block) 0 var(--blockquote-pad-block) var(--blockquote-pad-inline);
   border-left: 0.18rem solid var(--line-strong);
   font-style: italic;
-  color: color-mix(in srgb, var(--ink) 80%, var(--page));
+  color: color-mix(in srgb, var(--ink) 80%, transparent);
 }
 
 .reading-prose blockquote p {
@@ -130,7 +130,7 @@
   font-family: var(--sans);
   font-size: var(--text-xs);
   line-height: var(--leading-running);
-  color: color-mix(in srgb, var(--ink) 62%, var(--page));
+  color: color-mix(in srgb, var(--ink) 62%, transparent);
 }
 
 .reading-prose sup,

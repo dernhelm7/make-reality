@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from io import BytesIO
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+from labyrinth.preview import PreviewRequestHandler
 from .fixture_support import EXAMPLES_ROOT, REPO_ROOT
 
 
@@ -49,3 +51,13 @@ class CommandSmokeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((publish_root / "index.html").exists())
         self.assertTrue((publish_root / "site.css").exists())
+
+    def test_preview_responses_disable_browser_caching(self) -> None:
+        handler = PreviewRequestHandler.__new__(PreviewRequestHandler)
+        handler.request_version = "HTTP/1.1"
+        handler._headers_buffer = []
+        handler.wfile = BytesIO()
+
+        handler.end_headers()
+
+        self.assertIn(b"Cache-Control: no-store\r\n", handler.wfile.getvalue())

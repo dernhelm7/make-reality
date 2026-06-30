@@ -8,10 +8,11 @@
 /* ══ Colors ══════════════════════════════════════════════════════ */
 
 :root {
-  --color-bg:     #ffffff;  /* page background          */
-  --color-ink:    #202020;  /* body text                */
-  --color-primary: #110411; /* site.toml primary_color  */
-  --color-accent: var(--color-primary); /* links, active, emphasis */
+  --color-page-light: #ffffff; /* author palette: light page */
+  --color-page-dark:  #008080; /* author palette: dark page  */
+  /* --color-page-dark: #001033; */ /* backup: deep navy */
+  --color-ink: var(--color-page-dark); /* light-mode body text */
+  --color-accent: color-mix(in srgb, var(--color-page-dark) 64%, var(--color-page-light));
 }
 
 
@@ -63,12 +64,12 @@ h3              { font-size: var(--text-md);   }
 /* ══ Cursor ═══════════════════════════════════════════════════════
    CSS-only. SVG inline as data URI. No JS.                      */
 
-/* Default — filled circle */
+/* Default — filled circle; built RGB is taken from --color-page-dark. */
 body {
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='6' fill='rgba(0,0,0,0.35)'/></svg>") 7 7, auto;
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='6' fill='rgba(0,128,128,0.35)'/></svg>") 7 7, auto;
 }
 
-/* Links and interactive elements — outlined circle */
+/* Links and interactive elements — outlined circle; built RGB is taken from --color-page-dark. */
 a[href], button, [role="button"] {
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='6' fill='none' stroke='rgba(0,0,0,0.4)' stroke-width='1.5'/></svg>") 7 7, pointer;
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><circle cx='7' cy='7' r='6' fill='none' stroke='rgba(0,128,128,0.4)' stroke-width='1.5'/></svg>") 7 7, pointer;
 }

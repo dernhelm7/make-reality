@@ -31,7 +31,6 @@ class Heading:
     text: str
     anchor_id: str
     source_level: int
-    rendered_level: int
 
 
 @dataclass(frozen=True)
@@ -104,7 +103,6 @@ class BodyRender:
 class InlineRender:
     html: str
     visible_text: str
-    links: tuple[BodyLink, ...]
 
 
 def render_markdown_body(
@@ -197,7 +195,6 @@ def apply_heading_self_links(tokens: list[Token]) -> list[Heading]:
                 text=visible_text,
                 anchor_id=anchor_id,
                 source_level=source_level,
-                rendered_level=rendered_level,
             )
         )
     return headings
@@ -265,7 +262,6 @@ def render_markdown_paragraphs(
     *,
     context: BodyContext,
     tag_prefix: str = "",
-    include_link_class: bool = True,
 ) -> tuple[InlineRender, ...]:
     paragraphs: list[list[str]] = []
     buffer: list[str] = []
@@ -289,7 +285,6 @@ def render_markdown_paragraphs(
             lines,
             context=context,
             tag_prefix=tag_prefix,
-            include_link_class=include_link_class,
         )
         for lines in paragraphs
         if lines
@@ -301,11 +296,9 @@ def render_markdown_paragraph_lines(
     *,
     context: BodyContext,
     tag_prefix: str,
-    include_link_class: bool,
 ) -> InlineRender:
     pieces: list[str] = []
     visible: list[str] = []
-    links: list[BodyLink] = []
     prior_hard_break = False
     break_tag = f"<{tag_prefix}br/>" if tag_prefix else "<br>"
 
@@ -323,17 +316,14 @@ def render_markdown_paragraph_lines(
             text.strip(),
             context=context,
             tag_prefix=tag_prefix,
-            include_link_class=include_link_class,
         )
         pieces.append(inline.html)
         visible.append(inline.visible_text)
-        links.extend(inline.links)
         prior_hard_break = hard_break
 
     return InlineRender(
         html="".join(pieces),
         visible_text="".join(visible),
-        links=tuple(links),
     )
 
 
@@ -346,11 +336,39 @@ def strip_markdown_hard_break(line: str) -> tuple[str, bool]:
     return line, False
 
 
-class HTMLFragmentRewriter(HTMLParser):
-    def __init__(self, context: BodyContext) -> None:
+class HTMLAccumulator(HTMLParser):
+    def __init__(self) -> None:
         super().__init__(convert_charrefs=False)
-        self.context = context
         self.output: list[str] = []
+
+    def append_html(self, html: str, visible_text: str | None = None) -> None:
+        self.output.append(html)
+
+    def handle_endtag(self, tag: str) -> None:
+        self.append_html(f"</{tag}>")
+
+    def handle_data(self, data: str) -> None:
+        self.append_html(data, visible_text=data)
+
+    def handle_comment(self, data: str) -> None:
+        self.append_html(f"<!--{data}-->")
+
+    def handle_entityref(self, name: str) -> None:
+        rendered = f"&{name};"
+        self.append_html(rendered, visible_text=html_entity_visible_text(rendered))
+
+    def handle_charref(self, name: str) -> None:
+        rendered = f"&#{name};"
+        self.append_html(rendered, visible_text=html_entity_visible_text(rendered))
+
+    def render_output(self) -> str:
+        return "".join(self.output)
+
+
+class HTMLFragmentRewriter(HTMLAccumulator):
+    def __init__(self, context: BodyContext) -> None:
+        super().__init__()
+        self.context = context
         self.headings: list[Heading] = []
         self.anchor_ids: set[str] = set()
         self.links: list[BodyLink] = []
@@ -370,7 +388,7 @@ class HTMLFragmentRewriter(HTMLParser):
         rendered_tag = render_start_tag(tag, rendered_attrs)
 
         if self._heading_tag is not None:
-            self._heading_inner.append(rendered_tag)
+            self.append_html(rendered_tag)
             return
 
         if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
@@ -380,7 +398,7 @@ class HTMLFragmentRewriter(HTMLParser):
             self._heading_text = []
             return
 
-        self.output.append(rendered_tag)
+        self.append_html(rendered_tag)
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         rendered_attrs, link = rewrite_link_attributes(
@@ -391,10 +409,7 @@ class HTMLFragmentRewriter(HTMLParser):
         if link is not None:
             self.links.append(link)
         rendered = render_start_tag(tag, rendered_attrs, self_closing=True)
-        if self._heading_tag is not None:
-            self._heading_inner.append(rendered)
-            return
-        self.output.append(rendered)
+        self.append_html(rendered)
 
     def handle_endtag(self, tag: str) -> None:
         if self._heading_tag is not None:
@@ -414,7 +429,6 @@ class HTMLFragmentRewriter(HTMLParser):
                         text=text,
                         anchor_id=anchor_id,
                         source_level=source_level,
-                        rendered_level=source_level,
                     )
                 )
                 self._heading_tag = None
@@ -423,44 +437,22 @@ class HTMLFragmentRewriter(HTMLParser):
                 self._heading_text = []
                 return
 
-            self._heading_inner.append(f"</{tag}>")
+            self.append_html(f"</{tag}>")
             return
 
-        self.output.append(f"</{tag}>")
+        super().handle_endtag(tag)
 
-    def handle_data(self, data: str) -> None:
+    def append_html(self, html: str, visible_text: str | None = None) -> None:
         if self._heading_tag is not None:
-            self._heading_inner.append(data)
-            self._heading_text.append(data)
+            self._heading_inner.append(html)
+            if visible_text is not None:
+                self._heading_text.append(visible_text)
             return
-        self.output.append(data)
-
-    def handle_comment(self, data: str) -> None:
-        rendered = f"<!--{data}-->"
-        if self._heading_tag is not None:
-            self._heading_inner.append(rendered)
-            return
-        self.output.append(rendered)
-
-    def handle_entityref(self, name: str) -> None:
-        rendered = f"&{name};"
-        if self._heading_tag is not None:
-            self._heading_inner.append(rendered)
-            self._heading_text.append(html_entity_visible_text(rendered))
-            return
-        self.output.append(rendered)
-
-    def handle_charref(self, name: str) -> None:
-        rendered = f"&#{name};"
-        if self._heading_tag is not None:
-            self._heading_inner.append(rendered)
-            self._heading_text.append(html_entity_visible_text(rendered))
-            return
-        self.output.append(rendered)
+        super().append_html(html, visible_text)
 
     def render(self) -> BodyRender:
         return BodyRender(
-            html="".join(self.output),
+            html=self.render_output(),
             headings=tuple(self.headings),
             anchor_ids=frozenset(self.anchor_ids),
             links=tuple(self.links),
@@ -483,11 +475,9 @@ def render_inline(
     *,
     context: BodyContext,
     tag_prefix: str = "",
-    include_link_class: bool = True,
 ) -> InlineRender:
     pieces: list[str] = []
     visible: list[str] = []
-    links: list[BodyLink] = []
     index = 0
 
     while index < len(text):
@@ -507,14 +497,11 @@ def render_inline(
                         fragment=None,
                         kind="work",
                     )
-                    class_attr = (
-                        f' class="{escape(link_class_name(link))}"' if include_link_class else ""
-                    )
+                    class_attr = f' class="{escape(link_class_name(link))}"'
                     pieces.append(
                         f'<{tag_prefix}a{class_attr} href="{escape(context.render_href(link))}">'
                         f"{escape(visible_label)}</{tag_prefix}a>"
                     )
-                    links.append(link)
                 visible.append(visible_label)
                 index = end + 2
                 continue
@@ -530,15 +517,12 @@ def render_inline(
                     label,
                     context=context,
                     tag_prefix=tag_prefix,
-                    include_link_class=include_link_class,
                 )
-                class_attr = f' class="{escape(link_class_name(link))}"' if include_link_class else ""
+                class_attr = f' class="{escape(link_class_name(link))}"'
                 pieces.append(
                     f'<{tag_prefix}a{class_attr} href="{escape(rendered_href)}">{rendered_label.html}</{tag_prefix}a>'
                 )
                 visible.append(rendered_label.visible_text)
-                links.extend(rendered_label.links)
-                links.append(link)
                 index = link_match.end()
                 continue
 
@@ -549,11 +533,9 @@ def render_inline(
                     text[index + 1 : end],
                     context=context,
                     tag_prefix=tag_prefix,
-                    include_link_class=include_link_class,
                 )
                 pieces.append(f"<{tag_prefix}em>{emphasized.html}</{tag_prefix}em>")
                 visible.append(emphasized.visible_text)
-                links.extend(emphasized.links)
                 index = end + 1
                 continue
 
@@ -565,7 +547,6 @@ def render_inline(
     return InlineRender(
         html="".join(pieces),
         visible_text="".join(visible),
-        links=tuple(links),
     )
 
 
@@ -599,29 +580,19 @@ def unique_anchor_id(base: str, used_ids: set[str]) -> str:
 
 
 def resolve_internal_path(current_public_path: str, href: str) -> tuple[str, str | None] | None:
-    parts = urlsplit(href)
-    if parts.scheme or parts.netloc:
-        return None
-
-    raw_path = parts.path
-    fragment = parts.fragment or None
-    if raw_path == "":
-        return current_public_path, fragment
-
-    if raw_path.startswith("/"):
-        normalized = posixpath.normpath(raw_path)
-    else:
-        base = posixpath.dirname(current_public_path) or "/"
-        normalized = posixpath.normpath(posixpath.join(base, raw_path))
-
-    if normalized == ".":
-        normalized = "/"
-    if not normalized.startswith("/"):
-        normalized = "/" + normalized
-    return normalized, fragment
+    return resolve_public_path(posixpath.dirname(current_public_path) or "/", href, empty_path=current_public_path)
 
 
 def resolve_page_asset_path(current_public_path: str, href: str) -> tuple[str, str | None] | None:
+    return resolve_public_path(current_public_path, href, empty_path=current_public_path)
+
+
+def resolve_public_path(
+    relative_base: str,
+    href: str,
+    *,
+    empty_path: str,
+) -> tuple[str, str | None] | None:
     parts = urlsplit(href)
     if parts.scheme or parts.netloc:
         return None
@@ -629,12 +600,12 @@ def resolve_page_asset_path(current_public_path: str, href: str) -> tuple[str, s
     raw_path = parts.path
     fragment = parts.fragment or None
     if raw_path == "":
-        return current_public_path, fragment
+        return empty_path, fragment
 
     if raw_path.startswith("/"):
         normalized = posixpath.normpath(raw_path)
     else:
-        normalized = posixpath.normpath(posixpath.join(current_public_path, raw_path))
+        normalized = posixpath.normpath(posixpath.join(relative_base, raw_path))
 
     if normalized == ".":
         normalized = "/"
